@@ -4,73 +4,100 @@ import * as THREE from 'three'
 import { seededRandom } from './random'
 
 export default function GalaxyParticles() {
-  const points = useRef()
+  const nearStars = useRef()
+  const farMist = useRef()
 
-  const { positions, colors } = useMemo(() => {
-    const count = 18000
-    const positionsArray = new Float32Array(count * 3)
-    const colorsArray = new Float32Array(count * 3)
-    const inside = new THREE.Color('#ffb35c')
-    const outside = new THREE.Color('#4d7dff')
-    const branches = 5
-    const radiusMax = 34
+  const { nearPositions, nearColors, farPositions, farColors } = useMemo(() => {
+    const nearCount = 14000
+    const farCount = 22000
+    const nearPositionsArray = new Float32Array(nearCount * 3)
+    const nearColorsArray = new Float32Array(nearCount * 3)
+    const farPositionsArray = new Float32Array(farCount * 3)
+    const farColorsArray = new Float32Array(farCount * 3)
+    const cyan = new THREE.Color('#7edcff')
+    const gold = new THREE.Color('#ffd17a')
+    const violet = new THREE.Color('#c7b7ff')
+    const white = new THREE.Color('#ffffff')
 
-    for (let i = 0; i < count; i += 1) {
+    for (let i = 0; i < nearCount; i += 1) {
       const i3 = i * 3
-      const radius = seededRandom(i + 1) * radiusMax
-      const spin = radius * 0.34
-      const branchAngle = ((i % branches) / branches) * Math.PI * 2
-      const randomPower = 2.8
-      const randomness = 0.55
-      const randomX =
-        (seededRandom(i + 17) < 0.5 ? -1 : 1) *
-        Math.pow(seededRandom(i + 29), randomPower) *
-        randomness *
-        radius
-      const randomY =
-        (seededRandom(i + 41) < 0.5 ? -1 : 1) *
-        Math.pow(seededRandom(i + 53), randomPower) *
-        randomness *
-        radius *
-        0.12
-      const randomZ =
-        (seededRandom(i + 67) < 0.5 ? -1 : 1) *
-        Math.pow(seededRandom(i + 79), randomPower) *
-        randomness *
-        radius
+      const theta = seededRandom(i + 11) * Math.PI * 2
+      const phi = Math.acos(2 * seededRandom(i + 23) - 1)
+      const radius = 8 + Math.pow(seededRandom(i + 37), 0.72) * 34
+      const clusterWave = Math.sin(theta * 3 + radius * 0.18) * 2.2
 
-      positionsArray[i3] = Math.cos(branchAngle + spin) * radius + randomX
-      positionsArray[i3 + 1] = randomY - 0.8
-      positionsArray[i3 + 2] = Math.sin(branchAngle + spin) * radius + randomZ
+      nearPositionsArray[i3] = Math.sin(phi) * Math.cos(theta) * radius
+      nearPositionsArray[i3 + 1] = Math.cos(phi) * radius * 0.72 + clusterWave
+      nearPositionsArray[i3 + 2] = Math.sin(phi) * Math.sin(theta) * radius
 
-      const mixed = inside.clone().lerp(outside, radius / radiusMax)
-      colorsArray[i3] = mixed.r
-      colorsArray[i3 + 1] = mixed.g
-      colorsArray[i3 + 2] = mixed.b
+      const mixed = white.clone().lerp(seededRandom(i + 51) > 0.55 ? cyan : gold, seededRandom(i + 67) * 0.55)
+      nearColorsArray[i3] = mixed.r
+      nearColorsArray[i3 + 1] = mixed.g
+      nearColorsArray[i3 + 2] = mixed.b
     }
 
-    return { positions: positionsArray, colors: colorsArray }
+    for (let i = 0; i < farCount; i += 1) {
+      const i3 = i * 3
+      const theta = seededRandom(i + 101) * Math.PI * 2
+      const phi = Math.acos(2 * seededRandom(i + 113) - 1)
+      const radius = 28 + Math.pow(seededRandom(i + 127), 0.55) * 58
+      const drift = Math.sin(theta * 4.2 + phi * 2.6) * 4
+
+      farPositionsArray[i3] = Math.sin(phi) * Math.cos(theta) * radius
+      farPositionsArray[i3 + 1] = Math.cos(phi) * radius + drift
+      farPositionsArray[i3 + 2] = Math.sin(phi) * Math.sin(theta) * radius
+
+      const mixed = violet.clone().lerp(cyan, seededRandom(i + 139) * 0.55)
+      farColorsArray[i3] = mixed.r
+      farColorsArray[i3 + 1] = mixed.g
+      farColorsArray[i3 + 2] = mixed.b
+    }
+
+    return {
+      nearPositions: nearPositionsArray,
+      nearColors: nearColorsArray,
+      farPositions: farPositionsArray,
+      farColors: farColorsArray,
+    }
   }, [])
 
   useFrame((_, delta) => {
-    points.current.rotation.y += delta * 0.025
-    points.current.rotation.z += delta * 0.006
+    nearStars.current.rotation.y += delta * 0.012
+    nearStars.current.rotation.x += delta * 0.004
+    farMist.current.rotation.y -= delta * 0.006
+    farMist.current.rotation.z += delta * 0.003
   })
 
   return (
-    <points ref={points} rotation={[0.18, 0, -0.16]}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={positions.length / 3} array={positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={colors.length / 3} array={colors} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.045}
-        vertexColors
-        transparent
-        opacity={0.82}
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </points>
+    <group>
+      <points ref={farMist}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" count={farPositions.length / 3} array={farPositions} itemSize={3} />
+          <bufferAttribute attach="attributes-color" count={farColors.length / 3} array={farColors} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial
+          size={0.06}
+          vertexColors
+          transparent
+          opacity={0.38}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+      <points ref={nearStars}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" count={nearPositions.length / 3} array={nearPositions} itemSize={3} />
+          <bufferAttribute attach="attributes-color" count={nearColors.length / 3} array={nearColors} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial
+          size={0.075}
+          vertexColors
+          transparent
+          opacity={0.72}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+    </group>
   )
 }

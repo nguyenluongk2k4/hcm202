@@ -1,4 +1,7 @@
-export default function InfoPanel({ planet, onClose }) {
+export default function InfoPanel({ planet, unlockedQuotes, onOpenQuote, onClose }) {
+  const quoteCount = planet.quotes?.length ?? 0
+  const unlockedCount = planet.quotes?.filter((quote) => unlockedQuotes.includes(quote.id)).length ?? 0
+
   return (
     <aside className="info-panel">
       <div className="panel-top">
@@ -16,9 +19,29 @@ export default function InfoPanel({ planet, onClose }) {
         ))}
       </ul>
       <div className="concept-strip">
-        <span>Khái niệm trọng tâm</span>
+        <span>Giá trị cốt lõi</span>
         <strong>{planet.concept}</strong>
       </div>
+      {quoteCount > 0 && (
+        <div className="planet-bookmarks">
+          <div>
+            <span>Bookmark đã mở</span>
+            <strong>
+              {unlockedCount}/{quoteCount}
+            </strong>
+          </div>
+          {planet.quotes.map((quote) => (
+            <button
+              key={quote.id}
+              className={unlockedQuotes.includes(quote.id) ? 'is-unlocked' : ''}
+              type="button"
+              onClick={() => onOpenQuote(quote)}
+            >
+              {unlockedQuotes.includes(quote.id) ? 'Đã lưu' : 'Mở khóa'} bookmark
+            </button>
+          ))}
+        </div>
+      )}
     </aside>
   )
 }
