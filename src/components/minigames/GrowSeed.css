@@ -1,0 +1,186 @@
+.minigame-grow-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.tree-container {
+  width: 100%;
+  max-width: 360px;
+  height: 360px;
+  background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 50%, #2e1065 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 60px rgba(46, 16, 101, 0.8);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tree-container:active {
+  transform: scale(0.98);
+}
+
+.tree-container.is-won {
+  border-color: rgba(244, 114, 182, 0.8);
+  box-shadow: 0 0 50px rgba(236, 72, 153, 0.5), inset 0 0 40px rgba(236, 72, 153, 0.3);
+  pointer-events: none;
+}
+
+/* Background elements */
+.tree-sky-bg {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0.5;
+}
+
+.tree-moon {
+  position: absolute;
+  top: 30px;
+  right: 40px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fff 0%, #fde047 40%, #fbbf24 100%);
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.4);
+  animation: moon-pulse 4s infinite alternate ease-in-out;
+}
+
+@keyframes moon-pulse {
+  0% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.3); }
+  100% { box-shadow: 0 0 50px rgba(251, 191, 36, 0.7); }
+}
+
+/* Energy Ray */
+.tree-energy-ray {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 150%;
+  background: linear-gradient(to bottom, rgba(244, 114, 182, 0) 0%, rgba(244, 114, 182, 0.15) 50%, rgba(244, 114, 182, 0.35) 100%);
+  clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%);
+  animation: ray-flicker 0.2s infinite alternate;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes ray-flicker {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* Water Pond (Ground) */
+.tree-ground-texture {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: radial-gradient(ellipse at center, rgba(30, 58, 138, 0.8) 0%, rgba(15, 23, 42, 1) 100%);
+  border-top: 2px solid rgba(56, 189, 248, 0.3);
+  z-index: 5;
+  overflow: hidden;
+}
+
+.tree-ground-texture::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 30px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  animation: ripple 2s infinite ease-out;
+}
+
+@keyframes ripple {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+
+/* SVG Canvas */
+.tree-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.petal-advanced {
+  transition: fill-opacity 0.3s ease, stroke-opacity 0.3s ease, transform 0.1s linear, stroke-dashoffset 0.1s linear;
+}
+
+/* Pollen (Fireflies) */
+.tree-firefly {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: #fde047;
+  border-radius: 50%;
+  box-shadow: 0 0 12px 3px #eab308;
+  z-index: 20;
+  pointer-events: none;
+  animation: pollen-float 4s infinite ease-in-out alternate;
+  opacity: 0;
+}
+
+@keyframes pollen-float {
+  0% { transform: translate(0, 0) scale(0.8); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translate(20px, -60px) scale(1.2); opacity: 0; }
+}
+
+/* Falling/Floating Petals (when won) */
+.tree-falling-leaf {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #fbcfe8 0%, #db2777 100%);
+  border-radius: 50% 0 50% 50%;
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.6);
+  z-index: 25;
+  pointer-events: none;
+  animation: petal-float-up 5s linear forwards;
+}
+
+@keyframes petal-float-up {
+  0% {
+    transform: translateY(320px) translateX(0) rotate(0deg) scale(0.5);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-20px) translateX(var(--sway)) rotate(360deg) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Bling bling sparkles */
+.sparkle-star {
+  animation: twinkle 1s infinite alternate ease-in-out;
+  transform-origin: 0px 0px;
+}
+
+@keyframes twinkle {
+  0% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.2) rotate(45deg); }
+  100% { opacity: 0; transform: scale(0.5) rotate(90deg); }
+}
+

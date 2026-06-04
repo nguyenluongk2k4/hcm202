@@ -1,7 +1,6 @@
 import { OrbitControls, Stars } from '@react-three/drei'
 import { useRef } from 'react'
 import { planets } from '../../data/cosmos'
-import AuroraRibbons from './AuroraRibbons'
 import CameraFocus from './CameraFocus'
 import CentralPlanet from './CentralPlanet'
 import ConstellationLattice from './ConstellationLattice'
@@ -9,10 +8,9 @@ import GalaxyParticles from './GalaxyParticles'
 import MemoryComets from './MemoryComets'
 import NebulaVeils from './NebulaVeils'
 import PlanetMesh from './PlanetMesh'
-import HolographicArchive from './HolographicArchive'
 import WarpDrive from './WarpDrive'
 
-export default function Scene({ selectedPlanet, setSelectedPlanet, unlockedQuotes, onOpenQuote, isWarping, archiveVisible, setArchiveVisible, unlockedQuoteItems, isCompleted }) {
+export default function Scene({ selectedPlanet, setSelectedPlanet, unlockedQuotes, onOpenQuote, isWarping, isCompleted, onDoubleClickPlanet }) {
   const controlsRef = useRef()
   const centralPlanet = planets[0]
   const orbitPlanets = planets.filter((planet) => planet.distance > 0)
@@ -27,28 +25,20 @@ export default function Scene({ selectedPlanet, setSelectedPlanet, unlockedQuote
       <Stars radius={48} depth={26} count={1200} factor={2.2} saturation={0.8} fade speed={1.2} />
       <NebulaVeils />
       <GalaxyParticles />
-      <AuroraRibbons />
       <ConstellationLattice />
       <MemoryComets />
       <WarpDrive active={isWarping} />
       
-      <HolographicArchive 
-        visible={archiveVisible} 
-        unlockedQuotes={unlockedQuoteItems} 
-        onClose={() => setArchiveVisible(false)} 
-        openQuote={onOpenQuote} 
-      />
-      
       <CameraFocus 
         selectedPlanet={selectedPlanet} 
         controlsRef={controlsRef} 
-        archiveVisible={archiveVisible} 
         isCompleted={isCompleted}
       />
       <CentralPlanet
         planet={centralPlanet}
         unlockedQuotes={unlockedQuotes}
         onClick={() => setSelectedPlanet({ ...centralPlanet, focusPosition: [0, 0, 0] })}
+        onDoubleClick={() => onDoubleClickPlanet(centralPlanet)}
         onOpenQuote={onOpenQuote}
         isCompleted={isCompleted}
       />
@@ -59,6 +49,7 @@ export default function Scene({ selectedPlanet, setSelectedPlanet, unlockedQuote
           selected={selectedPlanet.id === planet.id}
           unlockedQuotes={unlockedQuotes}
           onSelect={setSelectedPlanet}
+          onDoubleClick={() => onDoubleClickPlanet(planet)}
           onOpenQuote={onOpenQuote}
         />
       ))}

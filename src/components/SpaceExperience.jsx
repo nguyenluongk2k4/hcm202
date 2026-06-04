@@ -4,15 +4,17 @@ import { planets } from '../data/cosmos'
 import InfoPanel from './space/InfoPanel'
 import QuotePanel from './space/QuotePanel'
 import Scene from './space/Scene'
+import MinigameOverlay from './minigames/MinigameOverlay'
 
 export default function SpaceExperience({ onBack }) {
   const [selectedPlanet, setSelectedPlanet] = useState(planets[0])
   const [selectedQuote, setSelectedQuote] = useState(null)
-  const [panelVisible, setPanelVisible] = useState(true)
-  const [archiveVisible, setArchiveVisible] = useState(false)
+  const [openedPlanet, setOpenedPlanet] = useState(null)
   const [unlockedQuotes, setUnlockedQuotes] = useState([])
   const [quoteRevealKey, setQuoteRevealKey] = useState(0)
   const [isWarping, setIsWarping] = useState(true)
+  const [pendingMinigame, setPendingMinigame] = useState(null)
+  const [minigamesEnabled, setMinigamesEnabled] = useState(true)
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -22,18 +24,34 @@ export default function SpaceExperience({ onBack }) {
   }, [])
 
   const allQuotes = useMemo(() => planets.flatMap((planet) => planet.quotes ?? []), [])
-  const unlockedQuoteItems = allQuotes.filter((quote) => unlockedQuotes.includes(quote.id))
   const isCompleted = unlockedQuotes.length === allQuotes.length
 
   const selectPlanet = (planet) => {
     setSelectedPlanet(planet)
-    setPanelVisible(true)
   }
 
-  const openQuote = (quote) => {
+  const openQuote = (quote, planet) => {
+    if (!unlockedQuotes.includes(quote.id)) {
+      if (minigamesEnabled) {
+        setPendingMinigame({ quote, planet })
+        return
+      } else {
+        // Automatically unlock if minigames are disabled
+        setUnlockedQuotes((current) => [...current, quote.id])
+      }
+    }
+    
     setSelectedQuote(quote)
     setQuoteRevealKey((key) => key + 1)
+  }
+
+  const handleMinigameComplete = () => {
+    if (!pendingMinigame) return
+    const { quote } = pendingMinigame
     setUnlockedQuotes((current) => (current.includes(quote.id) ? current : [...current, quote.id]))
+    setSelectedQuote(quote)
+    setQuoteRevealKey((key) => key + 1)
+    setPendingMinigame(null)
   }
 
   return (
@@ -46,9 +64,21 @@ export default function SpaceExperience({ onBack }) {
           <p className="eyebrow">Vũ Trụ Kí Ức</p>
           <h1>Bản đồ tư tưởng Hồ Chí Minh</h1>
         </div>
-        <button className="archive-toggle" type="button" onClick={() => setArchiveVisible((visible) => !visible)}>
-          Sổ tay {unlockedQuotes.length}/{allQuotes.length}
-        </button>
+        <div className="experience-controls" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Thử thách:</span>
+          <button 
+            className={`secondary-action ${minigamesEnabled ? 'active' : ''}`} 
+            type="button" 
+            onClick={() => setMinigamesEnabled(!minigamesEnabled)}
+            style={{ 
+              background: minigamesEnabled ? 'rgba(74, 222, 128, 0.2)' : 'rgba(248, 113, 113, 0.2)',
+              borderColor: minigamesEnabled ? '#4ade80' : '#f87171',
+              color: minigamesEnabled ? '#4ade80' : '#f87171'
+            }}
+          >
+            {minigamesEnabled ? 'Bật' : 'Tắt'}
+          </button>
+        </div>
       </div>
 
       <div className="space-experience">
@@ -60,10 +90,8 @@ export default function SpaceExperience({ onBack }) {
               unlockedQuotes={unlockedQuotes}
               onOpenQuote={openQuote}
               isWarping={isWarping}
-              archiveVisible={archiveVisible}
-              setArchiveVisible={setArchiveVisible}
-              unlockedQuoteItems={unlockedQuoteItems}
               isCompleted={isCompleted}
+              onDoubleClickPlanet={setOpenedPlanet}
             />
           </Suspense>
         </Canvas>
@@ -80,27 +108,34 @@ export default function SpaceExperience({ onBack }) {
             <span>Scroll</span> zoom
           </div>
           <div>
-            <span>Click</span> mở hành tinh
+            <span>Click</span> zoom hành tinh
+          </div>
+          <div>
+            <span>Double Click</span> xem thông tin
           </div>
           <div>
             <span>Bookmark</span> mở câu nói
           </div>
         </div>
 
-        {panelVisible && (
+        {openedPlanet && (
           <InfoPanel
-            planet={selectedPlanet}
+            planet={openedPlanet}
             unlockedQuotes={unlockedQuotes}
-            onOpenQuote={openQuote}
-            onClose={() => setPanelVisible(false)}
+            onOpenQuote={(quote) => openQuote(quote, openedPlanet)}
+            onClose={() => setOpenedPlanet(null)}
           />
         )}
-        {!panelVisible && (
-          <button className="reopen-panel" type="button" onClick={() => setPanelVisible(true)}>
-            Mở bảng chủ đề
-          </button>
-        )}
         <QuotePanel quote={selectedQuote} onClose={() => setSelectedQuote(null)} />
+        
+        {pendingMinigame && (
+          <MinigameOverlay
+            quote={pendingMinigame.quote}
+            planet={pendingMinigame.planet}
+            onComplete={handleMinigameComplete}
+            onCancel={() => setPendingMinigame(null)}
+          />
+        )}
       </div>
     </section>
   )

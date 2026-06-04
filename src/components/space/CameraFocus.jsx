@@ -2,7 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 
-export default function CameraFocus({ selectedPlanet, controlsRef, archiveVisible, isCompleted }) {
+export default function CameraFocus({ selectedPlanet, controlsRef, isCompleted }) {
   const { camera } = useThree()
   const animation = useRef(null)
   const previousPlanetId = useRef(selectedPlanet?.id)
@@ -11,12 +11,7 @@ export default function CameraFocus({ selectedPlanet, controlsRef, archiveVisibl
   useEffect(() => {
     let target, desiredPosition
 
-    if (archiveVisible) {
-      // Focus on Holographic Archive at [-18, 2, -5]
-      target = new THREE.Vector3(-18, 2, -5)
-      desiredPosition = new THREE.Vector3(-18, 2, 6)
-      previousPlanetId.current = null // Force re-run when closing archive
-    } else if (isCompleted && !hasSnappedToFinale.current) {
+    if (isCompleted && !hasSnappedToFinale.current) {
       // Focus on Grand Finale Image at [0, 6.88, 0] (Central Planet size is 1.72)
       hasSnappedToFinale.current = true
       target = new THREE.Vector3(0, 6.88, 0)
@@ -47,7 +42,7 @@ export default function CameraFocus({ selectedPlanet, controlsRef, archiveVisibl
       fromTarget: controlsRef.current?.target?.clone() ?? new THREE.Vector3(0, 0, 0),
       toTarget: target,
     }
-  }, [camera, controlsRef, selectedPlanet, archiveVisible, isCompleted])
+  }, [camera, controlsRef, selectedPlanet, isCompleted])
 
   useFrame((_, delta) => {
     if (!animation.current) {

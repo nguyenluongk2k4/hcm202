@@ -1,0 +1,149 @@
+.minigame-sun {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  position: relative;
+  background: radial-gradient(circle at center, #1b0033 0%, #05000a 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 1.5rem;
+  box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 50px rgba(138,43,226,0.2);
+}
+
+.minigame-instruction {
+  text-align: center;
+  color: #ffca28;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255, 202, 40, 0.5);
+  margin-bottom: 15px;
+  font-family: 'Inter', sans-serif;
+  z-index: 10;
+  position: relative;
+}
+
+.sun-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(255,100,0,0.05), transparent);
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 0 40px rgba(255, 69, 0, 0.1);
+}
+
+/* Core */
+.sun-core-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  z-index: 5;
+}
+
+.sun-core {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fff 0%, #ffd700 20%, #ff4500 80%, #8b0000 100%);
+  box-shadow: 0 0 30px #ff4500, 0 0 60px #ff8c00;
+  transition: transform 0.1s linear, background 1s ease, box-shadow 1s ease;
+  position: relative;
+}
+
+.sun-core::after {
+  content: '';
+  position: absolute;
+  inset: -15px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent, rgba(255,165,0,0.5), transparent, rgba(255,69,0,0.5), transparent);
+  animation: rotate-corona 4s infinite linear;
+  filter: blur(6px);
+  z-index: -1;
+}
+
+@keyframes rotate-corona {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Stars */
+.sun-star {
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.1s linear, opacity 0.1s linear, width 0.1s, height 0.1s, box-shadow 0.1s;
+  transform-origin: center;
+}
+
+/* Gravity Waves */
+.gravity-wave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 165, 0, 0.4);
+  box-shadow: 0 0 20px rgba(255, 69, 0, 0.3) inset;
+  pointer-events: none;
+  animation: shockwave-in 1s linear forwards;
+}
+
+@keyframes shockwave-in {
+  0% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0.1); opacity: 0; }
+}
+
+/* Win States */
+.sun-supernova {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: supernova-explode 3s ease-out forwards;
+  z-index: 20;
+}
+
+@keyframes supernova-explode {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; box-shadow: 0 0 100px #fff; }
+  20% { transform: translate(-50%, -50%) scale(50); opacity: 1; background: #fff; }
+  100% { transform: translate(-50%, -50%) scale(50); opacity: 0; }
+}
+
+/* Tranquil Sun state after win */
+.sun-container.is-won .sun-core {
+  background: radial-gradient(circle at center, #ffffff 0%, #fffacd 40%, rgba(255,215,0,0) 100%);
+  box-shadow: 0 0 50px #fff, 0 0 100px #fffacd, 0 0 150px #ffd700;
+  animation: tranquil-pulse 4s infinite alternate;
+}
+.sun-container.is-won .sun-core::after {
+  background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.6), transparent, rgba(255,215,0,0.6), transparent);
+  filter: blur(10px);
+  animation: rotate-corona 10s infinite linear;
+}
+
+@keyframes tranquil-pulse {
+  0% { transform: scale(1.5); }
+  100% { transform: scale(1.6); box-shadow: 0 0 60px #fff, 0 0 120px #fffacd, 0 0 200px #ffd700; }
+}
+
+.minigame-progress {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  margin-top: 15px;
+  overflow: hidden;
+}
+
+.minigame-progress-fill {
+  height: 100%;
+  transition: width 0.1s linear;
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import hoChiMinhImage from '../assets/HoChiMinhImage.jpg'
 const previewQuotes = [
   'Không có gì quý hơn độc lập, tự do.',
@@ -26,33 +26,11 @@ const journeySteps = [
 
 const starTopics = ['Độc lập', 'Nhân dân', 'Đạo đức', 'Văn hóa', 'Tuổi trẻ', 'Vận dụng']
 
-const memoryShards = [
-  'Tín hiệu độc lập - tự do',
-  'Bookmark đang phát sáng',
-  'Quỹ đạo tư tưởng Hồ Chí Minh',
-  'Sổ tay ký ức đã sẵn sàng',
-]
 
-const hologramGlyphs = [
-  { label: 'Độc lập', x: '12.8rem', y: '-7.2rem' },
-  { label: 'Tự do', x: '13.4rem', y: '4.2rem' },
-  { label: 'Nhân dân', x: '-10.6rem', y: '6.8rem' },
-  { label: 'Đoàn kết', x: '-11.8rem', y: '-4.4rem' },
-]
 
 export default function LandingPage({ onExplore }) {
-  const [pointer, setPointer] = useState({ x: 50, y: 50 })
-  const [pressed, setPressed] = useState(false)
   const [burstKey, setBurstKey] = useState(0)
   const [traveling, setTraveling] = useState(false)
-
-  const handlePointerMove = (event) => {
-    const rect = event.currentTarget.getBoundingClientRect()
-    const x = ((event.clientX - rect.left) / rect.width) * 100
-    const y = ((event.clientY - rect.top) / rect.height) * 100
-
-    setPointer({ x, y })
-  }
 
   const handleExplore = () => {
     if (traveling) {
@@ -66,78 +44,13 @@ export default function LandingPage({ onExplore }) {
 
   return (
     <section
-      className={`landing-page landing-page--memory ${pressed ? 'is-pressed' : ''} ${traveling ? 'is-traveling' : ''}`}
-      style={{
-        '--pointer-x': `${pointer.x}%`,
-        '--pointer-y': `${pointer.y}%`,
-      }}
+      className={`landing-page landing-page--memory ${traveling ? 'is-traveling' : ''}`}
       aria-labelledby="landing-title"
-      onPointerMove={handlePointerMove}
-      onPointerDown={() => setPressed(true)}
-      onPointerUp={() => setPressed(false)}
-      onPointerCancel={() => setPressed(false)}
-      onPointerLeave={() => setPressed(false)}
     >
       <div className="landing-fixed-visuals" aria-hidden="true">
         <div className="landing-wallpaper" />
         <div className="landing-nebula-ribbons" />
-        <div className="landing-star-shower">
-          {Array.from({ length: 16 }).map((_, index) => (
-            <span
-              key={index}
-              style={{
-                '--shoot-left': `${(index * 17) % 100}%`,
-                '--shoot-top': `${(index * 23) % 86}%`,
-                '--shoot-delay': `${(index % 11) * 0.42}s`,
-                '--shoot-duration': `${3.6 + (index % 5) * 0.38}s`,
-              }}
-            />
-          ))}
-        </div>
-        <div className="landing-bling-field">
-          {Array.from({ length: 12 }).map((_, index) => (
-            <span
-              key={index}
-              style={{
-                '--bling-left': `${8 + ((index * 19) % 84)}%`,
-                '--bling-top': `${10 + ((index * 29) % 76)}%`,
-                '--bling-delay': `${(index % 9) * 0.26}s`,
-                '--bling-size': `${0.32 + (index % 4) * 0.1}rem`,
-              }}
-            />
-          ))}
-        </div>
-        <div className="landing-memory-shards">
-          {memoryShards.map((shard) => (
-            <span key={shard}>{shard}</span>
-          ))}
-        </div>
-        <div className="landing-cursor-light" />
         {burstKey > 0 && <div key={burstKey} className="landing-click-burst" />}
-        <div className="landing-stars" />
-        <div className="memory-portal">
-          <div className="portal-halo" />
-          <div className="portal-core" />
-          <div className="portal-ring portal-ring--one" />
-          <div className="portal-ring portal-ring--two" />
-          <div className="portal-ring portal-ring--three" />
-          <div className="portal-orbit portal-orbit--one">
-            <span />
-          </div>
-          <div className="portal-orbit portal-orbit--two">
-            <span />
-          </div>
-          <div className="portal-orbit portal-orbit--three">
-            <span />
-          </div>
-        </div>
-        <div className="memory-constellation">
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
       </div>
 
       <div className={`travel-cinematic ${traveling ? 'is-active' : ''}`} aria-hidden={!traveling} aria-live="polite">
@@ -145,41 +58,6 @@ export default function LandingPage({ onExplore }) {
           <div className="hologram-backlight" />
           <div className="hologram-beam" />
           <div className="hologram-aura" />
-          <div className="hologram-sparkles">
-            {Array.from({ length: 20 }).map((_, index) => {
-              const x = ((index * 37) % 64) - 32
-              const y = ((index * 29) % 48) - 24
-              const size = 0.18 + (index % 3) * 0.07
-              const delay = 0.12 + (index % 8) * 0.07
-
-              return (
-                <span
-                  key={index}
-                  style={{
-                    '--spark-x': `${x}rem`,
-                    '--spark-y': `${y}rem`,
-                    '--spark-size': `${size}rem`,
-                    '--spark-delay': `${delay}s`,
-                    '--spark-rotate': `${index * 23}deg`,
-                  }}
-                />
-              )
-            })}
-          </div>
-          <div className="hologram-glyphs">
-            {hologramGlyphs.map((glyph, index) => (
-              <span
-                key={glyph.label}
-                style={{
-                  '--glyph-x': glyph.x,
-                  '--glyph-y': glyph.y,
-                  '--glyph-delay': `${0.18 + index * 0.08}s`,
-                }}
-              >
-                {glyph.label}
-              </span>
-            ))}
-          </div>
           <div className="hologram-rings" />
           <img className="hologram-photo" src={hoChiMinhImage} alt="" loading="eager" decoding="sync" fetchPriority="high" />
         </div>

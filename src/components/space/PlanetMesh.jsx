@@ -7,7 +7,7 @@ import BookmarkMarker from './BookmarkMarker'
 import OrbitPath from './OrbitPath'
 import { createPlanetTexture } from './planetTexture'
 
-export default function PlanetMesh({ planet, selected, unlockedQuotes, onSelect, onOpenQuote }) {
+export default function PlanetMesh({ planet, selected, unlockedQuotes, onSelect, onDoubleClick, onOpenQuote }) {
   const orbit = useRef()
   const planetGroup = useRef()
   const mesh = useRef()
@@ -40,12 +40,17 @@ export default function PlanetMesh({ planet, selected, unlockedQuotes, onSelect,
     onSelect({ ...planet, focusPosition: focusPosition.toArray() })
   }
 
+  const handleDoubleClick = (event) => {
+    event?.stopPropagation()
+    onDoubleClick?.(planet)
+  }
+
   return (
     <group>
       <OrbitPath radius={planet.distance} />
       <group ref={orbit}>
         <group ref={planetGroup} position={[planet.distance, 0, 0]}>
-          <mesh ref={mesh} onClick={selectPlanet}>
+          <mesh ref={mesh} onClick={selectPlanet} onDoubleClick={handleDoubleClick}>
             <sphereGeometry args={[planet.size, 48, 48]} />
             <meshStandardMaterial
               color={palette[1]}
@@ -104,11 +109,11 @@ export default function PlanetMesh({ planet, selected, unlockedQuotes, onSelect,
               total={planet.quotes.length}
               planetSize={planet.size}
               unlocked={unlockedQuotes.includes(quote.id)}
-              onOpen={onOpenQuote}
+              onOpen={() => onOpenQuote(quote, planet)}
             />
           ))}
           <Html position={[0, planet.size + 0.55, 0]} center distanceFactor={13} zIndexRange={[4, 0]}>
-            <button className={`space-label ${selected ? 'is-selected' : ''}`} type="button" onClick={selectPlanet}>
+            <button className={`space-label ${selected ? 'is-selected' : ''}`} type="button" onClick={selectPlanet} onDoubleClick={handleDoubleClick}>
               <small>{planet.signal}</small>
               {planet.name}
             </button>

@@ -1,7 +1,6 @@
 import { startTransition, useEffect, useState } from 'react'
 import LandingPage from './components/LandingPage'
 import SpaceExperience from './components/SpaceExperience'
-import StarCursor from './components/StarCursor'
 import './App.css'
 
 const EXPLORE_HASH = '#kham-pha'
@@ -60,7 +59,6 @@ function App() {
       ) : (
         <LandingPage onExplore={openExplorePage} />
       )}
-      <StarCursor />
     </main>
   )
 }

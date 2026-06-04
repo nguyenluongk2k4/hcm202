@@ -8,7 +8,7 @@ import ConstellationDrawing from './ConstellationDrawing'
 import GrandFinale from './GrandFinale'
 import { createPlanetTexture } from './planetTexture'
 
-export default function CentralPlanet({ planet, unlockedQuotes, onClick, onOpenQuote, isCompleted }) {
+export default function CentralPlanet({ planet, unlockedQuotes, onClick, onDoubleClick, onOpenQuote, isCompleted }) {
   const core = useRef()
   const halo = useRef()
   const texture = useMemo(() => {
@@ -34,7 +34,7 @@ export default function CentralPlanet({ planet, unlockedQuotes, onClick, onOpenQ
         <torusGeometry args={[2.7, 0.018, 16, 180]} />
         <meshBasicMaterial color="#82ddff" transparent opacity={0.36} />
       </mesh>
-      <mesh ref={core} onClick={onClick}>
+      <mesh ref={core} onClick={onClick} onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick?.(planet); }}>
         <sphereGeometry args={[1.72, 64, 64]} />
         <meshStandardMaterial
           color="#f0a45e"
@@ -57,7 +57,7 @@ export default function CentralPlanet({ planet, unlockedQuotes, onClick, onOpenQ
           total={planet.quotes.length}
           planetSize={planet.size}
           unlocked={unlockedQuotes.includes(quote.id)}
-          onOpen={onOpenQuote}
+          onOpen={() => onOpenQuote(quote, planet)}
         />
       ))}
       <ConstellationDrawing 
@@ -72,7 +72,7 @@ export default function CentralPlanet({ planet, unlockedQuotes, onClick, onOpenQ
         />
       )}
       <Html position={[0, 2.35, 0]} center distanceFactor={10} zIndexRange={[4, 0]}>
-        <button className="space-label primary-label" type="button" onClick={onClick}>
+        <button className="space-label primary-label" type="button" onClick={onClick} onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick?.(planet); }}>
           <small>{planet.signal}</small>
           {planet.name}
         </button>
