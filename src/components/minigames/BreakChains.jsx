@@ -1,130 +1,343 @@
-import { useState, useEffect, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import './BreakChains.css'
 
 const DIALS_CONFIG = [
-  { letters: ['Đ', 'T', 'H', 'B', 'N'], target: 1 }, // T
-  { letters: ['A', 'Ư', 'Ự', 'I', 'E'], target: 2 }, // Ự
-  { letters: ['M', 'D', 'P', 'Q', 'C'], target: 1 }, // D
-  { letters: ['A', 'E', 'O', 'I', 'U'], target: 2 }, // O
+  { letters: ['T', 'Đ', 'N', 'H', 'D', 'Q'], target: 1, clue: 'Dân tộc' },
+  { letters: ['A', 'Ô', 'Ộ', 'Ơ', 'U', 'Ê'], target: 2, clue: 'Chủ quyền' },
+  { letters: ['G', 'C', 'K', 'Q', 'M', 'T'], target: 1, clue: 'Cội nguồn' },
+  { letters: ['L', 'T', 'B', 'N', 'H', 'V'], target: 0, clue: 'Tự chủ' },
+  { letters: ['Â', 'A', 'Ậ', 'Ư', 'Ê', 'Ô'], target: 2, clue: 'Không lệ thuộc' },
+  { letters: ['P', 'C', 'D', 'T', 'K', 'L'], target: 0, clue: 'Mở lối' },
+  { letters: ['H', 'N', 'T', 'L', 'D', 'M'], target: 2, clue: 'Nhân dân' },
+  { letters: ['Ú', 'Ì', 'Ọ', 'C', 'Ả', 'Ê'], target: 3, clue: 'Tự do' },
 ]
 
+const finaleWords  = ['Độc lập', 'Tự do', 'Hạnh phúc', 'Nhân dân']
+const colorTokens  = ['#ffffff', '#fef08a', '#38bdf8', '#fb7185', '#fbbf24', '#a5f3fc']
+
+function seededRatio(index, salt = 1) {
+  const value = Math.sin(index * 78.233 + salt * 29.911) * 10000
+  return value - Math.floor(value)
+}
+
+function isSolved(values) {
+  return values.every((v, i) => v === DIALS_CONFIG[i].target)
+}
+
 export default function BreakChains({ onWin }) {
-  const [dials, setDials] = useState([0, 0, 0, 0])
-  const [won, setWon] = useState(false)
-  const [showEpicWin, setShowEpicWin] = useState(false)
+  const [dials, setDials]         = useState(() => Array(DIALS_CONFIG.length).fill(0))
+  const [won, setWon]             = useState(false)
+  const [showFinale, setShowFinale] = useState(false)
+  const [lastDial, setLastDial]   = useState(null)
+  const [flashDial, setFlashDial] = useState(null)
   const wonRef = useRef(false)
 
-  const handleShift = (dialIndex, dir) => {
+  const sparks = useMemo(() =>
+    Array.from({ length: 56 }).map((_, i) => ({
+      id:       i,
+      angle:    seededRatio(i, 1) * 360,
+      dist:     110 + seededRatio(i, 2) * 420,
+      delay:    seededRatio(i, 3) * 0.7,
+      duration: 2.1 + seededRatio(i, 4) * 1.8,
+      size:     3 + seededRatio(i, 5) * 7,
+      color:    colorTokens[Math.floor(seededRatio(i, 6) * colorTokens.length)],
+    })), [])
+
+  const shards = useMemo(() =>
+    Array.from({ length: 28 }).map((_, i) => ({
+      id:       i,
+      left:     seededRatio(i, 7) * 100,
+      top:      10 + seededRatio(i, 8) * 68,
+      angle:    -180 + seededRatio(i, 9) * 360,
+      fall:     100 + seededRatio(i, 10) * 260,
+      delay:    seededRatio(i, 11) * 1.0,
+      duration: 2.3 + seededRatio(i, 12) * 2.2,
+      scale:    0.5 + seededRatio(i, 13) * 1.1,
+    })), [])
+
+  const rays = useMemo(() =>
+    Array.from({ length: 16 }).map((_, i) => ({
+      id:     i,
+      rotate: i * 22.5,
+      delay:  seededRatio(i, 14) * 1.4,
+      length: 44 + seededRatio(i, 15) * 42,
+    })), [])
+
+  const orbs = useMemo(() =>
+    Array.from({ length: 10 }).map((_, i) => ({
+      id:       i,
+      angle:    seededRatio(i, 40) * 360,
+      radius:   120 + seededRatio(i, 41) * 200,
+      size:     8 + seededRatio(i, 42) * 18,
+      delay:    seededRatio(i, 43) * 0.9,
+      duration: 3.2 + seededRatio(i, 44) * 2.0,
+      color:    colorTokens[Math.floor(seededRatio(i, 45) * colorTokens.length)],
+    })), [])
+
+  const correctCount = dials.filter((v, i) => v === DIALS_CONFIG[i].target).length
+  const progress     = won ? 100 : (correctCount / DIALS_CONFIG.length) * 100
+  const phrase       = dials.map((v, i) => DIALS_CONFIG[i].letters[v]).join('')
+
+  const complete = () => {
+    wonRef.current = true
+    setWon(true)
+    window.setTimeout(() => setShowFinale(true), 480)
+    window.setTimeout(onWin, 10500)
+  }
+
+  const handleShift = (dialIndex, direction) => {
     if (wonRef.current) return
-    setDials(prev => {
-      const next = [...prev]
-      const len = DIALS_CONFIG[dialIndex].letters.length
-      next[dialIndex] = (next[dialIndex] + dir + len) % len
+
+    setFlashDial(dialIndex)
+    window.setTimeout(() => setFlashDial(null), 180)
+
+    setDials((current) => {
+      const next   = [...current]
+      const length = DIALS_CONFIG[dialIndex].letters.length
+      next[dialIndex] = (next[dialIndex] + direction + length) % length
+
+      setLastDial(dialIndex)
+      window.setTimeout(() => setLastDial(null), 380)
+
+      if (isSolved(next)) complete()
       return next
     })
   }
 
-  useEffect(() => {
+  const handleDialPointerDown = (dialIndex, direction) => {
     if (wonRef.current) return
-    const isWin = dials.every((d, i) => d === DIALS_CONFIG[i].target)
-    if (isWin) {
-      wonRef.current = true
-      setWon(true)
-      
-      // Delay to let the lock "snap" open before the epic explosion
-      setTimeout(() => {
-        setShowEpicWin(true)
-        setTimeout(() => onWin(), 5500)
-      }, 500)
-    }
-  }, [dials, onWin])
+    handleShift(dialIndex, direction)
 
-  // Progress based on correct letters (just for visual feedback)
-  const correctCount = dials.filter((d, i) => d === DIALS_CONFIG[i].target).length
-  const progress = won ? 100 : (correctCount / 4) * 100
+    const interval = setInterval(() => {
+      if (wonRef.current) { clearInterval(interval); return }
+      handleShift(dialIndex, direction)
+    }, 200)
+
+    const stop = () => {
+      clearInterval(interval)
+    }
+    window.addEventListener('pointerup', stop, { once: true })
+    window.addEventListener('pointercancel', stop, { once: true })
+  }
 
   return (
-    <div className="minigame-break">
+    <div className={`minigame-break ${won ? 'is-won' : ''} ${showFinale ? 'is-final-scene' : ''}`}>
       <p className="minigame-instruction">
-        {won ? '✦ Tự do đã được giành lấy! ✦' : 'Xoay các trục chữ để giải mã phong ấn'}
+        {won
+          ? 'Khóa đã vỡ — độc lập không dừng ở cánh cửa mở, mà dẫn tới tự do và hạnh phúc.'
+          : `Xoay 8 trục mật mã để mở khóa ĐỘC LẬP. (${correctCount}/${DIALS_CONFIG.length} đúng)`}
       </p>
 
-      <div className={`break-container ${won ? 'is-won' : ''}`}>
-        
-        {/* ── Background Chains ── */}
-        <div className={`chain-wrapper ${showEpicWin ? 'is-shattered' : ''}`}>
+      <div className={`break-container ${won ? 'is-won' : ''} ${showFinale ? 'show-finale' : ''}`}>
+        <div className="freedom-sky" />
+        <div className="freedom-scanlines" />
+        <div className="freedom-orbit freedom-orbit--one" aria-hidden="true" />
+        <div className="freedom-orbit freedom-orbit--two" aria-hidden="true" />
+        <div className="freedom-orbit freedom-orbit--three" aria-hidden="true" />
+        <div className="freedom-light-bridge" aria-hidden="true">
+          <span /><span /><span />
+        </div>
+
+        <div className="barrier-wall barrier-wall--left" />
+        <div className="barrier-wall barrier-wall--right" />
+
+        <div className={`chain-wrapper ${showFinale ? 'is-shattered' : ''} progress-level-${correctCount}`}>
+          <div className="chain-strand chain-strand--one" />
+          <div className="chain-strand chain-strand--two" />
           <div className="chain-link left-link" />
+          <div className="chain-link middle-link" />
           <div className="chain-link right-link" />
         </div>
 
-        {/* ── The Giant Combination Lock ── */}
-        <div className={`padlock ${won ? 'is-unlocked' : ''} ${showEpicWin ? 'is-destroyed' : ''}`}>
+        <div className={`padlock ${won ? 'is-unlocked' : ''} ${showFinale ? 'is-destroyed' : ''}`}>
+          <div className="padlock-aura" />
           <div className="padlock-shackle">
             <div className="shackle-left" />
             <div className="shackle-right" />
             <div className="shackle-top" />
           </div>
-          
+
           <div className="padlock-body">
-            <div className="padlock-rivet tl" />
-            <div className="padlock-rivet tr" />
-            <div className="padlock-rivet bl" />
-            <div className="padlock-rivet br" />
-            
+            <div className="padlock-rivet tl" /><div className="padlock-rivet tr" />
+            <div className="padlock-rivet bl" /><div className="padlock-rivet br" />
+
+            <div className="dial-readout" aria-label="Mật mã hiện tại">
+              {phrase}
+              <span className="dial-readout-glow" />
+            </div>
+
             <div className="dials-container">
-              {dials.map((val, i) => {
-                const config = DIALS_CONFIG[i]
-                const isCorrect = val === config.target
-                
+              {dials.map((value, index) => {
+                const config    = DIALS_CONFIG[index]
+                const isCorrect = value === config.target
+
                 return (
-                  <div key={i} className={`dial ${isCorrect ? 'is-correct' : ''}`}>
-                    <button className="dial-btn up" onClick={() => handleShift(i, -1)}>▲</button>
+                  <div
+                    key={config.clue}
+                    className={[
+                      'dial',
+                      isCorrect            ? 'is-correct'  : '',
+                      lastDial  === index  ? 'is-spinning' : '',
+                      flashDial === index  ? 'is-flash'    : '',
+                    ].join(' ')}
+                  >
+                    <button
+                      className="dial-btn up"
+                      type="button"
+                      onPointerDown={() => handleDialPointerDown(index, -1)}
+                      aria-label={`Lùi trục ${index + 1}`}
+                    >
+                      ▲
+                    </button>
                     <div className="dial-window">
-                      <div 
-                        className="dial-strip" 
-                        style={{ transform: `translateY(${-val * 40}px)` }}
+                      {isCorrect && <div className="dial-correct-glow" />}
+                      <div
+                        className="dial-strip"
+                        style={{ transform: `rotateX(${value * 60}deg)` }}
                       >
-                        {config.letters.map((char, j) => (
-                          <div key={j} className="dial-char">{char}</div>
+                        {config.letters.map((char, charIdx) => (
+                          <div
+                            key={char}
+                            className={`dial-char ${value === charIdx ? 'is-active' : ''}`}
+                            style={{ transform: `rotateX(${-charIdx * 60}deg) translateZ(36px)` }}
+                          >
+                            {char}
+                          </div>
                         ))}
                       </div>
                     </div>
-                    <button className="dial-btn down" onClick={() => handleShift(i, 1)}>▼</button>
+                    <button
+                      className="dial-btn down"
+                      type="button"
+                      onPointerDown={() => handleDialPointerDown(index, 1)}
+                      aria-label={`Tiến trục ${index + 1}`}
+                    >
+                      ▼
+                    </button>
+                    <span className="dial-clue">{config.clue}</span>
                   </div>
                 )
               })}
             </div>
+
             <div className="padlock-keyhole" />
           </div>
         </div>
 
-        {/* ── EPIC WIN PLOT TWIST ── */}
-        {showEpicWin && (
-          <div className="epic-win-overlay">
+        <div className="freedom-checkpoints" aria-hidden="true">
+          {DIALS_CONFIG.map((config, index) => (
+            <span
+              key={config.clue}
+              className={dials[index] === config.target ? 'is-lit' : ''}
+            />
+          ))}
+        </div>
+
+        {showFinale && (
+          <div className="epic-win-overlay" aria-live="polite">
+            <div className="epic-horizon" />
+
             <div className="epic-shockwave" />
+            <div className="epic-shockwave epic-shockwave--2" />
+            <div className="epic-shockwave epic-shockwave--3" />
+
             <div className="epic-sun-flare" />
-            <div className="epic-rays" />
-            <div className="epic-banner">
-              <span className="text-glow-noble">ĐỘC LẬP</span><br/>
-              <span className="text-solid-noble">TỰ DO</span>
+
+            <div className="epic-rays">
+              {rays.map((ray) => (
+                <i
+                  key={ray.id}
+                  style={{
+                    '--ray-rotate': `${ray.rotate}deg`,
+                    '--ray-delay':  `${ray.delay}s`,
+                    '--ray-length': `${ray.length}vmax`,
+                  }}
+                />
+              ))}
             </div>
-            {Array.from({ length: 60 }).map((_, i) => (
-              <div key={`spark-${i}`} className="epic-spark" style={{
-                '--angle': `${Math.random() * 360}deg`,
-                '--dist': `${120 + Math.random() * 350}px`,
-                animationDelay: `${Math.random() * 0.5}s`,
-                background: ['#fff', '#fde047', '#fbbf24', '#f87171'][Math.floor(Math.random() * 4)]
-              }} />
+
+            <div className="epic-road">
+              <span /><span /><span />
+            </div>
+
+            <div className="epic-orbs">
+              {orbs.map((orb) => (
+                <i
+                  key={orb.id}
+                  style={{
+                    '--orb-angle':    `${orb.angle}deg`,
+                    '--orb-radius':   `${orb.radius}px`,
+                    '--orb-size':     `${orb.size}px`,
+                    '--orb-color':    orb.color,
+                    animationDelay:    `${orb.delay}s`,
+                    animationDuration: `${orb.duration}s`,
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="epic-word-orbit">
+              {finaleWords.map((word, index) => (
+                <span key={word} style={{ '--word-index': index }}>
+                  {word}
+                </span>
+              ))}
+            </div>
+
+            {shards.map((shard) => (
+              <i
+                key={shard.id}
+                className="epic-shard"
+                style={{
+                  left:              `${shard.left}%`,
+                  top:               `${shard.top}%`,
+                  '--shard-angle':   `${shard.angle}deg`,
+                  '--shard-fall':    `${shard.fall}px`,
+                  '--shard-scale':   shard.scale,
+                  animationDelay:    `${shard.delay}s`,
+                  animationDuration: `${shard.duration}s`,
+                }}
+              />
             ))}
+
+            {sparks.map((spark) => (
+              <i
+                key={spark.id}
+                className="epic-spark"
+                style={{
+                  '--angle':      `${spark.angle}deg`,
+                  '--dist':       `${spark.dist}px`,
+                  '--spark-size': `${spark.size}px`,
+                  color:             spark.color,
+                  background:        spark.color,
+                  animationDelay:    `${spark.delay}s`,
+                  animationDuration: `${spark.duration}s`,
+                }}
+              />
+            ))}
+
+            <div className="epic-banner">
+              <div className="epic-banner-badge">
+                <span className="epic-banner-dot" />
+                <small>Độc lập · Hành tinh đã mở khóa</small>
+              </div>
+              <strong>ĐỘC LẬP</strong>
+              <span className="epic-banner-sub">TỰ DO — HẠNH PHÚC</span>
+              <blockquote>
+                "Nước Việt Nam có quyền hưởng tự do và độc lập,<br />
+                và sự thật đã trở thành <em>một nước tự do độc lập</em>."
+              </blockquote>
+              <p>
+                Độc lập không phải tấm bản đồ — đó là con đường mỗi thế hệ phải
+                tự bước, tự giữ, và trao lại cho người tiếp theo.
+              </p>
+            </div>
           </div>
         )}
       </div>
 
       <div className="minigame-progress">
-        <div
-          className="minigame-progress-fill"
-          style={{ width: `${progress}%` }}
-        />
+        <div className="minigame-progress-fill" style={{ width: `${progress}%` }} />
       </div>
     </div>
   )

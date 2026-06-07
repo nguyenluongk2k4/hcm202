@@ -13,6 +13,7 @@ export default function GrandFinale({ quotes, planetSize }) {
   const total = quotes?.length || 1
   const radius = planetSize * 2.15 + 0.42
   const topPoint = useMemo(() => new THREE.Vector3(0, planetSize * 4, 0), [planetSize])
+  const quoteHighlights = useMemo(() => (quotes || []).slice(0, 4), [quotes])
 
   useEffect(() => {
     let frame
@@ -60,17 +61,17 @@ export default function GrandFinale({ quotes, planetSize }) {
     <group>
       <lineSegments ref={lineRef}>
         <bufferGeometry />
-        <lineBasicMaterial color="#ffdf8a" transparent opacity={opacity * 0.6} linewidth={2} />
+        <lineBasicMaterial color="#ffdf8a" transparent opacity={opacity * 0.34} linewidth={2} />
       </lineSegments>
 
       <group ref={imageGroupRef} position={topPoint}>
         <mesh position={[0, 0, -0.2]}>
-          <circleGeometry args={[3.2, 32]} />
-          <meshBasicMaterial color="#ffdf8a" transparent opacity={opacity * 0.4} blending={THREE.AdditiveBlending} />
+          <circleGeometry args={[3.8, 48]} />
+          <meshBasicMaterial color="#ffdf8a" transparent opacity={opacity * 0.24} blending={THREE.AdditiveBlending} />
         </mesh>
         <mesh ref={haloRef} position={[0, 0, -0.1]}>
-          <circleGeometry args={[2.5, 32]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={opacity * 0.6} blending={THREE.AdditiveBlending} />
+          <circleGeometry args={[2.8, 48]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={opacity * 0.42} blending={THREE.AdditiveBlending} />
         </mesh>
         
         <Html transform center distanceFactor={12} zIndexRange={[5, 0]}>
@@ -82,19 +83,56 @@ export default function GrandFinale({ quotes, planetSize }) {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: '1.5rem',
-            width: '28rem'
+            gap: '1rem',
+            width: 'min(34rem, 84vw)',
+            position: 'relative'
           }}>
+            <div style={{
+              position: 'absolute',
+              inset: '-4rem -5rem',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(255,255,255,0.34), rgba(255,223,138,0.18) 32%, transparent 68%)',
+              filter: 'blur(0.5rem)',
+              zIndex: -1,
+            }} />
             <img 
               src={hoChiMinhImage} 
               alt="Bác Hồ" 
               style={{
-                width: '18rem',
+                width: 'min(18rem, 62vw)',
                 borderRadius: '1rem',
                 border: '2px solid rgba(255, 223, 138, 0.6)',
-                boxShadow: '0 0 60px rgba(255, 223, 138, 0.8)'
+                boxShadow: '0 0 52px rgba(255, 223, 138, 0.72), 0 0 110px rgba(255, 255, 255, 0.22)'
               }}
             />
+            <div style={{
+              display: 'grid',
+              gap: '0.52rem',
+              width: '100%',
+            }}>
+              {quoteHighlights.map((quote, index) => (
+                <span
+                  key={quote.id}
+                  style={{
+                    display: 'block',
+                    padding: '0.58rem 0.78rem',
+                    border: '1px solid rgba(255, 244, 184, 0.28)',
+                    borderRadius: '8px',
+                    color: 'rgba(255, 250, 232, 0.94)',
+                    background: 'linear-gradient(90deg, rgba(255, 223, 138, 0.14), rgba(126, 220, 255, 0.08)), rgba(5, 10, 22, 0.62)',
+                    boxShadow: '0 0 22px rgba(255, 223, 138, 0.16)',
+                    fontSize: 'clamp(0.72rem, 1.45vw, 0.92rem)',
+                    fontWeight: 850,
+                    lineHeight: 1.32,
+                    opacity,
+                    transform: `translateY(${(1 - opacity) * (16 + index * 4)}px)`,
+                    transition: `opacity 220ms ease ${index * 90}ms, transform 360ms ease ${index * 90}ms`,
+                  }}
+                >
+                  {quote.text}
+                </span>
+              ))}
+            </div>
           </div>
         </Html>
       </group>

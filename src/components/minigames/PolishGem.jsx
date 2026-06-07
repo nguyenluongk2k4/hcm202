@@ -1,299 +1,363 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './PolishGem.css'
 
+const TOTAL_HITS = 9
+const virtues = ['Cần', 'Kiệm', 'Liêm', 'Chính']
+const dustWords = ['Ích kỷ', 'Lãng phí', 'Giả dối', 'Vô trách nhiệm']
+
+function seededRatio(index, salt = 1) {
+  const value = Math.sin(index * 88.217 + salt * 39.733) * 10000
+  return value - Math.floor(value)
+}
+
 export default function PolishGem({ onWin }) {
-  const [phase, setPhase] = useState('breaking') // 'breaking' | 'polishing' | 'won'
+  const [phase, setPhase] = useState('breaking')
   const [hits, setHits] = useState(0)
-  const [shards, setShards] = useState([])
+  const [progress, setProgress] = useState(0)
   const [isShaking, setIsShaking] = useState(false)
   const [isScrubbing, setIsScrubbing] = useState(false)
   const [flarePos, setFlarePos] = useState({ x: -999, y: -999 })
-  
-  const canvasRef = useRef(null)
-  const [progress, setProgress] = useState(0)
+  const [shards, setShards] = useState([])
   const [sparkles, setSparkles] = useState([])
-  const isDrawing = useRef(false)
-  const lastPos = useRef(null)
+  const [showFinale, setShowFinale] = useState(false)
 
-  const TOTAL_HITS = 15
+  const canvasRef = useRef(null)
+  const drawingRef = useRef(false)
+  const lastPosRef = useRef(null)
+  const wonRef = useRef(false)
+  const shardSeqRef = useRef(0)
+  const sparkleSeqRef = useRef(0)
 
-  // Initialize the dirt canvas
-  useEffect(() => {
-    if (phase !== 'polishing') return
+  const ambientDust = useMemo(() => {
+    return Array.from({ length: 34 }).map((_, index) => ({
+      id: index,
+      left: 6 + seededRatio(index, 1) * 88,
+      top: 6 + seededRatio(index, 2) * 84,
+      size: 2 + seededRatio(index, 3) * 5,
+      delay: seededRatio(index, 4) * 4,
+      duration: 3.6 + seededRatio(index, 5) * 4.5,
+      drift: -28 + seededRatio(index, 6) * 56,
+    }))
+  }, [])
+
+  const finaleSparks = useMemo(() => {
+    return Array.from({ length: 44 }).map((_, index) => ({
+      id: index,
+      angle: seededRatio(index, 7) * 360,
+      distance: 120 + seededRatio(index, 8) * 380,
+      delay: seededRatio(index, 9) * 0.85,
+      duration: 2.3 + seededRatio(index, 10) * 2.5,
+      size: 3 + seededRatio(index, 11) * 7,
+    }))
+  }, [])
+
+  const initDustCanvas = () => {
     const canvas = canvasRef.current
     if (!canvas) return
+
     const ctx = canvas.getContext('2d')
-    // Fill with dark brown/mud dirt
-    ctx.fillStyle = '#2a1a08'
+    ctx.clearRect(0, 0, 280, 280)
+    ctx.globalCompositeOperation = 'source-over'
+
+    const gradient = ctx.createRadialGradient(112, 92, 16, 140, 140, 150)
+    gradient.addColorStop(0, 'rgba(105, 63, 20, 0.96)')
+    gradient.addColorStop(0.58, 'rgba(41, 25, 12, 0.96)')
+    gradient.addColorStop(1, 'rgba(6, 10, 18, 0.96)')
+
+    ctx.fillStyle = gradient
     ctx.beginPath()
-    ctx.arc(120, 120, 120, 0, Math.PI * 2)
+    ctx.arc(140, 140, 132, 0, Math.PI * 2)
     ctx.fill()
-    // Add texture using random blobs
-    for (let i = 0; i < 60; i++) {
-      const x = Math.random() * 240
-      const y = Math.random() * 240
-      const r = Math.random() * 20 + 5
-      const dark = Math.random() > 0.5
-      ctx.fillStyle = dark ? 'rgba(0,0,0,0.5)' : 'rgba(80,40,10,0.4)'
+
+    for (let i = 0; i < 72; i += 1) {
+      const x = 20 + seededRatio(i, 12) * 240
+      const y = 20 + seededRatio(i, 13) * 240
+      const radius = 6 + seededRatio(i, 14) * 24
+      const alpha = 0.18 + seededRatio(i, 15) * 0.4
+
+      ctx.fillStyle = i % 2 === 0 ? `rgba(0, 0, 0, ${alpha})` : `rgba(146, 64, 14, ${alpha})`
       ctx.beginPath()
-      ctx.arc(x, y, r, 0, Math.PI * 2)
+      ctx.arc(x, y, radius, 0, Math.PI * 2)
       ctx.fill()
+    }
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)'
+    ctx.font = '700 15px Inter, Arial, sans-serif'
+    ctx.textAlign = 'center'
+    dustWords.forEach((word, index) => {
+      const angle = (Math.PI * 2 * index) / dustWords.length - Math.PI / 2
+      ctx.fillText(word, 140 + Math.cos(angle) * 72, 145 + Math.sin(angle) * 72)
+    })
+  }
+
+  useEffect(() => {
+    if (phase === 'polishing') {
+      window.setTimeout(initDustCanvas, 40)
     }
   }, [phase])
 
-  const spawnShards = useCallback(() => {
-    const newShards = Array.from({ length: 8 }, (_, i) => {
-      const angle = (i / 8) * Math.PI * 2 + Math.random() * 0.5
-      const dist = Math.random() * 130 + 60
+  const addShards = (hitIndex) => {
+    const burstId = shardSeqRef.current += 1
+    const nextShards = Array.from({ length: 8 }).map((_, index) => {
+      const angle = (index / 10) * Math.PI * 2 + seededRatio(index, hitIndex + 20) * 0.5
+      const distance = 70 + seededRatio(index, hitIndex + 30) * 145
+
       return {
-        id: Date.now() + i,
-        dx: Math.cos(angle) * dist + 'px',
-        dy: Math.sin(angle) * dist + 'px',
-        rot: (Math.random() - 0.5) * 720 + 'deg',
-        size: Math.random() * 14 + 6 + 'px',
-        dur: Math.random() * 0.4 + 0.4 + 's',
-        opacity: Math.random() * 0.5 + 0.5
+        id: `${burstId}-${hitIndex}-${index}`,
+        dx: `${Math.cos(angle) * distance}px`,
+        dy: `${Math.sin(angle) * distance}px`,
+        rotate: `${-360 + seededRatio(index, hitIndex + 40) * 720}deg`,
+        size: `${7 + seededRatio(index, hitIndex + 50) * 18}px`,
+        duration: `${0.45 + seededRatio(index, hitIndex + 60) * 0.42}s`,
       }
     })
-    setShards(prev => [...prev.slice(-40), ...newShards])
-    setTimeout(() => {
-      const ids = newShards.map(s => s.id)
-      setShards(prev => prev.filter(s => !ids.includes(s.id)))
-    }, 1000)
-  }, [])
 
-  const handleRockClick = () => {
+    setShards((current) => [...current.slice(-44), ...nextShards])
+    window.setTimeout(() => {
+      const ids = new Set(nextShards.map((shard) => shard.id))
+      setShards((current) => current.filter((shard) => !ids.has(shard.id)))
+    }, 1000)
+  }
+
+  const handleRockHit = () => {
     if (phase !== 'breaking') return
+
     const nextHits = hits + 1
     setHits(nextHits)
-    spawnShards()
     setIsShaking(true)
-    setTimeout(() => setIsShaking(false), 300)
+    addShards(nextHits)
+
+    window.setTimeout(() => setIsShaking(false), 220)
 
     if (nextHits >= TOTAL_HITS) {
-      setTimeout(() => setPhase('polishing'), 600)
+      window.setTimeout(() => setPhase('polishing'), 520)
     }
   }
 
-  const spawnSparkle = (x, y) => {
-    const count = Math.floor(Math.random() * 3) + 2
-    const newSparks = Array.from({ length: count }, (_, i) => {
-      const id = Date.now() + Math.random() + i
-      const angle = Math.random() * Math.PI * 2
-      const dist = Math.random() * 120 + 50
+  const addSparkles = (x, y) => {
+    const burstId = sparkleSeqRef.current += 1
+    const newSparkles = Array.from({ length: 3 }).map((_, index) => {
+      const angle = seededRatio(index, x + y + 70) * Math.PI * 2
+      const distance = 50 + seededRatio(index, x + y + 90) * 120
+
       return {
-        id,
-        x: x - 120,
-        y: y - 120,
-        dx: Math.cos(angle) * dist + 'px',
-        dy: Math.sin(angle) * dist + 'px',
-        size: Math.random() * 8 + 4 + 'px'
+        id: `${burstId}-${index}-${Math.round(x)}-${Math.round(y)}`,
+        x: x - 140,
+        y: y - 140,
+        dx: `${Math.cos(angle) * distance}px`,
+        dy: `${Math.sin(angle) * distance}px`,
+        size: `${4 + seededRatio(index, x + y + 110) * 8}px`,
       }
     })
-    setSparkles(prev => [...prev.slice(-40), ...newSparks])
-    setTimeout(() => {
-      const idsToRemove = newSparks.map(s => s.id)
-      setSparkles(prev => prev.filter(s => !idsToRemove.includes(s.id)))
-    }, 800)
+
+    setSparkles((current) => [...current.slice(-48), ...newSparkles])
+    window.setTimeout(() => {
+      const ids = new Set(newSparkles.map((sparkle) => sparkle.id))
+      setSparkles((current) => current.filter((sparkle) => !ids.has(sparkle.id)))
+    }, 780)
   }
 
-  const erase = (x, y) => {
+  const complete = () => {
+    if (wonRef.current) return
+
+    wonRef.current = true
+    setPhase('won')
+    setProgress(100)
+    window.setTimeout(() => setShowFinale(true), 720)
+    window.setTimeout(onWin, 10200)
+  }
+
+  const updateProgress = (ctx) => {
+    const imageData = ctx.getImageData(0, 0, 280, 280)
+    let transparentCount = 0
+
+    for (let i = 3; i < imageData.data.length; i += 4) {
+      if (imageData.data[i] < 120) transparentCount += 1
+    }
+
+    const nextProgress = Math.min(100, Math.round((transparentCount / (280 * 280)) * 100))
+    setProgress(nextProgress)
+
+    if (nextProgress >= 76) complete()
+  }
+
+  const eraseAt = (x, y) => {
     const canvas = canvasRef.current
     if (!canvas) return
+
     const ctx = canvas.getContext('2d')
     ctx.globalCompositeOperation = 'destination-out'
-    if (lastPos.current) {
+    ctx.lineCap = 'round'
+    ctx.lineJoin = 'round'
+    ctx.lineWidth = 40
+
+    if (lastPosRef.current) {
       ctx.beginPath()
-      ctx.moveTo(lastPos.current.x, lastPos.current.y)
+      ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y)
       ctx.lineTo(x, y)
-      ctx.strokeStyle = 'rgba(0,0,0,1)'
-      ctx.lineWidth = 28
-      ctx.lineCap = 'round'
       ctx.stroke()
     } else {
       ctx.beginPath()
-      ctx.arc(x, y, 18, 0, Math.PI * 2)
-      ctx.fillStyle = 'rgba(0,0,0,1)'
+      ctx.arc(x, y, 22, 0, Math.PI * 2)
       ctx.fill()
     }
+
     ctx.globalCompositeOperation = 'source-over'
-    lastPos.current = { x, y }
-    spawnSparkle(x, y)
-
-    // Calculate progress
-    const imageData = ctx.getImageData(0, 0, 240, 240)
-    let transparentCount = 0
-    for (let i = 3; i < imageData.data.length; i += 4) {
-      if (imageData.data[i] < 128) transparentCount++
-    }
-    const pct = Math.round((transparentCount / (240 * 240)) * 100)
-    setProgress(Math.min(100, pct))
-  }
-
-  const checkWin = () => {
-    if (progress >= 80 && phase === 'polishing') {
-      setPhase('won')
-      setTimeout(() => onWin(), 3500)
-    }
-  }
-
-  const handlePointerDown = (e) => {
-    if (phase !== 'polishing') return
-    isDrawing.current = true
-    setIsScrubbing(true)
-    const rect = canvasRef.current.getBoundingClientRect()
-    const scaleX = canvasRef.current.width / rect.width
-    const scaleY = canvasRef.current.height / rect.height
-    const x = (e.clientX - rect.left) * scaleX
-    const y = (e.clientY - rect.top) * scaleY
+    lastPosRef.current = { x, y }
     setFlarePos({ x, y })
-    lastPos.current = null
-    erase(x, y)
+    addSparkles(x, y)
+    updateProgress(ctx)
   }
 
-  const handlePointerMove = (e) => {
-    if (!isDrawing.current || phase !== 'polishing') return
-    const rect = canvasRef.current.getBoundingClientRect()
-    const scaleX = canvasRef.current.width / rect.width
-    const scaleY = canvasRef.current.height / rect.height
-    const x = (e.clientX - rect.left) * scaleX
-    const y = (e.clientY - rect.top) * scaleY
-    if (isScrubbing) setFlarePos({ x, y })
-    erase(x, y)
-    if (Math.random() < 0.25) checkWin()
+  const getCanvasPoint = (event) => {
+    const canvas = canvasRef.current
+    const rect = canvas.getBoundingClientRect()
+
+    return {
+      x: ((event.clientX - rect.left) / rect.width) * canvas.width,
+      y: ((event.clientY - rect.top) / rect.height) * canvas.height,
+    }
+  }
+
+  const handlePointerDown = (event) => {
+    if (phase !== 'polishing') return
+
+    event.preventDefault()
+    drawingRef.current = true
+    lastPosRef.current = null
+    setIsScrubbing(true)
+
+    const point = getCanvasPoint(event)
+    eraseAt(point.x, point.y)
+  }
+
+  const handlePointerMove = (event) => {
+    if (!drawingRef.current || phase !== 'polishing') return
+
+    const point = getCanvasPoint(event)
+    eraseAt(point.x, point.y)
   }
 
   const handlePointerUp = () => {
     if (phase !== 'polishing') return
-    isDrawing.current = false
+
+    drawingRef.current = false
+    lastPosRef.current = null
     setIsScrubbing(false)
-    lastPos.current = null
-    checkWin()
   }
 
-  const glowIntensity = progress / 100
+  const visibleProgress = phase === 'breaking' ? (hits / TOTAL_HITS) * 100 : progress
+  const glowIntensity = phase === 'breaking' ? hits / TOTAL_HITS : progress / 100
 
   return (
-    <div className="minigame-polish">
-      <p className="minigame-instruction" style={{ color: '#a7f3d0' }}>
-        {phase === 'breaking' && 'Đập vỡ lớp đá để lộ ngọc bên trong!'}
-        {phase === 'polishing' && 'Chà xát để lau sạch lớp bụi trần gian'}
-        {phase === 'won' && '✨ Ngọc sáng rực — Đức hạnh tỏa sáng! ✨'}
+    <div className={`minigame-polish ${showFinale ? 'is-final-scene' : ''}`}>
+      {ambientDust.map((dust) => (
+        <i
+          key={dust.id}
+          className="ethics-ambient-dust"
+          style={{
+            left: `${dust.left}%`,
+            top: `${dust.top}%`,
+            width: `${dust.size}px`,
+            '--drift': `${dust.drift}px`,
+            animationDelay: `${dust.delay}s`,
+            animationDuration: `${dust.duration}s`,
+          }}
+        />
+      ))}
+
+      <p className="minigame-instruction">
+        {phase === 'breaking' && 'Đập vỡ lớp đá thô để lộ viên ngọc đạo đức bên trong.'}
+        {phase === 'polishing' && 'Lau sạch bụi mờ để Cần - Kiệm - Liêm - Chính hiện ra.'}
+        {phase === 'won' && 'Viên ngọc đã sáng: đạo đức phải được rèn trong từng hành động.'}
       </p>
 
-      <div className={`polish-container ${phase === 'won' ? 'is-won' : ''}`}>
+      <div className={`ethics-stage ${phase === 'won' ? 'is-won' : ''}`}>
+        <div className="ethics-stage-aura" />
+        <div className="ethics-orbit-ring" />
 
-        {/* Phase 1: Rock Breaking */}
-        {(phase === 'breaking') && (
+        {phase === 'breaking' && (
           <>
-            <div
-              className={`rock-wrapper ${isShaking ? 'rock-shake' : ''}`}
-              onClick={handleRockClick}
-              style={{ cursor: 'crosshair' }}
+            <button
+              type="button"
+              className={`ethics-rock ${isShaking ? 'is-shaking' : ''}`}
+              onPointerDown={(event) => {
+                event.preventDefault()
+                handleRockHit()
+              }}
+              aria-label="Đập vỡ lớp đá thô"
             >
-              <svg viewBox="0 0 200 200" className="rock-svg">
+              <svg viewBox="0 0 240 240" aria-hidden="true">
                 <defs>
-                  <radialGradient id="rock-grad" cx="35%" cy="30%">
-                    <stop offset="0%" stopColor="#78716c"/>
-                    <stop offset="60%" stopColor="#44403c"/>
-                    <stop offset="100%" stopColor="#1c1917"/>
+                  <radialGradient id="ethicsRockGradient" cx="36%" cy="28%">
+                    <stop offset="0%" stopColor="#a8a29e" />
+                    <stop offset="58%" stopColor="#57534e" />
+                    <stop offset="100%" stopColor="#1c1917" />
                   </radialGradient>
-                  <filter id="rock-rough">
-                    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" seed={hits} result="noise"/>
-                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G"/>
-                  </filter>
+                  <radialGradient id="ethicsRockCore" cx="50%" cy="50%">
+                    <stop offset="0%" stopColor="#ffffff" />
+                    <stop offset="48%" stopColor="#a7f3d0" />
+                    <stop offset="100%" stopColor="rgba(16, 185, 129, 0)" />
+                  </radialGradient>
                 </defs>
                 <polygon
-                  points="100,12 165,40 188,110 155,175 100,188 45,175 12,110 35,40"
-                  fill="url(#rock-grad)" filter="url(#rock-rough)"
-                  stroke="#292524" strokeWidth="2"
+                  points="120,12 191,43 220,122 180,207 120,224 52,196 16,120 42,44"
+                  className="ethics-rock-body"
                 />
-                {/* Crack progression */}
-                {hits > 2 && <path d="M 75 70 L 90 95 L 80 130" fill="none" stroke="#ff6600" strokeWidth="2" opacity="0.7"/>}
-                {hits > 5 && <path d="M 120 65 L 110 100 L 130 140" fill="none" stroke="#ff8800" strokeWidth="2.5" opacity="0.8"/>}
-                {hits > 9 && <path d="M 85 85 L 100 105 L 115 85" fill="none" stroke="#ffcc00" strokeWidth="2" opacity="0.9"/>}
-                {hits > 12 && <path d="M 60 120 L 100 100 L 140 120" fill="none" stroke="#ffffff" strokeWidth="2.5" opacity="1"/>}
+                <circle cx="120" cy="122" r={18 + hits * 8} className="ethics-rock-core" opacity={0.12 + hits * 0.08} />
+                {hits > 1 && <path d="M84 78 L102 112 L88 152" className="ethics-crack" />}
+                {hits > 3 && <path d="M145 72 L132 116 L156 164" className="ethics-crack ethics-crack--gold" />}
+                {hits > 5 && <path d="M72 144 L120 116 L172 148" className="ethics-crack ethics-crack--bright" />}
+                {hits > 7 && <path d="M98 72 L120 116 L143 72 M120 116 L120 190" className="ethics-crack ethics-crack--white" />}
               </svg>
-            </div>
-            {/* Rock Shards */}
-            <div className="rock-shards">
-              {shards.map(s => (
-                <div
-                  key={s.id}
-                  className="rock-shard"
-                  style={{
-                    '--dx': s.dx,
-                    '--dy': s.dy,
-                    '--rot': s.rot,
-                    '--size': s.size,
-                    '--dur': s.dur,
-                    opacity: s.opacity
-                  }}
-                />
-              ))}
-            </div>
-            {/* Hit progress indicator */}
-            <div style={{
-              position: 'absolute', bottom: '-45px', left: '50%', transform: 'translateX(-50%)',
-              color: '#a7f3d0', fontSize: '0.85rem', letterSpacing: '0.1em'
-            }}>
-              {Array.from({ length: TOTAL_HITS }, (_, i) => (
-                <span key={i} style={{ opacity: i < hits ? 1 : 0.2, margin: '0 1px', fontSize: '0.6rem' }}>⬡</span>
+              <span>Đập lớp thô</span>
+            </button>
+
+            <div className="ethics-hit-track" aria-hidden="true">
+              {Array.from({ length: TOTAL_HITS }).map((_, index) => (
+                <span key={index} className={index < hits ? 'is-hit' : ''} />
               ))}
             </div>
           </>
         )}
 
-        {/* Phase 2 & Won: Gem */}
         {(phase === 'polishing' || phase === 'won') && (
-          <>
-            {/* Gem SVG */}
-            <div className="gem-svg-wrapper" style={{ '--glow-intensity': glowIntensity }}>
-              <svg viewBox="0 0 200 200" className="gem-svg">
-                <defs>
-                  <radialGradient id="gem-core" cx="38%" cy="32%">
-                    <stop offset="0%" stopColor="#ffffff"/>
-                    <stop offset="20%" stopColor="#a7f3d0"/>
-                    <stop offset="55%" stopColor="#059669"/>
-                    <stop offset="100%" stopColor="#064e3b"/>
-                  </radialGradient>
-                  <radialGradient id="gem-shine" cx="60%" cy="25%">
-                    <stop offset="0%" stopColor="rgba(255,255,255,0.9)"/>
-                    <stop offset="100%" stopColor="rgba(255,255,255,0)"/>
-                  </radialGradient>
-                </defs>
-                {/* Gem body */}
-                <polygon
-                  points="100,15 175,65 175,135 100,185 25,135 25,65"
-                  fill="url(#gem-core)"
-                />
-                {/* Inner facets */}
-                <polygon points="100,15 175,65 100,100" fill="rgba(167,243,208,0.25)"/>
-                <polygon points="100,15 25,65 100,100" fill="rgba(255,255,255,0.15)"/>
-                <polygon points="100,185 175,135 100,100" fill="rgba(6,78,59,0.5)"/>
-                <polygon points="100,185 25,135 100,100" fill="rgba(5,150,105,0.3)"/>
-                {/* Shine highlight */}
-                <ellipse cx="80" cy="60" rx="28" ry="16" fill="url(#gem-shine)" opacity="0.7" transform="rotate(-20 80 60)"/>
-                <ellipse cx="68" cy="52" rx="10" ry="6" fill="rgba(255,255,255,0.9)" opacity="0.8" transform="rotate(-20 68 52)"/>
-              </svg>
+          <div className="ethics-gem-wrap" style={{ '--glow-intensity': glowIntensity }}>
+            <svg viewBox="0 0 240 240" className="ethics-gem" aria-hidden="true">
+              <defs>
+                <radialGradient id="ethicsGemCore" cx="38%" cy="30%">
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="22%" stopColor="#d1fae5" />
+                  <stop offset="58%" stopColor="#10b981" />
+                  <stop offset="100%" stopColor="#064e3b" />
+                </radialGradient>
+                <linearGradient id="ethicsFacet" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="rgba(255, 255, 255, 0.7)" />
+                  <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
+                </linearGradient>
+              </defs>
+              <polygon points="120,18 205,70 205,154 120,224 35,154 35,70" className="ethics-gem-body" />
+              <polygon points="120,18 205,70 120,118" className="ethics-gem-facet ethics-gem-facet--one" />
+              <polygon points="120,18 35,70 120,118" className="ethics-gem-facet ethics-gem-facet--two" />
+              <polygon points="120,224 205,154 120,118" className="ethics-gem-facet ethics-gem-facet--three" />
+              <polygon points="120,224 35,154 120,118" className="ethics-gem-facet ethics-gem-facet--four" />
+              <ellipse cx="91" cy="67" rx="31" ry="15" className="ethics-gem-shine" transform="rotate(-20 91 67)" />
+            </svg>
+
+            <div className="ethics-virtue-orbit" aria-hidden="true">
+              {virtues.map((virtue, index) => (
+                <span key={virtue} style={{ '--virtue-index': index }}>
+                  {virtue}
+                </span>
+              ))}
             </div>
 
-            {/* Light Rays — visible and growing as progress increases */}
-            <div
-              className="gem-win-rays"
-              style={{
-                opacity: phase === 'won' ? 1 : Math.pow(progress / 100, 1.5),
-                transition: 'opacity 0.3s'
-              }}
-            />
-
-            {/* Dirt Layer */}
             {phase === 'polishing' && (
               <canvas
                 ref={canvasRef}
-                width={240}
-                height={240}
-                className="dust-canvas"
+                width={280}
+                height={280}
+                className="ethics-dust-canvas"
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
@@ -302,46 +366,82 @@ export default function PolishGem({ onWin }) {
               />
             )}
 
-            {/* Scrub flare at cursor */}
             {phase === 'polishing' && isScrubbing && (
               <div
-                className="scrub-flare"
+                className="ethics-scrub-flare"
                 style={{
-                  left: `calc(50% - 120px + ${flarePos.x}px)`,
-                  top: `calc(50% - 120px + ${flarePos.y}px)`,
+                  left: `calc(50% - 140px + ${flarePos.x}px)`,
+                  top: `calc(50% - 140px + ${flarePos.y}px)`,
                 }}
               />
             )}
-          </>
+          </div>
         )}
 
-        {/* Win Text */}
-        <div className="polish-content-beautiful">
-          <h3>Ngọc Sáng</h3>
-          <p>"Ngọc càng mài càng sáng, người càng rèn càng tài."</p>
-        </div>
-
-        {/* Sparkles */}
-        {sparkles.map(s => (
-          <div
-            key={s.id}
-            className="polish-sparkle"
+        {shards.map((shard) => (
+          <i
+            key={shard.id}
+            className="ethics-rock-shard"
             style={{
-              left: `calc(50% + ${s.x}px)`,
-              top: `calc(50% + ${s.y}px)`,
-              '--dx': s.dx,
-              '--dy': s.dy,
-              '--spark-size': s.size
+              '--dx': shard.dx,
+              '--dy': shard.dy,
+              '--rot': shard.rotate,
+              '--size': shard.size,
+              animationDuration: shard.duration,
+            }}
+          />
+        ))}
+
+        {sparkles.map((sparkle) => (
+          <i
+            key={sparkle.id}
+            className="ethics-polish-sparkle"
+            style={{
+              left: `calc(50% + ${sparkle.x}px)`,
+              top: `calc(50% + ${sparkle.y}px)`,
+              '--dx': sparkle.dx,
+              '--dy': sparkle.dy,
+              '--spark-size': sparkle.size,
             }}
           />
         ))}
       </div>
 
+      {showFinale && (
+        <div className="ethics-finale" aria-live="polite">
+          <div className="ethics-finale-aura" />
+          <div className="ethics-finale-rings" />
+          <div className="ethics-finale-pillars">
+            {virtues.map((virtue) => (
+              <span key={virtue}>{virtue}</span>
+            ))}
+          </div>
+          {finaleSparks.map((spark) => (
+            <i
+              key={spark.id}
+              className="ethics-finale-spark"
+              style={{
+                '--spark-angle': `${spark.angle}deg`,
+                '--spark-distance': `${spark.distance}px`,
+                '--spark-size': `${spark.size}px`,
+                '--duration': `${spark.duration}s`,
+                '--delay': `${spark.delay}s`,
+                animationDelay: `${spark.delay}s`,
+                animationDuration: `${spark.duration}s`,
+              }}
+            />
+          ))}
+          <div className="ethics-message-card">
+            <small>Hành tinh đã mở khóa</small>
+            <h3>ĐẠO ĐỨC CÁCH MẠNG</h3>
+            <strong>Cần - Kiệm - Liêm - Chính không phải khẩu hiệu, mà là ánh sáng phải được mài mỗi ngày.</strong>
+            <p>Ngọc càng mài càng sáng, người càng rèn càng vững: đạo đức đẹp nhất khi biến thành hành động.</p>
+          </div>
+        </div>
+      )}
+
       <div className="minigame-progress">
-        <div
-          className="minigame-progress-fill"
-          style={{ width: phase === 'breaking' ? `${(hits / TOTAL_HITS) * 100}%` : `${progress}%` }}
-        />
+        <div className="minigame-progress-fill" style={{ width: `${visibleProgress}%` }} />
       </div>
     </div>
   )

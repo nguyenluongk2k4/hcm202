@@ -1,365 +1,840 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './GrowSeed.css'
 
-function easeOutBack(x) {
-  if (x <= 0) return 0;
-  if (x >= 1) return 1;
-  const c1 = 1.70158;
-  const c3 = c1 + 1;
-  return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
-}
-
-// Lược bỏ bớt cánh thừa, tập trung vào dáng điệu thanh thoát, kiêu sa của 12 cánh sen.
-// Trình tự vẽ tuần tự từ ngoài vào trong một cách cực kỳ mượt mà.
-const lotusPetals = [
-  // Lớp ngoài (Back)
-  { id: 'l1-1', angle: -65, scale: 1.1, size: 'L', grad: 'grad-outer', drawOrder: 0 },
-  { id: 'l1-2', angle: -35, scale: 1.15, size: 'L', grad: 'grad-mid', drawOrder: 1 },
-  { id: 'l1-3', angle: 0, scale: 1.25, size: 'L', grad: 'grad-outer', drawOrder: 2 },
-  { id: 'l1-4', angle: 35, scale: 1.15, size: 'L', grad: 'grad-mid', drawOrder: 3 },
-  { id: 'l1-5', angle: 65, scale: 1.1, size: 'L', grad: 'grad-outer', drawOrder: 4 },
-  
-  // Lớp giữa (Middle)
-  { id: 'l2-1', angle: -45, scale: 0.95, size: 'M', grad: 'grad-mid', drawOrder: 5 },
-  { id: 'l2-2', angle: -15, scale: 1.05, size: 'M', grad: 'grad-inner', drawOrder: 6 },
-  { id: 'l2-3', angle: 15, scale: 1.05, size: 'M', grad: 'grad-inner', drawOrder: 7 },
-  { id: 'l2-4', angle: 45, scale: 0.95, size: 'M', grad: 'grad-mid', drawOrder: 8 },
-  
-  // Lớp trong (Bud)
-  { id: 'l3-1', angle: -20, scale: 0.8, size: 'S', grad: 'grad-inner', drawOrder: 9 },
-  { id: 'l3-2', angle: 0, scale: 0.9, size: 'S', grad: 'grad-gold', drawOrder: 10 },
-  { id: 'l3-3', angle: 20, scale: 0.8, size: 'S', grad: 'grad-inner', drawOrder: 11 },
+const cultureStages = [
+  {
+    key: 'seed',
+    label: 'Gieo hạt',
+    value: 'Niềm tin',
+    prompt: 'Đánh thức hạt giống niềm tin ở trung tâm khu vườn.',
+    threshold: 8,
+    x: 50,
+    y: 85,
+    color: '#fde047',
+  },
+  {
+    key: 'language',
+    label: 'Giữ tiếng nói',
+    value: 'Tiếng nói',
+    prompt: 'Kết nối tiếng nói chung để ký ức không bị đứt đoạn.',
+    threshold: 18,
+    x: 27,
+    y: 72,
+    color: '#7dd3fc',
+  },
+  {
+    key: 'knowledge',
+    label: 'Tưới tri thức',
+    value: 'Tri thức',
+    prompt: 'Dẫn dòng tri thức xuống rễ cây để văn hóa có nền tảng.',
+    threshold: 29,
+    x: 73,
+    y: 72,
+    color: '#38bdf8',
+  },
+  {
+    key: 'ethics',
+    label: 'Thắp đạo đức',
+    value: 'Đạo đức',
+    prompt: 'Thắp ngọn đèn đạo đức để tri thức không đi lệch hướng.',
+    threshold: 40,
+    x: 18,
+    y: 52,
+    color: '#34d399',
+  },
+  {
+    key: 'discipline',
+    label: 'Rèn kỷ luật',
+    value: 'Kỷ luật',
+    prompt: 'Khóa nhịp kỷ luật để hành động không chỉ là cảm hứng nhất thời.',
+    threshold: 51,
+    x: 82,
+    y: 52,
+    color: '#a7f3d0',
+  },
+  {
+    key: 'ideal',
+    label: 'Gọi lý tưởng',
+    value: 'Lý tưởng',
+    prompt: 'Đưa lý tưởng lên cao để mọi lựa chọn có phương hướng.',
+    threshold: 62,
+    x: 31,
+    y: 34,
+    color: '#fef08a',
+  },
+  {
+    key: 'human',
+    label: 'Trồng người',
+    value: 'Con người',
+    prompt: 'Đánh thức mầm người toàn diện: biết học, biết sống, biết cống hiến.',
+    threshold: 73,
+    x: 69,
+    y: 34,
+    color: '#ffffff',
+  },
+  {
+    key: 'beauty',
+    label: 'Vun cái đẹp',
+    value: 'Cái đẹp',
+    prompt: 'Vun cái đẹp trong cách nghĩ, cách nói và cách đối xử.',
+    threshold: 83,
+    x: 17,
+    y: 17,
+    color: '#f0abfc',
+  },
+  {
+    key: 'heritage',
+    label: 'Truyền di sản',
+    value: 'Di sản',
+    prompt: 'Trao di sản cho thế hệ kế tiếp bằng một đường sáng bền bỉ.',
+    threshold: 92,
+    x: 83,
+    y: 17,
+    color: '#93c5fd',
+  },
+  {
+    key: 'future',
+    label: 'Mở tương lai',
+    value: 'Tương lai',
+    prompt: 'Khép mạch sáng cuối cùng để khu vườn văn hóa mở ra tương lai.',
+    threshold: 98,
+    x: 50,
+    y: 9,
+    color: '#fef3c7',
+  },
 ]
 
-// Hình dáng giọt nước thuôn nhọn thanh tú, mang phong cách nghệ thuật ma thuật
-const getPathData = (size) => {
-  if (size === 'L') return "M0,0 C-50,-60 -30,-140 0,-170 C30,-140 50,-60 0,0"
-  if (size === 'M') return "M0,0 C-35,-45 -20,-110 0,-130 C20,-110 35,-45 0,0"
-  if (size === 'S') return "M0,0 C-25,-30 -15,-80 0,-95 C15,-80 25,-30 0,0"
-  return "M0,0 C-50,-60 -30,-140 0,-170 C30,-140 50,-60 0,0"
+const cultureLinks = [
+  ['seed', 'language'],
+  ['seed', 'knowledge'],
+  ['language', 'ethics'],
+  ['knowledge', 'discipline'],
+  ['ethics', 'ideal'],
+  ['discipline', 'human'],
+  ['ideal', 'human'],
+  ['ideal', 'beauty'],
+  ['human', 'heritage'],
+  ['beauty', 'future'],
+  ['heritage', 'future'],
+  ['language', 'knowledge'],
+  ['ethics', 'discipline'],
+]
+
+const lotusPetals = [
+  { id: 'outer-left', angle: -62, scale: 1.08, size: 'L', grad: 'culturePetalOuter', drawOrder: 0 },
+  { id: 'outer-mid-left', angle: -34, scale: 1.16, size: 'L', grad: 'culturePetalBlue', drawOrder: 1 },
+  { id: 'outer-center', angle: 0, scale: 1.24, size: 'L', grad: 'culturePetalGold', drawOrder: 2 },
+  { id: 'outer-mid-right', angle: 34, scale: 1.16, size: 'L', grad: 'culturePetalBlue', drawOrder: 3 },
+  { id: 'outer-right', angle: 62, scale: 1.08, size: 'L', grad: 'culturePetalOuter', drawOrder: 4 },
+  { id: 'middle-left', angle: -42, scale: 0.96, size: 'M', grad: 'culturePetalEmerald', drawOrder: 5 },
+  { id: 'middle-cl', angle: -14, scale: 1.08, size: 'M', grad: 'culturePetalInner', drawOrder: 6 },
+  { id: 'middle-cr', angle: 14, scale: 1.08, size: 'M', grad: 'culturePetalInner', drawOrder: 7 },
+  { id: 'middle-right', angle: 42, scale: 0.96, size: 'M', grad: 'culturePetalEmerald', drawOrder: 8 },
+  { id: 'inner-left', angle: -18, scale: 0.82, size: 'S', grad: 'culturePetalInner', drawOrder: 9 },
+  { id: 'inner-center', angle: 0, scale: 0.92, size: 'S', grad: 'culturePetalGold', drawOrder: 10 },
+  { id: 'inner-right', angle: 18, scale: 0.82, size: 'S', grad: 'culturePetalInner', drawOrder: 11 },
+]
+
+const finaleWords = ['Niềm tin', 'Tri thức', 'Đạo đức', 'Lý tưởng', 'Cái đẹp', 'Di sản']
+const quoteLetters = 'TRỒNG NGƯỜI - GIEO CẢ TƯƠNG LAI'.split('')
+
+function easeOutBack(x) {
+  if (x <= 0) return 0
+  if (x >= 1) return 1
+  const c1 = 1.70158
+  const c3 = c1 + 1
+  return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2)
+}
+
+function getPathData(size) {
+  if (size === 'L') return 'M0,0 C-50,-58 -31,-142 0,-174 C31,-142 50,-58 0,0'
+  if (size === 'M') return 'M0,0 C-36,-44 -22,-112 0,-134 C22,-112 36,-44 0,0'
+  return 'M0,0 C-25,-30 -16,-82 0,-98 C16,-82 25,-30 0,0'
+}
+
+function seededRatio(index, salt = 1) {
+  const value = Math.sin(index * 91.173 + salt * 37.719) * 10000
+  return value - Math.floor(value)
+}
+
+function getGlyphIcon(key) {
+  if (key === 'seed') return 'M12 28 C4 16 12 7 24 4 C27 17 22 25 12 28 Z'
+  if (key === 'language') return 'M7 15 C12 8 20 8 24 15 C28 8 36 8 41 15 V37 C35 32 29 32 24 38 C19 32 13 32 7 37 Z M14 18 H20 M28 18 H35 M14 25 H20 M28 25 H35'
+  if (key === 'knowledge') return 'M6 9 H18 C22 9 24 11 24 15 V33 C24 30 21 29 18 29 H6 Z M24 15 C24 11 27 9 31 9 H42 V29 H30 C27 29 24 30 24 33 Z'
+  if (key === 'ethics') return 'M24 5 C31 13 36 20 36 29 C36 37 31 43 24 43 C17 43 12 37 12 29 C12 20 17 13 24 5 Z M24 15 C21 20 19 25 19 29 C19 33 21 36 24 36 C27 36 29 33 29 29 C29 25 27 20 24 15 Z'
+  if (key === 'discipline') return 'M13 8 H35 L40 16 V38 L35 43 H13 L8 38 V16 Z M16 17 H32 M16 25 H32 M16 33 H27'
+  if (key === 'ideal') return 'M24 3 L30 17 L45 18 L33 28 L37 43 L24 35 L11 43 L15 28 L3 18 L18 17 Z'
+  if (key === 'human') return 'M24 8 C29 8 33 12 33 17 C33 22 29 26 24 26 C19 26 15 22 15 17 C15 12 19 8 24 8 Z M10 42 C13 32 18 29 24 29 C30 29 35 32 38 42'
+  if (key === 'beauty') return 'M24 6 C32 6 40 14 40 22 C40 33 24 44 24 44 C24 44 8 33 8 22 C8 14 16 6 24 6 Z M24 14 C20 14 16 18 16 22 C16 28 24 37 24 37 C24 37 32 28 32 22 C32 18 28 14 24 14 Z'
+  if (key === 'heritage') return 'M8 40 L8 18 L24 8 L40 18 L40 40 Z M16 40 L16 28 L24 24 L32 28 L32 40 Z M20 18 C20 14 24 11 28 14 C32 17 30 24 24 24 C18 24 16 21 20 18 Z'
+  return 'M24 4 L29 17 L43 18 L32 27 L36 42 L24 34 L12 42 L16 27 L5 18 L19 17 Z M24 14 V34 M14 23 H38'
+}
+
+function getCurvePath(start, end) {
+  const dx = end.x - start.x
+  const dy = end.y - start.y
+  const curve = Math.max(6, Math.min(16, Math.abs(dx) * 0.18 + Math.abs(dy) * 0.12))
+  const cx1 = start.x + dx * 0.38
+  const cy1 = start.y + dy * 0.18 - curve
+  const cx2 = start.x + dx * 0.62
+  const cy2 = start.y + dy * 0.82 + curve
+  return `M ${start.x} ${start.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${end.x} ${end.y}`
 }
 
 export default function GrowSeed({ onWin }) {
   const [progress, setProgress] = useState(0)
+  const [unlocked, setUnlocked] = useState([])
+  const [isPressing, setIsPressing] = useState(false)
   const [won, setWon] = useState(false)
-  const [fireflies, setFireflies] = useState([])
-  const [leaves, setLeaves] = useState([])
-  
-  const isGrowing = useRef(false)
-  const intervalRef = useRef(null)
+  const [pulse, setPulse] = useState(null)
+  const [glyphParticles, setGlyphParticles] = useState([])
+  const [shockwave, setShockwave] = useState(false)
+  const [finalePhase, setFinalePhase] = useState(0)
 
-  const sparkles = useMemo(() => {
-    return Array.from({ length: 40 }).map((_, i) => {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 20 + Math.random() * 150;
-      return {
-        id: i,
-        x: Math.cos(angle) * radius,
-        y: Math.sin(angle) * radius - 50,
-        delay: Math.random() * 2,
-        duration: 0.8 + Math.random() * 1.5,
-        scale: 0.5 + Math.random() * 2,
-      }
-    })
+  const intervalRef = useRef(null)
+  const wonRef = useRef(false)
+
+  const stageByKey = useMemo(() => {
+    return cultureStages.reduce((map, stage) => ({ ...map, [stage.key]: stage }), {})
   }, [])
 
-  const handlePointerDown = (e) => {
-    if (won) return
-    e.preventDefault()
-    isGrowing.current = true
-    
-    if (!intervalRef.current) {
-      intervalRef.current = setInterval(() => {
-        setProgress(p => {
-          if (p >= 100) {
-            clearInterval(intervalRef.current)
-            intervalRef.current = null
-            setWon(true)
-            setTimeout(() => onWin(), 5000)
-            return 100
-          }
-          return p + 0.18 
-        })
-      }, 30)
-    }
-  }
+  const activeStage = cultureStages.find(
+    (stage) => progress >= stage.threshold && !unlocked.includes(stage.key)
+  )
+  const activeIndex = activeStage ? cultureStages.findIndex((stage) => stage.key === activeStage.key) : -1
+  const drawPhase = Math.min(1, progress / 84)
+  const bloomPhase = Math.max(0, (progress - 82) / 18)
+  const bloom = easeOutBack(bloomPhase)
 
-  const handlePointerUp = () => {
-    if (won) return
-    isGrowing.current = false
+  const floatingLights = useMemo(() => {
+    return Array.from({ length: 92 }).map((_, index) => ({
+      id: index,
+      left: 4 + seededRatio(index, 1) * 92,
+      top: 6 + seededRatio(index, 2) * 82,
+      size: 2 + seededRatio(index, 3) * 5,
+      delay: seededRatio(index, 4) * 3.8,
+      duration: 3.8 + seededRatio(index, 5) * 4.7,
+      drift: -34 + seededRatio(index, 6) * 68,
+    }))
+  }, [])
+
+  const finalePetals = useMemo(() => {
+    return Array.from({ length: 148 }).map((_, index) => ({
+      id: index,
+      left: seededRatio(index, 7) * 100,
+      delay: seededRatio(index, 8) * 4.6,
+      duration: 4.5 + seededRatio(index, 9) * 4.4,
+      sway: -140 + seededRatio(index, 10) * 280,
+      scale: 0.45 + seededRatio(index, 11) * 1.35,
+      rotate: seededRatio(index, 12) * 360,
+      color: Math.floor(seededRatio(index, 13) * 4),
+    }))
+  }, [])
+
+  const finaleRays = useMemo(() => {
+    return Array.from({ length: 36 }).map((_, index) => ({
+      id: index,
+      angle: index * 10,
+      delay: seededRatio(index, 20) * 0.8,
+      length: 58 + seededRatio(index, 21) * 52,
+    }))
+  }, [])
+
+  const finaleOrbs = useMemo(() => {
+    return Array.from({ length: 42 }).map((_, index) => ({
+      id: index,
+      angle: seededRatio(index, 30) * 360,
+      dist: 90 + seededRatio(index, 31) * 320,
+      delay: seededRatio(index, 32) * 1.35,
+      duration: 2.6 + seededRatio(index, 33) * 2.2,
+      size: 4 + seededRatio(index, 34) * 11,
+    }))
+  }, [])
+
+  const stopGrowing = () => {
+    setIsPressing(false)
     clearInterval(intervalRef.current)
     intervalRef.current = null
   }
 
-  useEffect(() => {
-    const decayInterval = setInterval(() => {
-      if (!isGrowing.current && progress > 0 && progress < 100) {
-        setProgress((p) => Math.max(0, p - 0.25))
-      }
-    }, 50)
-    return () => clearInterval(decayInterval)
-  }, [progress])
+  const startGrowing = (event) => {
+    if (won || activeStage) return
+    event.preventDefault()
+    setIsPressing(true)
+    if (intervalRef.current) return
+
+    intervalRef.current = setInterval(() => {
+      setProgress((current) => {
+        const nextStage = cultureStages.find(
+          (stage) =>
+            current < stage.threshold &&
+            current + 0.28 >= stage.threshold &&
+            !unlocked.includes(stage.key)
+        )
+        if (nextStage) {
+          clearInterval(intervalRef.current)
+          intervalRef.current = null
+          setIsPressing(false)
+          setPulse(nextStage.key)
+          return nextStage.threshold
+        }
+        if (current >= 100) return 100
+        return Math.min(100, current + 0.28)
+      })
+    }, 28)
+  }
+
+  const spawnGlyphParticles = (stage) => {
+    const newParticles = Array.from({ length: 26 }).map((_, i) => ({
+      id: `${stage.key}-${Date.now()}-${i}`,
+      angle: (i / 26) * 360 + seededRatio(i, 50) * 20,
+      dist: 44 + seededRatio(i, 51) * 92,
+      duration: 0.62 + seededRatio(i, 52) * 0.62,
+      size: 3 + seededRatio(i, 53) * 8,
+      originX: stage.x,
+      originY: stage.y,
+      color: stage.color,
+    }))
+    setGlyphParticles((prev) => [...prev.slice(-80), ...newParticles])
+    window.setTimeout(() => {
+      const ids = new Set(newParticles.map((p) => p.id))
+      setGlyphParticles((prev) => prev.filter((p) => !ids.has(p.id)))
+    }, 1700)
+  }
+
+  const unlockStage = (stage) => {
+    if (!activeStage || activeStage.key !== stage.key || won) return
+    spawnGlyphParticles(stage)
+    setUnlocked((items) => [...items, stage.key])
+    setPulse(stage.key)
+    window.setTimeout(() => setPulse(null), 920)
+  }
+
+  const isLinkLit = (from, to) => unlocked.includes(from) && unlocked.includes(to)
+  const isLinkActive = (from, to) => {
+    if (!activeStage) return false
+    const otherKey = from === activeStage.key ? to : from
+    return (from === activeStage.key || to === activeStage.key) && unlocked.includes(otherKey)
+  }
 
   useEffect(() => {
-    if (progress > 20 && fireflies.length === 0) {
-      const f = Array.from({ length: 45 }).map((_, i) => ({
-        id: i,
-        x: Math.random() * 360,
-        y: Math.random() * 360,
-        delay: Math.random() * 2,
-        speed: 1 + Math.random() * 2,
-        size: 2 + Math.random() * 4
-      }))
-      setFireflies(f)
-    } else if (progress <= 5 && fireflies.length > 0) {
-      setFireflies([]) 
+    if (!isPressing && !activeStage && progress > 0 && progress < 100) {
+      const decay = window.setInterval(() => {
+        setProgress((current) => Math.max(0, current - 0.075))
+      }, 70)
+      return () => window.clearInterval(decay)
     }
-    
-    if (won && leaves.length === 0) {
-      const l = Array.from({ length: 60 }).map((_, i) => ({
-        id: i,
-        x: Math.random() * 360,
-        y: 360 + Math.random() * 80,
-        delay: Math.random() * 2.5,
-        sway: Math.random() * 60 - 30,
-        scale: 0.4 + Math.random() * 1.0
-      }))
-      setLeaves(l)
-    }
-  }, [progress, won, fireflies.length, leaves.length])
+    return undefined
+  }, [activeStage, isPressing, progress])
 
-  // 0 -> 70: Drawing multi-colored glowing paths
-  // 70 -> 100: Blooming explosion
-  const drawPhase = Math.min(1, progress / 70)
-  const bloomPhase = Math.max(0, (progress - 70) / 30)
-  const bounce = Math.max(0, easeOutBack(bloomPhase))
+  useEffect(() => {
+    if (progress >= 100 && !wonRef.current) {
+      wonRef.current = true
+      stopGrowing()
+      setWon(true)
+      window.setTimeout(() => setShockwave(true), 180)
+      window.setTimeout(() => setShockwave(false), 1300)
+      window.setTimeout(() => setFinalePhase(2), 740)
+      window.setTimeout(onWin, 11800)
+    }
+  }, [onWin, progress])
+
+  useEffect(() => {
+    return () => { clearInterval(intervalRef.current) }
+  }, [])
 
   return (
-    <div className="minigame-grow-tree">
-      <p className="minigame-instruction">
-        {won ? 'Tuyệt tác Đóa Sen Thần Kỳ đã bừng sáng!' : 'Nhấn giữ để thắp sáng từng nét ma thuật'}
-      </p>
+    <div className={`minigame-grow-tree ${won ? 'is-final' : ''}`}>
+      <div className="culture-topline">
+        <p className="minigame-instruction">
+          {won
+            ? 'Khu vườn đã nở: văn hóa trở thành ánh sáng sống trong từng con người.'
+            : activeStage
+              ? activeStage.prompt
+              : 'Giữ để vun trồng. Khi một biểu tượng bừng sáng, chạm vào nó để nối mạch văn hóa.'}
+        </p>
 
-      <div 
-        className={`tree-container ${won ? 'is-won' : ''}`}
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
-        style={{ touchAction: 'none', background: 'linear-gradient(180deg, #09090b 0%, #1e1b4b 50%, #2e1065 100%)' }}
+        <div className="culture-stage-counter" aria-label="Tiến trình vun trồng">
+          {cultureStages.map((stage, index) => (
+            <span
+              key={stage.key}
+              className={`${unlocked.includes(stage.key) ? 'is-lit' : ''} ${activeStage?.key === stage.key ? 'is-active' : ''}`}
+              style={{ '--stage-color': stage.color }}
+            >
+              {index + 1}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div
+        className={`culture-garden ${isPressing ? 'is-growing' : ''} ${activeStage ? 'has-stage' : ''} ${won ? 'is-won' : ''} ${shockwave ? 'is-shockwave' : ''}`}
+        onPointerDown={startGrowing}
+        onPointerUp={stopGrowing}
+        onPointerLeave={stopGrowing}
+        style={{ '--progress': `${progress}%`, touchAction: 'none' }}
       >
-        <div className="tree-sky-bg" style={{ opacity: 0.3 }} />
-        <div className="tree-moon" style={{ background: 'radial-gradient(circle at 30% 30%, #fff 0%, #f9a8d4 40%, #c026d3 100%)', boxShadow: '0 0 40px rgba(192, 38, 211, 0.4)' }} />
-        
-        {isGrowing.current && !won && <div className="tree-energy-ray" />}
+        <div className="culture-sky" />
+        <div className="culture-aurora culture-aurora--left" />
+        <div className="culture-aurora culture-aurora--right" />
+        <div className="culture-moon"><span>Văn hóa</span></div>
+        <div className="culture-orbit-ring" />
+        <div className="culture-orbit-ring culture-orbit-ring--inner" />
+        <div className="culture-water" />
 
-        <svg className="tree-canvas" viewBox="0 0 360 360">
-          <ellipse cx="180" cy="320" rx="140" ry="25" fill="url(#waterGlow)" opacity={(progress / 100) * 0.8} />
-          
+        {floatingLights.map((light) => (
+          <i
+            key={light.id}
+            className="culture-firefly"
+            style={{
+              left: `${light.left}%`,
+              top: `${light.top}%`,
+              width: `${light.size}px`,
+              '--drift': `${light.drift}px`,
+              animationDelay: `${light.delay}s`,
+              animationDuration: `${light.duration}s`,
+            }}
+          />
+        ))}
+
+        <svg className="culture-link-map" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <defs>
-            <radialGradient id="waterGlow">
-              <stop offset="0%" stopColor="#f472b6" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#c026d3" stopOpacity="0" />
-            </radialGradient>
-            
-            <filter id="neonGlow">
-              <feGaussianBlur stdDeviation="3" result="blur" />
+            <filter id="cultureLineGlow">
+              <feGaussianBlur stdDeviation="1.1" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            
-            <filter id="strongGlow">
-              <feGaussianBlur stdDeviation="8" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+          </defs>
+          {cultureLinks.map(([from, to], index) => {
+            const start = stageByKey[from]
+            const end = stageByKey[to]
+            const lit = isLinkLit(from, to)
+            const active = isLinkActive(from, to)
+            return (
+              <g key={`${from}-${to}`} className={`${lit ? 'is-lit' : ''} ${active ? 'is-active' : ''}`}>
+                <path className="culture-link-shadow" d={getCurvePath(start, end)} pathLength="100" />
+                <path
+                  className="culture-link-core"
+                  d={getCurvePath(start, end)}
+                  pathLength="100"
+                  style={{
+                    '--link-delay': `${index * 0.08}s`,
+                    '--link-color-a': start.color,
+                    '--link-color-b': end.color,
+                  }}
+                />
+                {(lit || active) && (
+                  <path
+                    className="culture-link-runner"
+                    d={getCurvePath(start, end)}
+                    pathLength="100"
+                    style={{
+                      '--link-delay': `${index * 0.09}s`,
+                      '--link-color-a': start.color,
+                      '--link-color-b': end.color,
+                    }}
+                  />
+                )}
+              </g>
+            )
+          })}
+        </svg>
 
-            {/* Màu Gradient cực kỳ rực rỡ và lôi cuốn, chuyển sắc từ Tím -> Hồng -> Vàng */}
-            <linearGradient id="grad-outer" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#4c1d95" />
-              <stop offset="60%" stopColor="#c026d3" />
-              <stop offset="100%" stopColor="#f472b6" />
+        {isPressing && !activeStage && !won && (
+          <>
+            <div className="culture-energy-column" />
+            <div className="culture-hand-ripple" />
+            <div className="culture-energy-rings">
+              <span /><span /><span /><span />
+            </div>
+          </>
+        )}
+
+        {cultureStages.map((stage, index) => {
+          const isUnlocked = unlocked.includes(stage.key)
+          const isActive = activeStage?.key === stage.key
+          return (
+            <button
+              key={stage.key}
+              type="button"
+              className={`culture-glyph ${isUnlocked ? 'is-unlocked' : ''} ${isActive ? 'is-active' : ''} ${pulse === stage.key ? 'is-pulsing' : ''}`}
+              style={{
+                left: `${stage.x}%`,
+                top: `${stage.y}%`,
+                '--glyph-color': stage.color,
+                '--glyph-index': index,
+              }}
+              onPointerDown={(event) => {
+                event.stopPropagation()
+                unlockStage(stage)
+              }}
+              disabled={!isActive}
+              aria-label={stage.prompt}
+            >
+              <span className="culture-glyph-halo" />
+              <svg viewBox="0 0 48 48" aria-hidden="true">
+                <path d={getGlyphIcon(stage.key)} />
+              </svg>
+              <strong>{stage.value}</strong>
+            </button>
+          )
+        })}
+
+        {glyphParticles.map((p) => (
+          <i
+            key={p.id}
+            className="culture-glyph-particle"
+            style={{
+              left: `${p.originX}%`,
+              top: `${p.originY}%`,
+              '--p-angle': `${p.angle}deg`,
+              '--p-dist': `${p.dist}px`,
+              '--p-size': `${p.size}px`,
+              '--p-color': p.color,
+              animationDuration: `${p.duration}s`,
+            }}
+          />
+        ))}
+
+        <svg className="culture-tree-canvas" viewBox="0 0 520 440" aria-hidden="true">
+          <defs>
+            <radialGradient id="cultureWaterGlow">
+              <stop offset="0%" stopColor="#dbeafe" stopOpacity="0.92" />
+              <stop offset="42%" stopColor="#38bdf8" stopOpacity="0.46" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+            </radialGradient>
+            <linearGradient id="cultureStem" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#134e4a" />
+              <stop offset="42%" stopColor="#2dd4bf" />
+              <stop offset="100%" stopColor="#fef3c7" />
             </linearGradient>
-            <linearGradient id="grad-mid" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#701a75" />
-              <stop offset="50%" stopColor="#db2777" />
-              <stop offset="100%" stopColor="#f9a8d4" />
+            <linearGradient id="culturePetalOuter" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#1e3a8a" />
+              <stop offset="58%" stopColor="#38bdf8" />
+              <stop offset="100%" stopColor="#fef3c7" />
             </linearGradient>
-            <linearGradient id="grad-inner" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#be185d" />
-              <stop offset="40%" stopColor="#f43f5e" />
-              <stop offset="100%" stopColor="#fde047" />
-            </linearGradient>
-            <linearGradient id="grad-gold" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#f59e0b" />
-              <stop offset="50%" stopColor="#fef08a" />
+            <linearGradient id="culturePetalBlue" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#172554" />
+              <stop offset="46%" stopColor="#60a5fa" />
               <stop offset="100%" stopColor="#ffffff" />
             </linearGradient>
+            <linearGradient id="culturePetalEmerald" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#064e3b" />
+              <stop offset="48%" stopColor="#34d399" />
+              <stop offset="100%" stopColor="#fef08a" />
+            </linearGradient>
+            <linearGradient id="culturePetalInner" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#2563eb" />
+              <stop offset="42%" stopColor="#a7f3d0" />
+              <stop offset="100%" stopColor="#ffffff" />
+            </linearGradient>
+            <linearGradient id="culturePetalGold" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#d97706" />
+              <stop offset="50%" stopColor="#fde047" />
+              <stop offset="100%" stopColor="#ffffff" />
+            </linearGradient>
+            <filter id="cultureGlow">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+            <filter id="cultureStrongGlow">
+              <feGaussianBlur stdDeviation="10" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="cultureUltraGlow">
+              <feGaussianBlur stdDeviation="18" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
 
-          {/* Vụ nổ ánh sáng trung tâm khi vừa bắt đầu bung nở */}
-          {bloomPhase > 0 && bloomPhase < 0.9 && (
-            <circle 
-              cx="180" cy="270" 
-              r={bloomPhase * 350} 
-              fill="url(#grad-gold)" 
-              opacity={(1 - bloomPhase / 0.9) * 0.4} 
-              filter="url(#strongGlow)" 
+          <ellipse cx="260" cy="392" rx="190" ry="36" fill="url(#cultureWaterGlow)" opacity={0.2 + progress / 120} />
+
+          <path
+            className="culture-stem culture-stem--main"
+            d="M260 386 C250 337 268 296 256 251 C246 212 214 193 230 154 C242 124 276 111 290 78"
+            fill="none"
+            stroke="url(#cultureStem)"
+            strokeWidth="13"
+            strokeLinecap="round"
+            pathLength="100"
+            strokeDasharray="100"
+            strokeDashoffset={100 - Math.min(100, progress * 1.04)}
+            filter="url(#cultureGlow)"
+          />
+          <path
+            className="culture-stem culture-stem--branch"
+            d="M258 268 C220 246 189 222 162 182 M262 242 C305 220 340 194 374 148"
+            fill="none"
+            stroke="#a7f3d0"
+            strokeWidth="6"
+            strokeLinecap="round"
+            pathLength="100"
+            strokeDasharray="100"
+            strokeDashoffset={100 - Math.max(0, (progress - 24) * 1.28)}
+            filter="url(#cultureGlow)"
+          />
+          <path
+            className="culture-stem culture-stem--branch culture-stem--gold"
+            d="M240 210 C200 198 168 176 148 140 M272 200 C318 186 354 162 386 120"
+            fill="none"
+            stroke="#fde047"
+            strokeWidth="4"
+            strokeLinecap="round"
+            pathLength="100"
+            strokeDasharray="100"
+            strokeDashoffset={100 - Math.max(0, (progress - 46) * 1.7)}
+            filter="url(#cultureGlow)"
+            opacity="0.72"
+          />
+
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => (
+            <g
+              key={index}
+              className="culture-floating-page"
+              style={{
+                '--page-delay': `${index * 0.2}s`,
+                opacity: progress > 20 + index * 8 ? 1 : 0,
+              }}
+              transform={`translate(${122 + index * 44} ${272 - index * 22}) rotate(${-18 + index * 6})`}
+            >
+              <rect x="-17" y="-12" width="34" height="24" rx="3" fill="#f8fafc" opacity="0.84" />
+              <path d="M-10 -4 H10 M-10 3 H6" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" opacity="0.66" />
+            </g>
+          ))}
+
+          {bloomPhase > 0 && (
+            <circle
+              cx="260" cy="108"
+              r={bloomPhase * 480}
+              fill="url(#culturePetalGold)"
+              opacity={(1 - bloomPhase) * 0.36}
+              filter="url(#cultureUltraGlow)"
               style={{ mixBlendMode: 'screen' }}
             />
           )}
 
-          <g transform="translate(180, 310)">
+          <g transform="translate(260, 280)">
             {lotusPetals.map((petal) => {
-              const N = lotusPetals.length
-              const duration = 0.2 // Mỗi nét vẽ chiếm 20%
-              const stagger = (1 - duration) / (N - 1)
+              const duration = 0.2
+              const stagger = (1 - duration) / (lotusPetals.length - 1)
               const startDraw = petal.drawOrder * stagger
               const endDraw = startDraw + duration
-              
               let localDrawProgress = 0
               if (drawPhase >= endDraw) localDrawProgress = 1
-              else if (drawPhase <= startDraw) localDrawProgress = 0
-              else localDrawProgress = (drawPhase - startDraw) / (endDraw - startDraw)
+              else if (drawPhase > startDraw) localDrawProgress = (drawPhase - startDraw) / (endDraw - startDraw)
 
-              const strokeOffset = 100 - (localDrawProgress * 100)
-              
-              // Cánh hoa lan tỏa sẵn từ đầu để người dùng thưởng thức trọn vẹn nét vẽ 
-              // Bung rộng hơn nữa khi nở ra.
-              const currentAngle = petal.angle * (0.8 + 0.2 * bounce)
-              const currentScale = petal.scale * (0.8 + 0.2 * bounce)
-              
-              // Fill Opacity: Lúc đang vẽ là 0. Khi vẽ xong 1 nét, nó mờ nhẹ (20%) để không bị trống. Nở thì sáng bừng 90%
-              const fillOpacity = localDrawProgress === 1 ? (0.2 + bloomPhase * 0.7) : 0
-              
-              const isDrawingRightNow = localDrawProgress > 0 && localDrawProgress < 1
-              
-              // Stroke Opacity mờ đi khi hoa nở, tạo hiệu ứng mềm mại hòa quyện
-              const strokeOpacity = drawPhase > 0 ? (1 - bloomPhase * 0.8) : 0
+              const strokeOffset = 100 - localDrawProgress * 100
+              const fillOpacity = localDrawProgress === 1 ? 0.18 + bloomPhase * 0.78 : 0
+              const strokeOpacity = drawPhase > 0 ? 1 - bloomPhase * 0.62 : 0
+              const isDrawing = localDrawProgress > 0 && localDrawProgress < 1
+              const currentAngle = petal.angle * (0.74 + 0.26 * bloom)
+              const currentScale = petal.scale * (0.74 + 0.26 * bloom)
 
               return (
-                <g key={petal.id} transform={`rotate(${currentAngle}) scale(${currentScale})`} style={{ transformOrigin: '0px 0px' }}>
-                  {/* Cánh hoa (Fill & Stroke) */}
-                  <path 
-                    className="petal-advanced"
+                <g key={petal.id} transform={`rotate(${currentAngle}) scale(${currentScale})`}>
+                  <path
                     d={getPathData(petal.size)}
                     fill={`url(#${petal.grad})`}
                     fillOpacity={fillOpacity}
-                    stroke={`url(#${petal.grad})`}  // <-- QUAN TRỌNG: Nét vẽ mang màu sắc cầu vồng cực đẹp thay vì màu trắng trơn
-                    strokeWidth={isDrawingRightNow ? 4 : 2} 
+                    stroke={`url(#${petal.grad})`}
+                    strokeWidth={isDrawing ? 5 : 2.4}
                     strokeOpacity={strokeOpacity}
                     strokeLinecap="round"
                     pathLength="100"
                     strokeDasharray="100"
                     strokeDashoffset={strokeOffset}
-                    filter={isDrawingRightNow || bloomPhase > 0 ? 'url(#neonGlow)' : 'none'}
-                    style={{ mixBlendMode: bloomPhase > 0 ? 'lighten' : 'normal' }} // Hiệu ứng pha màu thần kỳ khi bung nở
+                    filter={isDrawing || bloomPhase > 0 ? 'url(#cultureGlow)' : 'none'}
                   />
-                  
-                  {/* Đốm sáng rực rỡ chạy dọc theo đầu cọ (Pen tip) */}
-                  {isDrawingRightNow && (
-                    <path 
+                  {isDrawing && (
+                    <path
                       d={getPathData(petal.size)}
                       fill="none"
                       stroke="#ffffff"
-                      strokeWidth="6"
+                      strokeWidth="8"
                       strokeLinecap="round"
                       pathLength="100"
                       strokeDasharray="1 100"
                       strokeDashoffset={strokeOffset}
-                      filter="url(#strongGlow)"
+                      filter="url(#cultureStrongGlow)"
                     />
                   )}
                 </g>
               )
             })}
-            
-            {/* Lõi hoa thần kỳ chói lọi */}
-            {bloomPhase > 0 && (
-              <circle 
-                cx="0" cy="-30" 
-                r={25 * bounce} 
-                fill="#ffffff" 
-                filter="url(#strongGlow)"
-                opacity={Math.min(1, bloomPhase * 2)}
-              />
-            )}
-            
-            {bloomPhase > 0 && (
-              <circle 
-                cx="0" cy="-30" 
-                r={50 * bounce} 
-                fill="url(#grad-gold)" 
-                filter="url(#neonGlow)"
-                opacity={Math.min(0.8, bloomPhase * 2)}
-                style={{ mixBlendMode: 'screen' }}
-              />
-            )}
 
-            {/* Hàng loạt ngôi sao cực kỳ lấp lánh chớp tắt */}
-            {bloomPhase > 0 && sparkles.map(sp => (
-              <g 
-                key={sp.id} 
-                transform={`translate(${sp.x}, ${sp.y}) scale(${sp.scale * Math.min(1, bloomPhase * 3)})`} 
-              >
-                <g
-                  className="sparkle-star"
-                  style={{
-                    animationDelay: `${sp.delay}s`,
-                    animationDuration: `${sp.duration}s`
-                  }}
-                >
-                  <path d="M0,-12 Q0,0 12,0 Q0,0 0,12 Q0,0 -12,0 Q0,0 0,-12" fill="#ffffff" filter="url(#strongGlow)" />
-                </g>
-              </g>
-            ))}
+            {bloomPhase > 0 && (
+              <>
+                <circle cx="0" cy="-162" r={28 * bloom} fill="#ffffff" opacity={Math.min(1, bloomPhase * 2)} filter="url(#cultureUltraGlow)" />
+                <circle cx="0" cy="-162" r={62 * bloom} fill="url(#culturePetalGold)" opacity="0.76" filter="url(#cultureGlow)" />
+              </>
+            )}
           </g>
         </svg>
 
-        {fireflies.map(f => (
-          <div 
-            key={f.id} 
-            className="tree-firefly"
-            style={{
-              left: `${f.x}px`,
-              top: `${f.y}px`,
-              width: `${f.size}px`,
-              height: `${f.size}px`,
-              background: '#fde047',
-              boxShadow: '0 0 12px 3px #eab308',
-              animationDelay: `${f.delay}s`,
-              animationDuration: `${f.speed * 3}s`
-            }}
-          />
-        ))}
+        <div className="culture-stage-list">
+          {cultureStages.map((stage) => (
+            <span
+              key={stage.key}
+              className={
+                unlocked.includes(stage.key)
+                  ? 'is-done'
+                  : activeStage?.key === stage.key
+                    ? 'is-now'
+                    : ''
+              }
+              style={{ '--stage-color': stage.color }}
+            >
+              {stage.label}
+            </span>
+          ))}
+        </div>
 
-        {won && leaves.map(l => (
-          <div 
-            key={l.id} 
-            className="tree-falling-leaf"
-            style={{
-              left: `${l.x}px`,
-              top: `${l.y}px`,
-              transform: `scale(${l.scale})`,
-              background: 'linear-gradient(135deg, #fbcfe8 0%, #db2777 100%)',
-              animationDelay: `${l.delay}s`,
-              '--sway': `${l.sway}px`
-            }}
-          />
-        ))}
+        {activeStage && (
+          <div className="culture-focus-callout" style={{ '--stage-color': activeStage.color }}>
+            <small>Mốc {activeIndex + 1}/10</small>
+            <strong>{activeStage.label}</strong>
+          </div>
+        )}
 
-        <div className="tree-ground-texture" />
+        {won && finalePhase >= 2 && (
+          <div className="culture-finale" aria-live="polite">
+            <div className="culture-finale-shockwave" />
+            <div className="culture-finale-shockwave culture-finale-shockwave--2" />
+            <div className="culture-finale-sun" />
+
+            <div className="culture-finale-rays">
+              {finaleRays.map((ray) => (
+                <i
+                  key={ray.id}
+                  style={{
+                    '--ray-angle': `${ray.angle}deg`,
+                    '--ray-delay': `${ray.delay}s`,
+                    '--ray-length': `${ray.length}vmax`,
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="culture-finale-mandala">
+              <span /><span /><span /><span />
+            </div>
+
+            <svg className="culture-finale-network" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              {cultureLinks.map(([from, to], index) => {
+                const start = stageByKey[from]
+                const end = stageByKey[to]
+                return (
+                  <path
+                    key={`${from}-${to}`}
+                    d={getCurvePath(start, end)}
+                    pathLength="100"
+                    style={{ animationDelay: `${0.45 + index * 0.08}s` }}
+                  />
+                )
+              })}
+              {cultureStages.map((stage, index) => (
+                <circle
+                  key={stage.key}
+                  cx={stage.x}
+                  cy={stage.y}
+                  r="1.3"
+                  style={{ '--stage-color': stage.color, animationDelay: `${0.6 + index * 0.08}s` }}
+                />
+              ))}
+            </svg>
+
+            <div className="culture-finale-garden">
+              <span /><span /><span /><span /><span /><span /><span />
+            </div>
+
+            {finaleOrbs.map((orb) => (
+              <i
+                key={orb.id}
+                className="culture-finale-orb"
+                style={{
+                  '--orb-angle': `${orb.angle}deg`,
+                  '--orb-dist': `${orb.dist}px`,
+                  '--orb-size': `${orb.size}px`,
+                  animationDelay: `${orb.delay}s`,
+                  animationDuration: `${orb.duration}s`,
+                }}
+              />
+            ))}
+
+            {finalePetals.map((petal) => (
+              <i
+                key={petal.id}
+                className={`culture-finale-petal culture-finale-petal--${petal.color}`}
+                style={{
+                  left: `${petal.left}%`,
+                  '--sway': `${petal.sway}px`,
+                  '--petal-scale': petal.scale,
+                  '--petal-rotate': `${petal.rotate}deg`,
+                  animationDelay: `${petal.delay}s`,
+                  animationDuration: `${petal.duration}s`,
+                }}
+              />
+            ))}
+
+            <div className="culture-word-orbit">
+              {finaleWords.map((word, index) => (
+                <span key={word} style={{ '--orbit-index': index }}>{word}</span>
+              ))}
+            </div>
+
+            <div className="culture-message-card">
+              <div className="culture-message-badge">
+                <span className="culture-message-badge-dot" />
+                <small>Văn hóa - Hành tinh đã mở khóa</small>
+              </div>
+              <h3>
+                {quoteLetters.map((letter, index) => (
+                  <span
+                    key={`${letter}-${index}`}
+                    style={{ animationDelay: `${0.55 + index * 0.042}s` }}
+                  >
+                    {letter === ' ' ? '\u00a0' : letter}
+                  </span>
+                ))}
+              </h3>
+              <blockquote className="culture-message-quote">
+                "Vì lợi ích mười năm thì phải trồng cây,<br />
+                vì lợi ích trăm năm thì phải <em>trồng người</em>."
+              </blockquote>
+              <p>
+                Văn hóa không đứng yên trong sách vở. Nó đi qua tiếng nói, tri thức,
+                đạo đức và lý tưởng, rồi nở thành cách mỗi người sống đẹp hơn hôm nay.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
-      
-      <div className="minigame-progress">
-        <div 
-          className="minigame-progress-fill" 
-          style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #c026d3, #f472b6, #fde047)', boxShadow: '0 0 15px #f472b6' }} 
-        />
+
+      <div className="culture-progress-shell">
+        <div className="culture-progress-label">
+          <span>
+            {won
+              ? 'Vườn người bừng sáng'
+              : activeStage
+                ? 'Chạm biểu tượng đang gọi sáng'
+                : 'Năng lượng vun trồng'}
+          </span>
+          <strong>{Math.round(progress)}%</strong>
+        </div>
+        <div className="minigame-progress">
+          <div className="minigame-progress-fill" style={{ width: `${progress}%` }} />
+        </div>
       </div>
     </div>
   )

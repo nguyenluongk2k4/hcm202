@@ -1,371 +1,259 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import './GlobalNetwork.css'
 
-/* ---- Data ---- */
-const ORB_DATA = [
-  { id: 'asia',    label: 'Châu Á',   flag: '🌏', cls: 'orb-asia',    initX: 15, initY: 22, color: '#ef4444', orbitDelay: '0s'   },
-  { id: 'europe',  label: 'Châu Âu',  flag: '🌍', cls: 'orb-europe',  initX: 82, initY: 20, color: '#3b82f6', orbitDelay: '0.4s' },
-  { id: 'africa',  label: 'Châu Phi', flag: '🌍', cls: 'orb-africa',  initX: 18, initY: 78, color: '#eab308', orbitDelay: '0.9s' },
-  { id: 'america', label: 'Châu Mỹ',  flag: '🌎', cls: 'orb-america', initX: 80, initY: 78, color: '#22c55e', orbitDelay: '1.3s' },
-  { id: 'oceania', label: 'Đại Dương',flag: '🌏', cls: 'orb-oceania', initX: 50, initY: 12, color: '#a855f7', orbitDelay: '1.8s' },
+const VIETNAM = { x: 50, y: 52 }
+
+const regions = [
+  { id: 'asia', name: 'Châu Á', value: 'Láng giềng', x: 23, y: 30, color: '#f97316', align: 'left' },
+  { id: 'europe', name: 'Châu Âu', value: 'Tri thức', x: 77, y: 25, color: '#60a5fa', align: 'right' },
+  { id: 'africa', name: 'Châu Phi', value: 'Độc lập', x: 21, y: 73, color: '#facc15', align: 'left' },
+  { id: 'america', name: 'Châu Mỹ', value: 'Hòa bình', x: 80, y: 70, color: '#4ade80', align: 'right' },
+  { id: 'oceania', name: 'Đại dương', value: 'Hội nhập', x: 56, y: 86, color: '#22d3ee', align: 'bottom' },
+  { id: 'progressive', name: 'Thế giới', value: 'Tiến bộ', x: 50, y: 14, color: '#c084fc', align: 'top' },
 ]
 
-/* ---- Star generation ---- */
-const STARS = Array.from({ length: 60 }, (_, i) => ({
-  id: i,
-  x: Math.random() * 100,
-  y: Math.random() * 100,
-  size: Math.random() * 2 + 0.5,
-  dur: `${2 + Math.random() * 4}s`,
-  delay: `${Math.random() * 5}s`,
-}))
+const finaleWords = ['Dân tộc', 'Thời đại', 'Hòa bình', 'Hợp tác', 'Bản lĩnh', 'Hội nhập']
 
-/* ---- Ambient particles ---- */
-const AMBIENT = Array.from({ length: 30 }, (_, i) => {
-  const angle = (i / 30) * Math.PI * 2
-  const radius = 90 + Math.random() * 40
-  return {
-    id: i,
-    startX: Math.cos(angle) * radius,
-    startY: Math.sin(angle) * radius,
-    px: `${(Math.random() - 0.5) * 40}px`,
-    py: `${(Math.random() - 0.5) * 40}px`,
-    dur: `${3 + Math.random() * 3}s`,
-    delay: `${Math.random() * 4}s`,
-    color: ORB_DATA[i % ORB_DATA.length].color,
-  }
-})
+function seededRatio(index, salt = 0) {
+  const value = Math.sin(index * 29.43 + salt * 17.71) * 10000
+  return value - Math.floor(value)
+}
 
-/* ---- Win stars ---- */
-const WIN_STARS = Array.from({ length: 80 }, (_, i) => {
-  const angle = (i / 80) * Math.PI * 2
-  const dist = 60 + Math.random() * 140
-  return {
-    id: i,
-    dx: `${Math.cos(angle) * dist}px`,
-    dy: `${Math.sin(angle) * dist}px`,
-    dur: `${0.8 + Math.random() * 0.8}s`,
-    delay: `${Math.random() * 0.4}s`,
-    color: ORB_DATA[i % ORB_DATA.length].color,
-    left: `${40 + Math.random() * 20}%`,
-    top:  `${40 + Math.random() * 20}%`,
-  }
-})
+function distance(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y)
+}
 
-const CORE_CENTER = { x: 50, y: 50 } // percent
-const ABSORB_THRESHOLD = 12 // percent distance
+function routePath(region) {
+  const bendY = region.y < VIETNAM.y ? -7 : 7
+  const bendX = region.x < VIETNAM.x ? -5 : region.x > VIETNAM.x ? 5 : 0
+  const midX = (region.x + VIETNAM.x) / 2 + bendX
+  const midY = (region.y + VIETNAM.y) / 2 + bendY
+  return `M ${VIETNAM.x} ${VIETNAM.y} Q ${midX} ${midY} ${region.x} ${region.y}`
+}
 
 export default function GlobalNetwork({ onWin }) {
-  const containerRef = useRef(null)
-  const [positions, setPositions] = useState(() =>
-    Object.fromEntries(ORB_DATA.map(o => [o.id, { x: o.initX, y: o.initY }]))
-  )
-  const [absorbed, setAbsorbed] = useState([])
-  const [dragging, setDragging] = useState(null) // id of currently dragged orb
-  const [absorbEffect, setAbsorbEffect] = useState(null) // { id, color }
-  const [isCoreAbsorbing, setIsCoreAbsorbing] = useState(false)
+  const stageRef = useRef(null)
+  const [linked, setLinked] = useState([])
+  const [drawing, setDrawing] = useState(null)
+  const [pulse, setPulse] = useState(null)
   const [won, setWon] = useState(false)
-  const dragRef = useRef(null) // { id, offsetX, offsetY }
+  const [showFinale, setShowFinale] = useState(false)
 
-  /* ---- Drag helpers ---- */
-  const getPct = useCallback((clientX, clientY) => {
-    const rect = containerRef.current?.getBoundingClientRect()
-    if (!rect) return { x: 50, y: 50 }
+  const stars = useMemo(
+    () =>
+      Array.from({ length: 44 }, (_, index) => ({
+        id: index,
+        left: `${3 + seededRatio(index, 1) * 94}%`,
+        top: `${4 + seededRatio(index, 4) * 88}%`,
+        size: 1.2 + seededRatio(index, 7) * 3.6,
+        delay: `${seededRatio(index, 10) * 5}s`,
+        duration: `${3.5 + seededRatio(index, 14) * 6}s`,
+      })),
+    [],
+  )
+
+  const pointFromEvent = (event) => {
+    const rect = stageRef.current?.getBoundingClientRect()
+    if (!rect) return VIETNAM
     return {
-      x: ((clientX - rect.left) / rect.width) * 100,
-      y: ((clientY - rect.top) / rect.height) * 100,
+      x: Math.max(3, Math.min(97, ((event.clientX - rect.left) / rect.width) * 100)),
+      y: Math.max(4, Math.min(96, ((event.clientY - rect.top) / rect.height) * 100)),
     }
-  }, [])
+  }
 
-  const checkAbsorb = useCallback((id, x, y, currentAbsorbed) => {
-    const dx = x - CORE_CENTER.x
-    const dy = y - CORE_CENTER.y
-    const dist = Math.sqrt(dx * dx + dy * dy)
-    if (dist < ABSORB_THRESHOLD && !currentAbsorbed.includes(id)) {
-      return true
-    }
-    return false
-  }, [])
+  const startRoute = (event) => {
+    if (won) return
+    event.preventDefault()
+    setDrawing(pointFromEvent(event))
+  }
 
-  const doAbsorb = useCallback((id, color) => {
-    setAbsorbEffect({ id: Date.now(), color })
-    setIsCoreAbsorbing(true)
-    setTimeout(() => setIsCoreAbsorbing(false), 600)
+  const moveRoute = (event) => {
+    if (!drawing) return
+    setDrawing(pointFromEvent(event))
+  }
 
-    setAbsorbed(prev => {
-      const next = [...prev, id]
-      if (next.length === ORB_DATA.length) {
+  const endRoute = (event) => {
+    if (!drawing) return
+    const releasePoint = pointFromEvent(event)
+    const target = regions.find((region) => !linked.includes(region.id) && distance(releasePoint, region) < 11.5)
+
+    if (target) {
+      const nextLinked = [...linked, target.id]
+      setLinked(nextLinked)
+      setPulse({ id: `${target.id}-${linked.length}`, ...target, color: target.color })
+      setDrawing(null)
+
+      if (nextLinked.length === regions.length) {
         setWon(true)
-        setTimeout(onWin, 3000)
+        setTimeout(() => setShowFinale(true), 820)
+        setTimeout(() => onWin(), 10000)
       }
-      return next
-    })
-  }, [onWin])
+      return
+    }
 
-  /* ---- Mouse events ---- */
-  const handleMouseDown = useCallback((e, id) => {
-    if (absorbed.includes(id) || won) return
-    e.preventDefault()
-    dragRef.current = { id }
-    setDragging(id)
-  }, [absorbed, won])
+    setPulse({ id: `miss-${linked.length}-${Math.round(releasePoint.x)}-${Math.round(releasePoint.y)}`, ...releasePoint, color: '#e0f2fe', miss: true })
+    setDrawing(null)
+  }
 
-  useEffect(() => {
-    const onMouseMove = (e) => {
-      if (!dragRef.current) return
-      const { id } = dragRef.current
-      const { x, y } = getPct(e.clientX, e.clientY)
-      setPositions(prev => ({ ...prev, [id]: { x, y } }))
-    }
-    const onMouseUp = (e) => {
-      if (!dragRef.current) return
-      const { id } = dragRef.current
-      const { x, y } = getPct(e.clientX, e.clientY)
-      dragRef.current = null
-      setDragging(null)
-      const orbColor = ORB_DATA.find(o => o.id === id)?.color
-      setAbsorbed(prev => {
-        if (checkAbsorb(id, x, y, prev)) {
-          doAbsorb(id, orbColor)
-        }
-        return prev
-      })
-    }
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup', onMouseUp)
-    return () => {
-      window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('mouseup', onMouseUp)
-    }
-  }, [getPct, checkAbsorb, doAbsorb])
-
-  /* ---- Touch events ---- */
-  const handleTouchStart = useCallback((e, id) => {
-    if (absorbed.includes(id) || won) return
-    e.preventDefault()
-    dragRef.current = { id }
-    setDragging(id)
-  }, [absorbed, won])
-
-  useEffect(() => {
-    const onTouchMove = (e) => {
-      if (!dragRef.current) return
-      e.preventDefault()
-      const touch = e.touches[0]
-      const { id } = dragRef.current
-      const { x, y } = getPct(touch.clientX, touch.clientY)
-      setPositions(prev => ({ ...prev, [id]: { x, y } }))
-    }
-    const onTouchEnd = (e) => {
-      if (!dragRef.current) return
-      const { id } = dragRef.current
-      const touch = e.changedTouches[0]
-      const { x, y } = getPct(touch.clientX, touch.clientY)
-      dragRef.current = null
-      setDragging(null)
-      const orbColor = ORB_DATA.find(o => o.id === id)?.color
-      setAbsorbed(prev => {
-        if (checkAbsorb(id, x, y, prev)) {
-          doAbsorb(id, orbColor)
-        }
-        return prev
-      })
-    }
-    window.addEventListener('touchmove', onTouchMove, { passive: false })
-    window.addEventListener('touchend', onTouchEnd)
-    return () => {
-      window.removeEventListener('touchmove', onTouchMove)
-      window.removeEventListener('touchend', onTouchEnd)
-    }
-  }, [getPct, checkAbsorb, doAbsorb])
-
-  const progress = absorbed.length / ORB_DATA.length
-  const milestones = [0.2, 0.4, 0.6, 0.8, 1.0]
+  const progress = won ? 100 : (linked.length / regions.length) * 100
 
   return (
-    <div className="minigame-network">
+    <div className={`minigame-network ${showFinale ? 'is-final-scene' : ''}`}>
       <p className="minigame-instruction">
         {won
-          ? '🌐 Mạng lưới quốc tế đã kết nối!'
-          : 'Kéo các châu lục vào lõi trung tâm để kết nối toàn cầu'}
+          ? 'Các tuyến kết nối đã mở: bản lĩnh dân tộc gặp sức mạnh thời đại.'
+          : 'Kéo từ Việt Nam ra từng khu vực để mở mạng lưới đoàn kết quốc tế.'}
       </p>
 
       <div
-        ref={containerRef}
-        className={`network-container${won ? ' is-won' : ''}`}
+        ref={stageRef}
+        className={`network-stage ${won ? 'is-won' : ''}`}
+        onPointerMove={moveRoute}
+        onPointerUp={endRoute}
+        onPointerCancel={() => setDrawing(null)}
       >
-        {/* Star field */}
-        <div className="network-stars">
-          {STARS.map(s => (
-            <div
-              key={s.id}
-              className="network-star"
-              style={{
-                left: `${s.x}%`,
-                top: `${s.y}%`,
-                width: s.size,
-                height: s.size,
-                '--dur': s.dur,
-                '--delay': s.delay,
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Ambient particles */}
-        {AMBIENT.map(p => (
-          <div
-            key={p.id}
-            className="ambient-particle"
+        {stars.map((star) => (
+          <span
+            key={star.id}
+            className="network-star"
             style={{
-              left: `calc(50% + ${p.startX}px)`,
-              top:  `calc(50% + ${p.startY}px)`,
-              '--px': p.px,
-              '--py': p.py,
-              '--p-dur': p.dur,
-              '--p-delay': p.delay,
-              background: p.color,
-              boxShadow: `0 0 6px ${p.color}`,
+              left: star.left,
+              top: star.top,
+              width: star.size,
+              height: star.size,
+              animationDelay: star.delay,
+              animationDuration: star.duration,
             }}
           />
         ))}
+        <div className="network-nebula" aria-hidden="true" />
 
-        {/* SVG connection lines from absorbed orbs to core */}
-        <svg className="network-connections" viewBox="0 0 460 420" preserveAspectRatio="none">
-          {absorbed.map(id => {
-            const pos = positions[id]
-            const orbDef = ORB_DATA.find(o => o.id === id)
-            const cx = (CORE_CENTER.x / 100) * 460
-            const cy = (CORE_CENTER.y / 100) * 420
-            const ox = (pos.x / 100) * 460
-            const oy = (pos.y / 100) * 420
-            // Snap to core center
+        <svg className="network-routes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            {regions.map((region) => (
+              <linearGradient key={region.id} id={`globalRoute-${region.id}`} x1="0%" x2="100%" y1="0%" y2="0%">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+                <stop offset="100%" stopColor={region.color} stopOpacity="0.92" />
+              </linearGradient>
+            ))}
+            <filter id="networkBeamGlow">
+              <feGaussianBlur stdDeviation="0.85" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          {/* Hologram Wireframe Globe */}
+          <g className="network-hologram-globe">
+            <circle cx="50" cy="52" r="39" className="network-globe-sphere" />
+            <ellipse cx="50" cy="52" rx="39" ry="12" className="network-globe-lat" />
+            <ellipse cx="50" cy="52" rx="39" ry="24" className="network-globe-lat" />
+            <line x1="11" y1="52" x2="89" y2="52" className="network-globe-lat network-globe-equator" />
+            <ellipse cx="50" cy="52" rx="12" ry="39" className="network-globe-lon network-globe-lon--1" />
+            <ellipse cx="50" cy="52" rx="24" ry="39" className="network-globe-lon network-globe-lon--2" />
+            <line x1="50" y1="13" x2="50" y2="91" className="network-globe-lon network-globe-prime" />
+          </g>
+          {regions.map((region) => {
+            const active = linked.includes(region.id)
             return (
-              <line
-                key={id}
-                className="connection-line"
-                x1={cx} y1={cy}
-                x2={cx} y2={cy}
-                stroke={orbDef?.color || '#38bdf8'}
-                strokeWidth="1.5"
-                strokeOpacity="0.7"
-              />
+              <g key={region.id} className={active ? 'is-linked' : ''}>
+                <path className="network-route-base" d={routePath(region)} />
+                <path className="network-route-core" d={routePath(region)} stroke={`url(#globalRoute-${region.id})`} />
+                {active && <path className="network-route-runner" d={routePath(region)} />}
+              </g>
             )
           })}
-          {/* active drag guide lines */}
-          {ORB_DATA.filter(o => !absorbed.includes(o.id)).map(orb => {
-            const pos = positions[orb.id]
-            const cx = (CORE_CENTER.x / 100) * 460
-            const cy = (CORE_CENTER.y / 100) * 420
-            const ox = (pos.x / 100) * 460
-            const oy = (pos.y / 100) * 420
-            const dx = ox - cx; const dy = oy - cy
-            const dist = Math.sqrt(dx*dx + dy*dy)
-            if (dist > 100) return null
-            return (
-              <line
-                key={orb.id}
-                className="connection-line"
-                x1={cx} y1={cy} x2={ox} y2={oy}
-                stroke={orb.color}
-                strokeWidth="1"
-                strokeOpacity={0.3 + (1 - dist/100) * 0.4}
-              />
-            )
-          })}
+          {drawing && (
+            <path
+              className="network-drawing-route"
+              d={`M ${VIETNAM.x} ${VIETNAM.y} Q ${(VIETNAM.x + drawing.x) / 2} ${drawing.y - 8} ${drawing.x} ${drawing.y}`}
+            />
+          )}
         </svg>
 
-        {/* Core */}
-        <div className={`network-core${isCoreAbsorbing ? ' is-absorbing' : ''}`}>
-          <div className="core-ring core-ring-1" />
-          <div className="core-ring core-ring-2" />
-          <div className="core-ring core-ring-3" />
-          <div className="network-core-inner">VN</div>
-        </div>
+        <button
+          type="button"
+          className="network-vietnam-core"
+          style={{ left: `${VIETNAM.x}%`, top: `${VIETNAM.y}%` }}
+          onPointerDown={startRoute}
+        >
+          <span className="network-core-planet" />
+          <b>Việt Nam</b>
+          <small>Bản lĩnh dân tộc</small>
+        </button>
 
-        {/* Absorption shockwave */}
-        {absorbEffect && (
-          <div
-            key={absorbEffect.id}
-            className="absorb-shockwave"
-            style={{
-              left: '50%',
-              top:  '50%',
-              width: 80,
-              height: 80,
-              border: `3px solid ${absorbEffect.color}`,
-              boxShadow: `0 0 20px ${absorbEffect.color}`,
-            }}
-          />
-        )}
-
-        {/* Orbs */}
-        {ORB_DATA.map(orb => {
-          const pos = positions[orb.id]
-          const isAbsorbed = absorbed.includes(orb.id)
-          const isDragging = dragging === orb.id
+        {regions.map((region, index) => {
+          const active = linked.includes(region.id)
           return (
             <div
-              key={orb.id}
-              className={`network-orb ${orb.cls}${isAbsorbed ? ' is-absorbed' : ''}${isDragging ? ' is-dragging' : ''}`}
+              key={region.id}
+              className={`network-station network-station--${region.align} ${active ? 'is-linked' : ''}`}
               style={{
-                left: isAbsorbed ? '50%' : `${pos.x}%`,
-                top:  isAbsorbed ? '50%' : `${pos.y}%`,
-                '--orbit-delay': orb.orbitDelay,
+                left: `${region.x}%`,
+                top: `${region.y}%`,
+                '--region-color': region.color,
+                '--delay': `${index * 0.08}s`,
               }}
-              onMouseDown={e => handleMouseDown(e, orb.id)}
-              onTouchStart={e => handleTouchStart(e, orb.id)}
             >
-              <div className="orb-light">
-                <div className="orb-ring" />
-                {orb.flag}
-              </div>
-              <span className="orb-label">{orb.label}</span>
+              <span className="network-station-orb">
+                {active && (
+                  <>
+                    <span className="station-radar-ring station-radar-ring--1" />
+                    <span className="station-radar-ring station-radar-ring--2" />
+                  </>
+                )}
+              </span>
+              <b>{region.name}</b>
+              <small>{region.value}</small>
             </div>
           )
         })}
 
-        {/* Win overlay */}
-        {won && (
-          <>
-            {WIN_STARS.map(s => (
-              <div
-                key={s.id}
-                className="win-star-particle"
-                style={{
-                  left: s.left,
-                  top: s.top,
-                  background: s.color,
-                  boxShadow: `0 0 6px ${s.color}`,
-                  '--dx': s.dx,
-                  '--dy': s.dy,
-                  '--ws-dur': s.dur,
-                  '--ws-delay': s.delay,
-                }}
-              />
-            ))}
-            <div className="win-globe-wrap">
-              <div className="win-globe" />
-              <div className="win-text">🌐 Thế giới hòa bình</div>
-            </div>
-          </>
+        {pulse && (
+          <span
+            key={pulse.id}
+            className={`network-pulse ${pulse.miss ? 'is-miss' : ''}`}
+            style={{ left: `${pulse.x}%`, top: `${pulse.y}%`, '--pulse-color': pulse.color }}
+          />
         )}
+
+        <div className="network-status">
+          <span>{linked.length}</span>
+          <small>/ {regions.length} tuyến mở</small>
+        </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="minigame-progress" style={{ position: 'relative' }}>
-        <div
-          className="minigame-progress-fill"
-          style={{ width: `${progress * 100}%` }}
-        />
-        {milestones.map((m, i) => (
-          <div
-            key={i}
-            className={`progress-milestone${progress >= m ? ' is-lit' : ''}`}
-            style={{ left: `${m * 100}%` }}
-          />
-        ))}
+      <div className="network-progress" aria-hidden="true">
+        <span style={{ width: `${progress}%` }} />
       </div>
+
+      {showFinale && (
+        <div className="network-finale" aria-hidden="true">
+          <div className="network-finale-globe" />
+          <div className="network-finale-rings" />
+          <div className="network-finale-words">
+            {finaleWords.map((word, index) => (
+              <span key={word} style={{ '--delay': `${index * 0.12}s` }}>
+                {word}
+              </span>
+            ))}
+          </div>
+          <div className="network-finale-regions">
+            {regions.map((region, index) => (
+              <i key={region.id} style={{ '--index': index, '--region-color': region.color }}>
+                {region.name}
+              </i>
+            ))}
+          </div>
+          <div className="network-message-card">
+            <span>Hành tinh đã mở khóa</span>
+            <h3>QUỐC TẾ VÀ THỜI ĐẠI</h3>
+            <strong>Hội nhập không phải hòa tan, mà là đem bản lĩnh dân tộc bước vào dòng chảy chung của nhân loại.</strong>
+            <p>Sức mạnh Việt Nam lớn hơn khi biết kết nối với hòa bình, tiến bộ, tri thức và tình đoàn kết quốc tế.</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

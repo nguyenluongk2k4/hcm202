@@ -41,7 +41,7 @@ function StardustBurst({ color, onComplete }) {
   }, [])
   
   const [particles] = useState(() => {
-    const count = 180
+    const count = 72
     const positions = new Float32Array(count * 3)
     const velocities = []
     for (let i = 0; i < count; i++) {
@@ -52,7 +52,7 @@ function StardustBurst({ color, onComplete }) {
       const phi = Math.acos(-1 + (2 * i) / count)
       const theta = Math.sqrt(count * Math.PI) * phi
       
-      const speed = Math.random() * 2 + 1.5
+      const speed = Math.random() * 0.65 + 0.45
       const vx = Math.cos(theta) * Math.sin(phi) * speed
       const vy = Math.sin(theta) * Math.sin(phi) * speed
       const vz = Math.cos(phi) * speed
@@ -66,9 +66,9 @@ function StardustBurst({ color, onComplete }) {
     if (!points.current || !material.current) return
     const positions = points.current.geometry.attributes.position.array
     for (let i = 0; i < particles.count; i++) {
-      positions[i * 3] += particles.velocities[i].x * delta * 1.5
-      positions[i * 3 + 1] += particles.velocities[i].y * delta * 1.5
-      positions[i * 3 + 2] += particles.velocities[i].z * delta * 1.5
+      positions[i * 3] += particles.velocities[i].x * delta * 0.9
+      positions[i * 3 + 1] += particles.velocities[i].y * delta * 0.9
+      positions[i * 3 + 2] += particles.velocities[i].z * delta * 0.9
     }
     points.current.geometry.attributes.position.needsUpdate = true
     
@@ -90,8 +90,8 @@ function StardustBurst({ color, onComplete }) {
       </bufferGeometry>
       <pointsMaterial
         ref={material}
-        size={0.6}
-        color={'#ffffff'}
+        size={0.34}
+        color={color}
         map={particleTexture}
         transparent
         opacity={1}

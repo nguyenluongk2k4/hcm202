@@ -1,268 +1,415 @@
-import { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './BalanceScale.css'
 
-const STARS = Array.from({ length: 80 }, (_, i) => ({
-  id: i,
-  left: `${Math.random() * 100}%`,
-  top: `${Math.random() * 100}%`,
-  size: Math.random() * 2 + 1,
-  delay: Math.random() * 4,
-  duration: 1.5 + Math.random() * 2.5,
-}))
+const mandates = [
+  { key: 'of-people',  title: 'Của dân',    left: 'Quyền lực',  right: 'Nhân dân'   },
+  { key: 'by-people',  title: 'Do dân',     left: 'Đồng thuận', right: 'Hành động'  },
+  { key: 'for-people', title: 'Vì dân',     left: 'Kỷ cương',   right: 'Phục vụ'    },
+  { key: 'rule-law',   title: 'Pháp quyền', left: 'Công bằng',  right: 'Luật pháp'  },
+  { key: 'democracy',  title: 'Dân chủ',    left: 'Tự do',      right: 'Trách nhiệm'},
+]
+
+function seededRatio(index, salt = 1) {
+  const value = Math.sin(index * 76.371 + salt * 41.119) * 10000
+  return value - Math.floor(value)
+}
 
 export default function BalanceScale({ onWin }) {
-  const [angle, setAngle]               = useState(0)
-  const [won, setWon]                   = useState(false)
-  const [error, setError]               = useState(false)
-  const [isNearBalance, setIsNearBalance] = useState(false)
+  const [angle, setAngle]             = useState(0)
+  const [seals, setSeals]             = useState([])
+  const [error, setError]             = useState(false)
   const [hammerStrike, setHammerStrike] = useState(false)
-  const [showWinEffect, setShowWinEffect] = useState(false)
-
+  const [won, setWon]                 = useState(false)
+  const [showFinale, setShowFinale]   = useState(false)
+  const [readyGlow, setReadyGlow]     = useState(false)
   const angleRef = useRef(0)
-  angleRef.current = angle
+  const wonRef   = useRef(false)
+  const readyRef = useRef(false)
 
-  /* ── Core oscillation ──────────────────────────────────── */
+  const activeMandate = mandates[Math.min(seals.length, mandates.length - 1)]
+  const isReady       = Math.abs(angle) <= 5
+  const progress      = (seals.length / mandates.length) * 100
+
+  const stars = useMemo(() =>
+    Array.from({ length: 46 }).map((_, index) => ({
+      id:       index,
+      left:     4 + seededRatio(index, 1) * 92,
+      top:      5 + seededRatio(index, 2) * 86,
+      size:     1.2 + seededRatio(index, 3) * 3.6,
+      delay:    seededRatio(index, 4) * 4,
+      duration: 1.8 + seededRatio(index, 5) * 3,
+      hue:      Math.round(seededRatio(index, 77) * 360),
+    })), [])
+
+  // Finale: chromatic sparks
+  const finaleSparks = useMemo(() =>
+    Array.from({ length: 44 }).map((_, index) => ({
+      id:       index,
+      angle:    seededRatio(index, 6) * 360,
+      distance: 110 + seededRatio(index, 7) * 380,
+      delay:    seededRatio(index, 8) * 0.7,
+      duration: 2.2 + seededRatio(index, 9) * 2.5,
+      size:     3 + seededRatio(index, 10) * 9,
+      hue:      Math.round(seededRatio(index, 78) * 360),
+    })), [])
+
+  // Finale: light rays
+  const lightRays = useMemo(() =>
+    Array.from({ length: 12 }).map((_, i) => ({
+      id:     i,
+      angle:  i * 30,
+      hue:    (i * 24) % 360,
+      delay:  seededRatio(i, 80) * 0.8,
+      length: 35 + seededRatio(i, 81) * 45,
+    })), [])
+
+  // Finale: color rings
+  const colorRings = useMemo(() =>
+    Array.from({ length: 5 }).map((_, i) => ({
+      id:    i,
+      hue:   i * 72,
+      delay: i * 0.2,
+      size:  6 + i * 12,
+    })), [])
+
+  // Finale: scales sparks
+  const scaleOrbs = useMemo(() =>
+    Array.from({ length: 8 }).map((_, i) => ({
+      id:       i,
+      x:        20 + seededRatio(i, 82) * 60,
+      y:        20 + seededRatio(i, 83) * 60,
+      size:     6 + seededRatio(i, 84) * 14,
+      delay:    seededRatio(i, 85) * 1.2,
+      duration: 3 + seededRatio(i, 86) * 2,
+      hue:      Math.round(seededRatio(i, 87) * 360),
+    })), [])
+
   useEffect(() => {
-    if (won) return undefined
-    const start = Date.now()
-    let frame
-    const tick = () => {
-      const t   = Date.now() - start
-      // Oscillate between -45 and 45 degrees
-      const raw = Math.sin(t * 0.0018) * 45
-      setAngle(raw)
-      frame = requestAnimationFrame(tick)
+    angleRef.current = angle
+    const nowReady = Math.abs(angle) <= 5
+    if (nowReady !== readyRef.current) {
+      readyRef.current = nowReady
+      setReadyGlow(nowReady)
     }
-    tick()
-    return () => cancelAnimationFrame(frame)
-  }, [won])
-
-  /* ── Near-balance detection ────────────────────────────── */
-  useEffect(() => {
-    setIsNearBalance(Math.abs(angle) < 5)
   }, [angle])
 
-  /* ── Strike handler ────────────────────────────────────── */
-  const handleStrike = () => {
-    if (won || hammerStrike) return
-    
-    // Animate hammer
-    setHammerStrike(true)
-    setTimeout(() => setHammerStrike(false), 250)
+  useEffect(() => {
+    if (won) return undefined
 
-    // Check hit at the moment of impact (delay 100ms for visual sync)
-    setTimeout(() => {
-      if (Math.abs(angleRef.current) < 5) {
-        setWon(true)
-        setAngle(0) // snap to perfect balance
-        setShowWinEffect(true)
-        setTimeout(() => onWin(), 5000) // Delay to watch the epic plot twist
-      } else {
-        setError(true)
-        setTimeout(() => setError(false), 400)
-      }
-    }, 100)
+    const start = performance.now()
+    let frame = 0
+
+    const tick = (now) => {
+      const elapsed   = now - start
+      // Cân lắc nhanh hơn, biên độ giảm dần khi seal được đóng
+      const speed     = 0.00088 + seals.length * 0.00014
+      const amplitude = 26 - seals.length * 3.2
+      const nextAngle = Math.sin(elapsed * speed) * amplitude + Math.sin(elapsed * speed * 2.3) * 3
+
+      angleRef.current = nextAngle
+      setAngle(nextAngle)
+      frame = requestAnimationFrame(tick)
+    }
+
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [seals.length, won])
+
+  const complete = () => {
+    wonRef.current = true
+    setWon(true)
+    setAngle(0)
+    window.setTimeout(() => setShowFinale(true), 720)
+    window.setTimeout(onWin, 12000)
   }
 
-  const progress = won ? 100 : Math.max(0, 50 - Math.abs(angle) / 45 * 50)
+  const handleStrike = () => {
+    if (wonRef.current || hammerStrike) return
+
+    setHammerStrike(true)
+    window.setTimeout(() => setHammerStrike(false), 260)
+
+    window.setTimeout(() => {
+      if (Math.abs(angleRef.current) <= 5) {
+        const nextSeals = [...seals, activeMandate.key]
+        setSeals(nextSeals)
+        if (nextSeals.length === mandates.length) complete()
+      } else {
+        setError(true)
+        window.setTimeout(() => setError(false), 380)
+      }
+    }, 40)
+  }
 
   return (
-    <div className="minigame-balance">
+    <div className={`minigame-balance ${showFinale ? 'is-final-scene' : ''}`}>
       <p className="minigame-instruction">
         {won
-          ? '⚖ QUYỀN LỰC THUỘC VỀ NHÂN DÂN!'
-          : 'Gõ búa khi cán cân ở trạng thái cân bằng hoàn hảo nhất'}
+          ? 'Năm nguyên tắc đã cân bằng — quyền lực sáng khi quay về phục vụ nhân dân.'
+          : `Đóng dấu "${activeMandate.title}" khi kim cân vào vùng xanh giữa. (${seals.length}/${mandates.length})`}
       </p>
 
-      <div className={`balance-container${won ? ' is-won' : ''}${error ? ' is-error' : ''}`}>
-        
-        {error && <div className="error-flash" />}
+      <div className={`gov-stage ${error ? 'is-error' : ''} ${won ? 'is-won' : ''} ${readyGlow ? 'is-ready-glow' : ''}`}>
+        <div className="gov-stage-aura" />
+        <div className="gov-civic-grid" />
 
-        {STARS.map(s => (
-          <div
-            key={s.id}
-            className="balance-star"
+        {stars.map(star => (
+          <i
+            key={star.id}
+            className="gov-star"
             style={{
-              left: s.left, top: s.top, width: s.size, height: s.size,
-              animation: `twinkle ${s.duration}s ${s.delay}s ease-in-out infinite`,
+              left:              `${star.left}%`,
+              top:               `${star.top}%`,
+              width:             `${star.size}px`,
+              '--hue':           star.hue,
+              animationDelay:    `${star.delay}s`,
+              animationDuration: `${star.duration}s`,
             }}
           />
         ))}
 
-        <div className={`angle-display${isNearBalance ? ' is-ready' : ''}`}>
-          ĐỘ LỆCH: {Math.abs(angle).toFixed(1)}°
+        {error && <div className="gov-error-flash" />}
+
+        {/* Ready flash ring */}
+        {isReady && !won && <div className="gov-ready-flash" />}
+
+        {/* Balance meter */}
+        <div className={`gov-balance-meter ${isReady ? 'is-ready' : ''}`}>
+          <span>{isReady ? '✦ ZONE ✦' : 'Độ lệch'}</span>
+          <strong>{Math.abs(angle).toFixed(1)}°</strong>
         </div>
 
-        {showWinEffect && (
-          <>
-            <div className="win-epic-flash" />
-            <div className="win-shockwave" />
-            <div className="win-rays" />
-            <div className="win-banner-epic">
-              <span className="text-glow">CÔNG LÝ</span><br/>
-              <span className="text-solid">THỰC THI</span>
-            </div>
-            {Array.from({ length: 60 }).map((_, i) => (
-              <div key={`spark-${i}`} className="win-spark" style={{
-                '--angle': `${Math.random() * 360}deg`,
-                '--dist': `${100 + Math.random() * 200}px`,
-                animationDelay: `${Math.random() * 0.5}s`
-              }} />
-            ))}
-          </>
-        )}
+        {/* Mandate progress row */}
+        <div className="gov-mandate-row">
+          {mandates.map((mandate, index) => (
+            <span
+              key={mandate.key}
+              className={`${seals.includes(mandate.key) ? 'is-sealed' : ''} ${index === seals.length && !won ? 'is-active' : ''}`}
+            >
+              {mandate.title}
+            </span>
+          ))}
+        </div>
 
-        <svg viewBox="0 0 400 450" className="balance-svg">
+        {/* Scale SVG */}
+        <svg viewBox="0 0 460 460" className="gov-scale-svg">
           <defs>
-            <linearGradient id="gold-pillar" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#b45309" />
-              <stop offset="30%" stopColor="#fde68a" />
-              <stop offset="70%" stopColor="#fbbf24" />
+            <linearGradient id="govGold" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stopColor="#854d0e" />
+              <stop offset="28%"  stopColor="#fef3c7" />
+              <stop offset="56%"  stopColor="#facc15" />
               <stop offset="100%" stopColor="#78350f" />
             </linearGradient>
-            <linearGradient id="gold-beam" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fef08a" />
-              <stop offset="50%" stopColor="#fbbf24" />
-              <stop offset="100%" stopColor="#b45309" />
+            <linearGradient id="govBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   stopColor="#dbeafe" />
+              <stop offset="52%"  stopColor="#38bdf8" />
+              <stop offset="100%" stopColor="#1d4ed8" />
             </linearGradient>
-            <linearGradient id="wood-handle" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#451a03" />
-              <stop offset="50%" stopColor="#92400e" />
-              <stop offset="100%" stopColor="#451a03" />
-            </linearGradient>
-            <filter id="epic-glow" filterUnits="userSpaceOnUse" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="15" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
+            <radialGradient id="govSeal">
+              <stop offset="0%"   stopColor="#ffffff" />
+              <stop offset="42%"  stopColor="#fef08a" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </radialGradient>
+            <filter id="govGlow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="620" height="620">
+              <feGaussianBlur stdDeviation="7" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
-            <filter id="soft-glow" filterUnits="userSpaceOnUse" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
+            <filter id="govStrongGlow" filterUnits="userSpaceOnUse" x="-80" y="-80" width="620" height="620">
+              <feGaussianBlur stdDeviation="14" result="blur" />
               <feMerge>
+                <feMergeNode in="blur" />
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
 
-          {isNearBalance && !won && (
-             <circle cx="200" cy="150" r="120" fill="rgba(74, 222, 128, 0.15)" filter="url(#epic-glow)" className="balance-aura" />
-          )}
-          {won && (
-             <circle cx="200" cy="150" r="180" fill="rgba(251, 191, 36, 0.3)" filter="url(#epic-glow)" className="win-aura" />
-          )}
+          {/* Ready ring */}
+          <circle
+            cx="230" cy="170" r="112"
+            className={`gov-ready-ring ${isReady ? 'is-ready' : ''}`}
+            filter="url(#govStrongGlow)"
+          />
 
-          {/* ITEM GAME STYLE SCALE */}
-          <g className={won ? "scale-group win-glow" : "scale-group"}>
-            {/* Chân đế cán cân (Base) */}
-            <path d="M 130 400 L 270 400 L 250 350 L 150 350 Z" fill="url(#gold-pillar)" stroke="#3f1f07" strokeWidth="4" strokeLinejoin="round" />
-            <rect x="160" y="330" width="80" height="20" fill="url(#gold-pillar)" stroke="#3f1f07" strokeWidth="4" rx="6" />
-            
-            {/* Trụ cán cân (Pillar) */}
-            <rect x="188" y="150" width="24" height="180" fill="url(#gold-pillar)" stroke="#3f1f07" strokeWidth="4" rx="5" />
-            
-            {/* Trục chính */}
-            <circle cx="200" cy="150" r="14" fill="url(#gold-pillar)" stroke="#3f1f07" strokeWidth="4" />
-            <circle cx="200" cy="150" r="6" fill="#fde68a" />
+          {/* Foundation */}
+          <g className="gov-scale-foundation">
+            <path d="M154 408 L306 408 L280 360 L180 360 Z" />
+            <rect x="178" y="338" width="104" height="26" rx="8" />
+            <rect x="216" y="176" width="28" height="164" rx="7" />
+            <circle cx="230" cy="176" r="20" />
+          </g>
 
-            {/* Đòn bẩy và 2 Đĩa cân (Beam & Pans) */}
-            <g transform={`translate(200, 150) rotate(${angle})`} style={{ transition: won ? 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none' }}>
-              {/* Thanh đòn bẩy */}
-              <rect x="-130" y="-10" width="260" height="20" fill="url(#gold-beam)" stroke="#3f1f07" strokeWidth="4" rx="10" />
-              <circle cx="0" cy="0" r="20" fill="url(#gold-pillar)" stroke="#3f1f07" strokeWidth="4" />
-              <circle cx="0" cy="0" r="8" fill="#fde68a" />
+          {/* Beam */}
+          <g
+            className="gov-scale-beam"
+            transform={`translate(230, 176) rotate(${won ? 0 : angle})`}
+            style={{ transition: won ? 'transform 620ms cubic-bezier(0.16, 1, 0.3, 1)' : 'none' }}
+          >
+            <rect x="-150" y="-11" width="300" height="22" rx="11" />
+            <circle cx="0" cy="0" r="24" />
+            <circle cx="0" cy="0" r="8" />
 
-              {/* Móc treo trái và phải */}
-              <circle cx="-120" cy="0" r="8" fill="#3f1f07" />
-              <circle cx="120" cy="0" r="8" fill="#3f1f07" />
-
-              {/* Đĩa cân bên trái */}
-              <g transform="translate(-120, 0)">
-                <g transform={`rotate(${-angle})`} style={{ transition: won ? 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none' }}>
-                  {/* Dây xích (Drawn as thick dark lines for item game style) */}
-                  <line x1="0" y1="0" x2="-35" y2="80" stroke="#3f1f07" strokeWidth="3" />
-                  <line x1="0" y1="0" x2="35" y2="80" stroke="#3f1f07" strokeWidth="3" />
-                  <line x1="0" y1="0" x2="-35" y2="80" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="3 3" />
-                  <line x1="0" y1="0" x2="35" y2="80" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="3 3" />
-                  
-                  {/* Lòng đĩa */}
-                  <path d="M -45 80 Q 0 120 45 80 L 35 75 Q 0 110 -35 75 Z" fill="url(#gold-beam)" stroke="#3f1f07" strokeWidth="4" strokeLinejoin="round" />
-                  <path d="M -40 80 Q 0 115 40 80" fill="none" stroke="#fde68a" strokeWidth="2" />
-                </g>
+             {/* Left pan */}
+            <g transform="translate(-132, 0)">
+              <g transform={`rotate(${won ? 0 : -angle})`} style={{ transition: won ? 'transform 620ms cubic-bezier(0.16, 1, 0.3, 1)' : 'none' }}>
+                <line x1="0" y1="0" x2="-44" y2="86" />
+                <line x1="0" y1="0" x2="44" y2="86" />
+                <ellipse cx="0" cy="86" rx="52" ry="14" className="gov-scale-plate-bg" />
+                <path d="M-56 90 Q0 134 56 90 L44 82 Q0 118 -44 82 Z" />
+                <ellipse cx="0" cy="86" rx="44" ry="10" className="gov-scale-plate-glow" />
+                <text y="109">{activeMandate.left}</text>
               </g>
+            </g>
 
-              {/* Đĩa cân bên phải */}
-              <g transform="translate(120, 0)">
-                <g transform={`rotate(${-angle})`} style={{ transition: won ? 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none' }}>
-                  <line x1="0" y1="0" x2="-35" y2="80" stroke="#3f1f07" strokeWidth="3" />
-                  <line x1="0" y1="0" x2="35" y2="80" stroke="#3f1f07" strokeWidth="3" />
-                  <line x1="0" y1="0" x2="-35" y2="80" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="3 3" />
-                  <line x1="0" y1="0" x2="35" y2="80" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="3 3" />
-                  
-                  <path d="M -45 80 Q 0 120 45 80 L 35 75 Q 0 110 -35 75 Z" fill="url(#gold-beam)" stroke="#3f1f07" strokeWidth="4" strokeLinejoin="round" />
-                  <path d="M -40 80 Q 0 115 40 80" fill="none" stroke="#fde68a" strokeWidth="2" />
-                </g>
+            {/* Right pan */}
+            <g transform="translate(132, 0)">
+              <g transform={`rotate(${won ? 0 : -angle})`} style={{ transition: won ? 'transform 620ms cubic-bezier(0.16, 1, 0.3, 1)' : 'none' }}>
+                <line x1="0" y1="0" x2="-44" y2="86" />
+                <line x1="0" y1="0" x2="44" y2="86" />
+                <ellipse cx="0" cy="86" rx="52" ry="14" className="gov-scale-plate-bg" />
+                <path d="M-56 90 Q0 134 56 90 L44 82 Q0 118 -44 82 Z" />
+                <ellipse cx="0" cy="86" rx="44" ry="10" className="gov-scale-plate-glow" />
+                <text y="109">{activeMandate.right}</text>
               </g>
             </g>
           </g>
 
-          {/* ITEM GAME STYLE GAVEL (BÚA) - Thu nhỏ lại và gõ có hiệu ứng */}
-          <g 
-            className={`gavel-interactive ${hammerStrike ? 'is-striking' : ''}`} 
-            transform="translate(320, 390)" 
-            onClick={handleStrike}
-            cursor="pointer"
-          >
-            {/* Vùng bấm vô hình (Hitbox to) để dễ click */}
-            <circle cx="0" cy="-50" r="90" fill="transparent" />
-
-            {/* Đế gõ (Sound Block) */}
-            <path d="M -35 0 L 35 0 L 45 15 L -45 15 Z" fill="url(#wood-handle)" stroke="#3f1f07" strokeWidth="4" strokeLinejoin="round" />
-            <path d="M -30 2 L 30 2" stroke="#fde68a" strokeWidth="1" opacity="0.3" />
-
-            {/* Tay cầm và đầu búa xoay bằng CSS */}
-            <g className="gavel-head-wrapper">
-              {/* Scale down 0.7 để búa bé lại */}
-              <g transform="scale(0.7)">
-                {/* Tay cầm (Handle) */}
-                <rect x="-8" y="-120" width="16" height="120" fill="url(#wood-handle)" stroke="#3f1f07" strokeWidth="4" rx="8" />
-                <rect x="-10" y="-30" width="20" height="10" fill="url(#gold-beam)" stroke="#3f1f07" strokeWidth="4" rx="3" />
-                
-                {/* Đầu búa (Head) */}
-                <path d="M -35 -140 L 35 -140 L 40 -100 L -40 -100 Z" fill="url(#wood-handle)" stroke="#3f1f07" strokeWidth="4" strokeLinejoin="round" />
-                {/* Đai vàng bọc 2 đầu búa */}
-                <rect x="-45" y="-135" width="12" height="30" fill="url(#gold-beam)" stroke="#3f1f07" strokeWidth="4" rx="3" />
-                <rect x="33" y="-135" width="12" height="30" fill="url(#gold-beam)" stroke="#3f1f07" strokeWidth="4" rx="3" />
-                {/* Highlight */}
-                <path d="M -25 -135 L 25 -135" stroke="#fde68a" strokeWidth="2" opacity="0.5" />
-              </g>
+          {/* Seals */}
+          {seals.map((seal, index) => (
+            <g key={seal} className="gov-seal-mark" transform={`translate(${142 + index * 44}, 318)`}>
+              <circle r="18" />
+              <path d="M-8 0 L-2 7 L10 -8" />
             </g>
-            
-            {/* Vòng sáng quanh búa báo hiệu (nhấp nháy mời bấm) */}
-            {!won && (
-              <circle cx="0" cy="-40" r="50" fill="none" stroke="rgba(251, 191, 36, 0.4)" strokeWidth="2" strokeDasharray="6 6" className="gavel-hint-ring" />
-            )}
+          ))}
 
-            {/* Hiệu ứng tia lửa nổ lúc gõ trúng */}
+          {/* Gavel */}
+          <g
+            className={`gov-gavel ${hammerStrike ? 'is-striking' : ''} ${isReady ? 'is-ready' : ''}`}
+            transform="translate(378, 396)"
+            onPointerDown={(e) => { e.preventDefault(); handleStrike() }}
+          >
+            <circle cx="-28" cy="-56" r="74" className="gov-gavel-hitbox" />
+            <ellipse cx="-32" cy="7" rx="54" ry="15" />
+            <g className="gov-gavel-head">
+              <rect x="-8" y="-120" width="16" height="120" rx="8" />
+              <path d="M-48 -148 H38 L46 -110 H-56 Z" />
+              <rect x="-64" y="-142" width="18" height="30" rx="4" />
+              <rect x="36"  y="-142" width="18" height="30" rx="4" />
+            </g>
+            <circle cx="-28" cy="-56" r="52" className="gov-gavel-ring" />
             {hammerStrike && (
-              <g className="strike-impact">
-                <circle cx="-15" cy="-5" r="25" fill="#fde68a" filter="url(#epic-glow)" />
-                <path d="M -15 -35 L -10 -15 L 10 -10 L -5 0 L 5 20 L -15 10 L -35 20 L -25 0 L -40 -10 L -20 -15 Z" fill="#fff" />
+              <g className="gov-strike-impact">
+                <circle cx="-32" cy="7" r="10" className="gov-strike-ring gov-strike-ring--1" />
+                <circle cx="-32" cy="7" r="30" className="gov-strike-ring gov-strike-ring--2" />
+                <circle cx="-32" cy="7" r="50" className="gov-strike-ring gov-strike-ring--3" />
+                <path d="M-32 -30 L-22 -10 L2 -4 L-14 8 L-6 30 L-32 18 L-58 30 L-50 8 L-66 -4 L-42 -10 Z" className="gov-strike-star" />
               </g>
             )}
           </g>
         </svg>
-
       </div>
 
-      {/* ── Progress bar ── */}
+      {/* ══════════ CHROMATIC FINALE ══════════ */}
+      {showFinale && (
+        <div className="gov-finale" aria-live="polite">
+          {/* L1: Dawn background */}
+          <div className="gov-finale-dawn" />
+
+          {/* L2: Chromatic shockwave rings */}
+          {colorRings.map(ring => (
+            <div
+              key={ring.id}
+              className="gov-finale-shockwave"
+              style={{
+                '--ring-hue':   ring.hue,
+                '--ring-size':  `${ring.size}rem`,
+                animationDelay: `${ring.delay}s`,
+              }}
+            />
+          ))}
+
+          {/* L3: Light rays */}
+          <div className="gov-finale-rays">
+            {lightRays.map(ray => (
+              <i
+                key={ray.id}
+                style={{
+                  '--ray-angle':  `${ray.angle}deg`,
+                  '--ray-hue':    ray.hue,
+                  '--ray-length': `${ray.length}vmax`,
+                  '--ray-delay':  `${ray.delay}s`,
+                  animationDelay: `${ray.delay}s`,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* L4: Balance hall pillars */}
+          <div className="gov-finale-hall">
+            <span /><span /><span /><span /><span />
+          </div>
+
+          {/* L5: 3D rings */}
+          <div className="gov-finale-rings" />
+
+          {/* L6: Floating orbs */}
+          {scaleOrbs.map(orb => (
+            <i
+              key={orb.id}
+              className="gov-finale-orb"
+              style={{
+                left:              `${orb.x}%`,
+                top:               `${orb.y}%`,
+                '--orb-size':      `${orb.size}px`,
+                '--orb-hue':       orb.hue,
+                '--duration':      `${orb.duration}s`,
+                '--delay':         `${orb.delay}s`,
+                animationDelay:    `${orb.delay}s`,
+                animationDuration: `${orb.duration}s`,
+              }}
+            />
+          ))}
+
+          {/* L7: Chromatic sparks */}
+          {finaleSparks.map(spark => (
+            <i
+              key={spark.id}
+              className="gov-finale-spark"
+              style={{
+                '--spark-angle':    `${spark.angle}deg`,
+                '--spark-distance': `${spark.distance}px`,
+                '--spark-size':     `${spark.size}px`,
+                '--spark-hue':      spark.hue,
+                '--duration':       `${spark.duration}s`,
+                '--delay':          `${spark.delay}s`,
+                animationDelay:    `${spark.delay}s`,
+                animationDuration: `${spark.duration}s`,
+              }}
+            />
+          ))}
+
+          {/* L8: Message card */}
+          <div className="gov-message-card">
+            <div className="gov-message-badge">
+              <span className="gov-badge-dot" />
+              <em>Nhà nước · Hành tinh đã mở khóa</em>
+            </div>
+            <h3>NHÀ NƯỚC<br />CỦA DÂN</h3>
+            <blockquote>
+              "Bao nhiêu lợi ích đều vì dân.<br />
+              Bao nhiêu quyền hạn đều của <strong>dân</strong>."
+            </blockquote>
+            <p>
+              Quyền lực không đứng trên nhân dân. Chính phủ là
+              công bộc của dân — lắng nghe, dựa vào và hành động
+              vì hạnh phúc của nhân dân.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="minigame-progress">
-        <div
-          className="minigame-progress-fill"
-          style={{ width: `${progress}%`, transition: won ? 'width 0.5s ease' : 'none' }}
-        />
+        <div className="minigame-progress-fill" style={{ width: `${progress}%` }} />
       </div>
     </div>
   )
