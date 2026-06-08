@@ -1,40 +1,40 @@
 import { useMemo, useRef, useState } from 'react'
 import './TypeToAct.css'
 
-// Câu dài hơn, 10 tiles thay vì 7
 const targetTiles = [
-  { id: 'noi',       text: 'Nói',       note: 'lời hứa' },
-  { id: 'thi',       text: 'thì',       note: 'gắn với' },
-  { id: 'phai',      text: 'phải',      note: 'trách nhiệm' },
-  { id: 'lam',       text: 'làm',       note: 'hành động' },
-  { id: 'lam-duoc',  text: 'được',      note: 'kết quả' },
-  { id: 'kiem-tra',  text: 'kiểm tra',  note: 'theo sát' },
-  { id: 'den-noi',   text: 'đến nơi',   note: 'không qua loa' },
-  { id: 'den-chon',  text: 'đến chốn',  note: 'làm cho xong' },
-  { id: 'nhu-da',    text: 'như đã',    note: 'cam kết' },
-  { id: 'hua',       text: 'hứa',       note: 'lời thề' },
+  { id: 'noi',       text: 'Nói' },
+  { id: 'thi-1',     text: 'thì' },
+  { id: 'phai-1',    text: 'phải' },
+  { id: 'lam-1',     text: 'làm' },
+  { id: 'lam-2',     text: 'làm' },
+  { id: 'thi-2',     text: 'thì' },
+  { id: 'phai-2',    text: 'phải' },
+  { id: 'den-noi',   text: 'đến nơi' },
+  { id: 'den-chon',  text: 'đến chốn' },
 ]
 
-// Pool xáo trộn
 const shuffledTiles = [
   targetTiles[3], targetTiles[0], targetTiles[6], targetTiles[2],
-  targetTiles[8], targetTiles[5], targetTiles[9], targetTiles[1],
-  targetTiles[7], targetTiles[4],
+  targetTiles[8], targetTiles[5], targetTiles[1], targetTiles[7],
+  targetTiles[4],
 ]
 
 const deskSignals = ['Giản dị', 'Khoa học', 'Gần dân', 'Nêu gương', 'Thực tiễn', 'Nhất quán']
 const pledgeSteps = [
   { label: 'Cam kết', range: [0, 3] },
-  { label: 'Hành động', range: [4, 7] },
-  { label: 'Kiểm chứng', range: [8, 9] },
+  { label: 'Hành động', range: [4, 6] },
+  { label: 'Kiểm chứng', range: [7, 8] },
 ]
+
+const SUMMARY_REVEAL_DELAY = 560
+const SUMMARY_EXIT_DELAY = 5200
 
 function seededRatio(index, salt = 0) {
   const value = Math.sin(index * 38.61 + salt * 17.23) * 10000
   return value - Math.floor(value)
 }
 
-export default function TypeToAct({ onWin }) {
+export default function TypeToAct({ onWin, onSolved }) {
   const [slots, setSlots]           = useState(Array(targetTiles.length).fill(null))
   const [pool, setPool]             = useState([...shuffledTiles])
   const [errorState, setErrorState] = useState(false)
@@ -43,6 +43,8 @@ export default function TypeToAct({ onWin }) {
   const [stampTrail, setStampTrail] = useState([])
   const [correctSlots, setCorrectSlots] = useState([])
   const [lastPlaced, setLastPlaced] = useState(null)
+  const [combo, setCombo]           = useState(0)
+  const [comboBurst, setComboBurst] = useState(0)
   const stampIdRef = useRef(0)
 
   const ambientMarks = useMemo(
@@ -95,11 +97,23 @@ export default function TypeToAct({ onWin }) {
 
     const nextPool = [...pool]
     nextPool[index] = null
+    const isCorrectPlacement = item.text === targetTiles[firstEmptySlot].text
+    const nextCombo = isCorrectPlacement ? combo + 1 : 0
 
     setSlots(nextSlots)
     setPool(nextPool)
     setLastPlaced(firstEmptySlot)
     setTimeout(() => setLastPlaced(null), 400)
+    setCombo(nextCombo)
+    setComboBurst((burst) => burst + 1)
+
+    if (isCorrectPlacement) {
+      setCorrectSlots((current) => (
+        current.includes(firstEmptySlot) ? current : [...current, firstEmptySlot]
+      ))
+    } else {
+      setCorrectSlots((current) => current.filter((slotIndex) => slotIndex !== firstEmptySlot))
+    }
 
     setStampTrail((trail) => [
       ...trail.slice(-6),
@@ -111,7 +125,7 @@ export default function TypeToAct({ onWin }) {
     ])
 
     if (nextSlots.every(Boolean)) {
-      const correctMap = nextSlots.map((slot, slotIndex) => slot.id === targetTiles[slotIndex].id)
+      const correctMap = nextSlots.map((slot, slotIndex) => slot.text === targetTiles[slotIndex].text)
       const isCorrect  = correctMap.every(Boolean)
       if (isCorrect) {
         setCorrectSlots(nextSlots.map((_, i) => i))
@@ -139,6 +153,7 @@ export default function TypeToAct({ onWin }) {
     setSlots(nextSlots)
     setPool(nextPool)
     setCorrectSlots([])
+    setCombo(0)
   }
 
   const triggerError = () => {
@@ -149,17 +164,20 @@ export default function TypeToAct({ onWin }) {
       setPool([...shuffledTiles])
       setStampTrail([])
       setCorrectSlots([])
+      setCombo(0)
     }, 700)
   }
 
   const handleWin = () => {
+    onSolved?.()
     setWon(true)
-    setTimeout(() => setShowFinale(true), 560)
-    setTimeout(() => onWin(), 10000)
+    setTimeout(() => setShowFinale(true), SUMMARY_REVEAL_DELAY)
+    setTimeout(() => onWin(), SUMMARY_EXIT_DELAY)
   }
 
   const progress = won ? 100 : (slots.filter(Boolean).length / targetTiles.length) * 100
   const filledCount = slots.filter(Boolean).length
+  const comboClass = combo >= 6 ? 'is-combo-fire' : combo >= 3 ? 'is-combo-hot' : combo >= 2 ? 'is-combo-warm' : ''
 
   return (
     <div className={`minigame-type ${showFinale ? 'is-final-scene' : ''}`}>
@@ -168,10 +186,13 @@ export default function TypeToAct({ onWin }) {
           ? 'Con đường từ lời nói đến việc làm đã hoàn chỉnh.'
             : errorState
               ? 'Thứ tự chưa đúng — hãy thử lại từ đầu!'
-            : 'Xếp 10 mảnh câu thành một quy trình: cam kết rõ, hành động thật, kiểm tra đến cùng.'}
+            : 'Xếp các mảnh thành câu đúng: nói phải đi cùng việc làm đến nơi đến chốn.'}
       </p>
 
-      <div className={`style-board ${errorState ? 'is-error' : ''} ${won ? 'is-won' : ''}`}>
+      <div
+        className={`style-board ${errorState ? 'is-error' : ''} ${won ? 'is-won' : ''} ${comboClass}`}
+        style={{ '--tile-count': targetTiles.length }}
+      >
         {/* Ambient dust particles */}
         {ambientMarks.map((mark) => (
           <span
@@ -194,6 +215,12 @@ export default function TypeToAct({ onWin }) {
           <span className="style-lamp-beam" />
           <span className="style-lamp-stem" />
           <span className="style-lamp-base" />
+        </div>
+        <div className="style-lamp-cast" aria-hidden="true" />
+
+        <div className={`style-combo-meter ${combo >= 2 ? 'is-visible' : ''}`} aria-live="polite">
+          <span key={comboBurst}>Combo x{combo}</span>
+          <strong>{combo >= 6 ? 'Bốc cháy' : combo >= 3 ? 'Tăng tốc' : 'Đúng nhịp'}</strong>
         </div>
 
         {/* Word-to-action progress map */}
@@ -237,7 +264,6 @@ export default function TypeToAct({ onWin }) {
               {item ? (
                 <span className="style-tile in-slot">
                   <b>{item.text}</b>
-                  <small>{item.note}</small>
                 </span>
               ) : (
                 <span className="style-slot-index">{index + 1}</span>
@@ -257,7 +283,6 @@ export default function TypeToAct({ onWin }) {
               {item && (
                 <button type="button" className="style-tile in-pool" onClick={() => handlePoolClick(index)}>
                   <b>{item.text}</b>
-                  <small>{item.note}</small>
                 </button>
               )}
             </div>
@@ -369,16 +394,16 @@ export default function TypeToAct({ onWin }) {
           <div className="style-message-card">
             <div className="style-message-badge">
               <span className="style-message-badge-dot" />
-              <em>Phong cách · Hành tinh đã mở khóa</em>
+              <em>Tổng kết · Hành tinh đã mở khóa</em>
             </div>
             <h3>PHONG CÁCH<br />HỒ CHÍ MINH</h3>
             <blockquote>
               "Lời nói chỉ thật sự có trọng lượng<br />
-              khi nó bước ra thành <strong>việc làm</strong>."
+              khi được giữ bằng <strong>việc làm đến nơi đến chốn</strong>."
             </blockquote>
             <p>
-              Giản dị không phải là ít đi — mà là làm đúng điều cần làm,
-              đến nơi đến chốn, như đã hứa, để người khác có thể <em>tin</em>.
+              Đúng với bookmark “Nói thì phải làm”: phong cách nêu gương bắt đầu từ lời hứa rõ ràng,
+              rồi được chứng minh bằng hành động cụ thể để người khác có thể <em>tin</em>.
             </p>
           </div>
         </div>

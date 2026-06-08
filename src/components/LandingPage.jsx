@@ -1,5 +1,10 @@
-import { useState, useRef } from 'react'
-import hoChiMinhImage from '../assets/HoChiMinhImage.jpg'
+import { useCallback, useEffect, useRef, useState } from 'react'
+
+const travelIntroText = 'Giữa vũ trụ bao la, có những chân lý sáng ngời như những vì sao... Hãy bắt đầu hành trình tìm kiếm ánh sáng của bạn.'
+const TYPE_INTERVAL = 42
+const INTRO_REVEAL_DELAY = 860
+const INTRO_EXIT_DELAY = 1500
+
 const previewQuotes = [
   'Không có gì quý hơn độc lập, tự do.',
   'Đoàn kết, đoàn kết, đại đoàn kết.',
@@ -31,6 +36,48 @@ const starTopics = ['Độc lập', 'Nhân dân', 'Đạo đức', 'Văn hóa', 
 export default function LandingPage({ onExplore }) {
   const [burstKey, setBurstKey] = useState(0)
   const [traveling, setTraveling] = useState(false)
+  const [typedText, setTypedText] = useState('')
+  const [introPhase, setIntroPhase] = useState('idle')
+  const audioContextRef = useRef(null)
+
+  const getAudioContext = useCallback(() => {
+    if (typeof window === 'undefined') return null
+
+    const AudioContextConstructor = window.AudioContext || window.webkitAudioContext
+    if (!AudioContextConstructor) return null
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContextConstructor()
+    }
+
+    audioContextRef.current.resume?.()
+    return audioContextRef.current
+  }, [])
+
+  const playTypingSound = useCallback((character) => {
+    const audioContext = audioContextRef.current
+    if (!audioContext || audioContext.state === 'closed' || character === ' ') return
+
+    const now = audioContext.currentTime
+    const oscillator = audioContext.createOscillator()
+    const gain = audioContext.createGain()
+    const filter = audioContext.createBiquadFilter()
+
+    oscillator.type = 'triangle'
+    oscillator.frequency.value = 230 + Math.random() * 110
+    filter.type = 'highpass'
+    filter.frequency.value = 620
+
+    gain.gain.setValueAtTime(0.0001, now)
+    gain.gain.linearRampToValueAtTime(character === '.' ? 0.012 : 0.024, now + 0.006)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045)
+
+    oscillator.connect(filter)
+    filter.connect(gain)
+    gain.connect(audioContext.destination)
+    oscillator.start(now)
+    oscillator.stop(now + 0.05)
+  }, [])
 
   const handleExplore = () => {
     if (traveling) {
@@ -39,8 +86,45 @@ export default function LandingPage({ onExplore }) {
 
     setTraveling(true)
     setBurstKey((key) => key + 1)
-    window.setTimeout(onExplore, 5000)
+    setTypedText('')
+    setIntroPhase('typing')
+    getAudioContext()
   }
+
+  useEffect(() => {
+    if (!traveling) return undefined
+
+    let characterIndex = 0
+    let revealTimer = null
+    let exitTimer = null
+    const typeTimer = window.setInterval(() => {
+      characterIndex += 1
+      const nextText = travelIntroText.slice(0, characterIndex)
+      const nextCharacter = travelIntroText[characterIndex - 1]
+
+      setTypedText(nextText)
+      playTypingSound(nextCharacter)
+
+      if (characterIndex >= travelIntroText.length) {
+        window.clearInterval(typeTimer)
+
+        revealTimer = window.setTimeout(() => setIntroPhase('opening'), INTRO_REVEAL_DELAY)
+        exitTimer = window.setTimeout(onExplore, INTRO_REVEAL_DELAY + INTRO_EXIT_DELAY)
+      }
+    }, TYPE_INTERVAL)
+
+    return () => {
+      window.clearInterval(typeTimer)
+      window.clearTimeout(revealTimer)
+      window.clearTimeout(exitTimer)
+    }
+  }, [onExplore, playTypingSound, traveling])
+
+  useEffect(() => {
+    return () => {
+      audioContextRef.current?.close?.()
+    }
+  }, [])
 
   return (
     <section
@@ -53,15 +137,21 @@ export default function LandingPage({ onExplore }) {
         {burstKey > 0 && <div key={burstKey} className="landing-click-burst" />}
       </div>
 
-      <div className={`travel-cinematic ${traveling ? 'is-active' : ''}`} aria-hidden={!traveling} aria-live="polite">
-        <div className="hologram-stage" aria-hidden="true">
-          <div className="hologram-backlight" />
-          <div className="hologram-beam" />
-          <div className="hologram-aura" />
-          <div className="hologram-rings" />
-          <img className="hologram-photo" src={hoChiMinhImage} alt="" loading="eager" decoding="sync" fetchPriority="high" />
+      <div
+        className={`travel-cinematic ${traveling ? 'is-active' : ''} ${introPhase === 'opening' ? 'is-opening' : ''}`}
+        aria-hidden={!traveling}
+        aria-live="polite"
+      >
+        <div className="travel-typewriter-frame">
+          <span className="travel-typewriter-label">Mở cổng ký ức</span>
+          <p>
+            {typedText}
+            <span className="travel-typewriter-caret" aria-hidden="true" />
+          </p>
+          <div className="travel-typewriter-progress" aria-hidden="true">
+            <span style={{ '--intro-progress': `${(typedText.length / travelIntroText.length) * 100}%` }} />
+          </div>
         </div>
-        <p>Không có gì quý hơn độc lập, tự do.</p>
       </div>
 
       <div className="landing-explore-only">

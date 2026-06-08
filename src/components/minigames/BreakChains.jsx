@@ -8,8 +8,6 @@ const DIALS_CONFIG = [
   { letters: ['L', 'T', 'B', 'N', 'H', 'V'], target: 0, clue: 'Tự chủ' },
   { letters: ['Â', 'A', 'Ậ', 'Ư', 'Ê', 'Ô'], target: 2, clue: 'Không lệ thuộc' },
   { letters: ['P', 'C', 'D', 'T', 'K', 'L'], target: 0, clue: 'Mở lối' },
-  { letters: ['H', 'N', 'T', 'L', 'D', 'M'], target: 2, clue: 'Nhân dân' },
-  { letters: ['Ú', 'Ì', 'Ọ', 'C', 'Ả', 'Ê'], target: 3, clue: 'Tự do' },
 ]
 
 const finaleWords  = ['Độc lập', 'Tự do', 'Hạnh phúc', 'Nhân dân']
@@ -24,7 +22,7 @@ function isSolved(values) {
   return values.every((v, i) => v === DIALS_CONFIG[i].target)
 }
 
-export default function BreakChains({ onWin }) {
+export default function BreakChains({ onWin, onSolved }) {
   const [dials, setDials]         = useState(() => Array(DIALS_CONFIG.length).fill(0))
   const [won, setWon]             = useState(false)
   const [showFinale, setShowFinale] = useState(false)
@@ -80,6 +78,7 @@ export default function BreakChains({ onWin }) {
 
   const complete = () => {
     wonRef.current = true
+    onSolved?.()
     setWon(true)
     window.setTimeout(() => setShowFinale(true), 480)
     window.setTimeout(onWin, 10500)
@@ -125,7 +124,7 @@ export default function BreakChains({ onWin }) {
       <p className="minigame-instruction">
         {won
           ? 'Khóa đã vỡ — độc lập không dừng ở cánh cửa mở, mà dẫn tới tự do và hạnh phúc.'
-          : `Xoay 8 trục mật mã để mở khóa ĐỘC LẬP. (${correctCount}/${DIALS_CONFIG.length} đúng)`}
+          : `Xoay ${DIALS_CONFIG.length} trục mật mã để mở khóa ĐỘC LẬP. (${correctCount}/${DIALS_CONFIG.length} đúng)`}
       </p>
 
       <div className={`break-container ${won ? 'is-won' : ''} ${showFinale ? 'show-finale' : ''}`}>

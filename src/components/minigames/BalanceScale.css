@@ -351,10 +351,21 @@
 }
 
 /* Gavel */
-.gov-gavel { cursor: pointer; transition: filter 180ms ease; }
+.gov-gavel {
+  cursor: pointer;
+  transition: filter 180ms ease;
+}
+
+.gov-gavel-body {
+  transform-box: fill-box;
+  transform-origin: center;
+}
 
 .gov-gavel.is-ready {
   filter: drop-shadow(0 0 1rem rgba(74,222,128,0.72)) drop-shadow(0 0 2rem rgba(74,222,128,0.4));
+}
+
+.gov-gavel.is-ready .gov-gavel-body {
   animation: gavelReadyBob 1s ease-in-out infinite;
 }
 

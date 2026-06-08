@@ -1,9 +1,10 @@
 import { Canvas } from '@react-three/fiber'
-import { Suspense, useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { planets } from '../data/cosmos'
 import InfoPanel from './space/InfoPanel'
 import QuotePanel from './space/QuotePanel'
 import Scene from './space/Scene'
+import TruthMuseum from './space/TruthMuseum'
 import MinigameOverlay from './minigames/MinigameOverlay'
 
 export default function SpaceExperience({ onBack }) {
@@ -15,6 +16,10 @@ export default function SpaceExperience({ onBack }) {
   const [isWarping, setIsWarping] = useState(true)
   const [pendingMinigame, setPendingMinigame] = useState(null)
   const [minigamesEnabled, setMinigamesEnabled] = useState(true)
+  const [museumOpen, setMuseumOpen] = useState(false)
+  const minigameSessionRef = useRef(0)
+  const activeMinigameIdRef = useRef(null)
+  const previousUnlockedCountRef = useRef(0)
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -23,8 +28,21 @@ export default function SpaceExperience({ onBack }) {
     return () => clearTimeout(timer)
   }, [])
 
-  const allQuotes = useMemo(() => planets.flatMap((planet) => planet.quotes ?? []), [])
+  const allBookmarks = useMemo(
+    () => planets.flatMap((planet) => (planet.quotes ?? []).map((quote) => ({ quote, planet }))),
+    [],
+  )
+  const allQuotes = useMemo(() => allBookmarks.map((item) => item.quote), [allBookmarks])
   const isCompleted = unlockedQuotes.length === allQuotes.length
+
+  useEffect(() => {
+    const previousCount = previousUnlockedCountRef.current
+    previousUnlockedCountRef.current = unlockedQuotes.length
+
+    if (allQuotes.length > 0 && previousCount < allQuotes.length && unlockedQuotes.length === allQuotes.length) {
+      setMuseumOpen(true)
+    }
+  }, [allQuotes.length, unlockedQuotes.length])
 
   const selectPlanet = (planet) => {
     setSelectedPlanet(planet)
@@ -33,7 +51,10 @@ export default function SpaceExperience({ onBack }) {
   const openQuote = (quote, planet) => {
     if (!unlockedQuotes.includes(quote.id)) {
       if (minigamesEnabled) {
-        setPendingMinigame({ quote, planet })
+        const minigameId = `${quote.id}-${minigameSessionRef.current += 1}`
+        activeMinigameIdRef.current = minigameId
+        setSelectedQuote(null)
+        setPendingMinigame({ id: minigameId, quote, planet })
         return
       } else {
         // Automatically unlock if minigames are disabled
@@ -45,13 +66,26 @@ export default function SpaceExperience({ onBack }) {
     setQuoteRevealKey((key) => key + 1)
   }
 
-  const handleMinigameComplete = () => {
-    if (!pendingMinigame) return
-    const { quote } = pendingMinigame
+  const handleMinigameComplete = (completedMinigame) => {
+    if (!completedMinigame || activeMinigameIdRef.current !== completedMinigame.id) return
+    const { quote } = completedMinigame
     setUnlockedQuotes((current) => (current.includes(quote.id) ? current : [...current, quote.id]))
     setSelectedQuote(quote)
     setQuoteRevealKey((key) => key + 1)
+    activeMinigameIdRef.current = null
     setPendingMinigame(null)
+  }
+
+  const handleMinigameCancel = (minigame) => {
+    if (!minigame || activeMinigameIdRef.current !== minigame.id) return
+    activeMinigameIdRef.current = null
+    setPendingMinigame(null)
+  }
+
+  const openCollectedQuote = (quote) => {
+    setSelectedQuote(quote)
+    setQuoteRevealKey((key) => key + 1)
+    setMuseumOpen(false)
   }
 
   return (
@@ -100,6 +134,17 @@ export default function SpaceExperience({ onBack }) {
           <div key={quoteRevealKey + 'trail'} className="quote-reveal-trail" aria-hidden="true" />
         )}
 
+        <button
+          className={`collection-toggle ${isCompleted ? 'is-complete' : ''}`}
+          type="button"
+          onClick={() => setMuseumOpen(true)}
+          aria-label="Mở Túi đồ và Bộ sưu tập"
+        >
+          <span>Túi đồ</span>
+          <strong>Bộ sưu tập</strong>
+          <em>{unlockedQuotes.length}/{allQuotes.length}</em>
+        </button>
+
         <div className="hud-bar">
           <div>
             <span>Drag</span> xoay camera
@@ -127,13 +172,21 @@ export default function SpaceExperience({ onBack }) {
           />
         )}
         <QuotePanel quote={selectedQuote} onClose={() => setSelectedQuote(null)} />
+
+        <TruthMuseum
+          visible={museumOpen}
+          bookmarks={allBookmarks}
+          unlockedQuotes={unlockedQuotes}
+          onClose={() => setMuseumOpen(false)}
+          onOpenQuote={openCollectedQuote}
+        />
         
         {pendingMinigame && (
           <MinigameOverlay
             quote={pendingMinigame.quote}
             planet={pendingMinigame.planet}
-            onComplete={handleMinigameComplete}
-            onCancel={() => setPendingMinigame(null)}
+            onComplete={() => handleMinigameComplete(pendingMinigame)}
+            onCancel={() => handleMinigameCancel(pendingMinigame)}
           />
         )}
       </div>

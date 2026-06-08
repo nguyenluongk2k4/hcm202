@@ -14,7 +14,7 @@ function seededRatio(index, salt = 1) {
   return value - Math.floor(value)
 }
 
-export default function BalanceScale({ onWin }) {
+export default function BalanceScale({ onWin, onSolved }) {
   const [angle, setAngle]             = useState(0)
   const [seals, setSeals]             = useState([])
   const [error, setError]             = useState(false)
@@ -117,6 +117,7 @@ export default function BalanceScale({ onWin }) {
 
   const complete = () => {
     wonRef.current = true
+    onSolved?.()
     setWon(true)
     setAngle(0)
     window.setTimeout(() => setShowFinale(true), 720)
@@ -288,23 +289,25 @@ export default function BalanceScale({ onWin }) {
             transform="translate(378, 396)"
             onPointerDown={(e) => { e.preventDefault(); handleStrike() }}
           >
-            <circle cx="-28" cy="-56" r="74" className="gov-gavel-hitbox" />
-            <ellipse cx="-32" cy="7" rx="54" ry="15" />
-            <g className="gov-gavel-head">
-              <rect x="-8" y="-120" width="16" height="120" rx="8" />
-              <path d="M-48 -148 H38 L46 -110 H-56 Z" />
-              <rect x="-64" y="-142" width="18" height="30" rx="4" />
-              <rect x="36"  y="-142" width="18" height="30" rx="4" />
-            </g>
-            <circle cx="-28" cy="-56" r="52" className="gov-gavel-ring" />
-            {hammerStrike && (
-              <g className="gov-strike-impact">
-                <circle cx="-32" cy="7" r="10" className="gov-strike-ring gov-strike-ring--1" />
-                <circle cx="-32" cy="7" r="30" className="gov-strike-ring gov-strike-ring--2" />
-                <circle cx="-32" cy="7" r="50" className="gov-strike-ring gov-strike-ring--3" />
-                <path d="M-32 -30 L-22 -10 L2 -4 L-14 8 L-6 30 L-32 18 L-58 30 L-50 8 L-66 -4 L-42 -10 Z" className="gov-strike-star" />
+            <g className="gov-gavel-body">
+              <circle cx="-28" cy="-56" r="74" className="gov-gavel-hitbox" />
+              <ellipse cx="-32" cy="7" rx="54" ry="15" />
+              <g className="gov-gavel-head">
+                <rect x="-8" y="-120" width="16" height="120" rx="8" />
+                <path d="M-48 -148 H38 L46 -110 H-56 Z" />
+                <rect x="-64" y="-142" width="18" height="30" rx="4" />
+                <rect x="36"  y="-142" width="18" height="30" rx="4" />
               </g>
-            )}
+              <circle cx="-28" cy="-56" r="52" className="gov-gavel-ring" />
+              {hammerStrike && (
+                <g className="gov-strike-impact">
+                  <circle cx="-32" cy="7" r="10" className="gov-strike-ring gov-strike-ring--1" />
+                  <circle cx="-32" cy="7" r="30" className="gov-strike-ring gov-strike-ring--2" />
+                  <circle cx="-32" cy="7" r="50" className="gov-strike-ring gov-strike-ring--3" />
+                  <path d="M-32 -30 L-22 -10 L2 -4 L-14 8 L-6 30 L-32 18 L-58 30 L-50 8 L-66 -4 L-42 -10 Z" className="gov-strike-star" />
+                </g>
+              )}
+            </g>
           </g>
         </svg>
       </div>

@@ -50,7 +50,7 @@ function curvedPath(from, to) {
   return `M ${from.x} ${from.y} Q ${midX + bend} ${midY - 2} ${to.x} ${to.y}`
 }
 
-export default function HeartConstellation({ onWin }) {
+export default function HeartConstellation({ onWin, onSolved }) {
   const stageRef = useRef(null)
   const burstIdRef = useRef(0)
   const trailIdRef = useRef(0)
@@ -94,6 +94,7 @@ export default function HeartConstellation({ onWin }) {
     setBursts((items) => [...items.slice(-5), { id: `${hit.id}-${burstIdRef.current += 1}`, x: hit.x, y: hit.y }])
 
     if (nextLit.length === heartNodes.length) {
+      onSolved?.()
       setWon(true)
       setTimeout(() => setShowFinale(true), 820)
       setTimeout(() => onWin(), 10000)

@@ -103,7 +103,7 @@ function curvedPath(start, end, strength = 0.12) {
   return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
 }
 
-export default function ConnectFragments({ onWin }) {
+export default function ConnectFragments({ onWin, onSolved }) {
   const [edges, setEdges]             = useState([])
   const [drag, setDrag]               = useState(null)
   const [won, setWon]                 = useState(false)
@@ -144,10 +144,11 @@ export default function ConnectFragments({ onWin }) {
 
   const complete = useCallback(() => {
     wonRef.current = true
+    onSolved?.()
     setWon(true)
     setShowFinale(true)
     window.setTimeout(onWin, 14000)
-  }, [onWin])
+  }, [onSolved, onWin])
 
   useEffect(() => {
     if (!drag || won) return undefined

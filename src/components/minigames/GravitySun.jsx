@@ -40,7 +40,7 @@ function curvePath(from, to, bend = 10) {
   return `M ${from.x} ${from.y} Q ${midX + (normalX / length) * bend} ${midY + (normalY / length) * bend} ${to.x} ${to.y}`
 }
 
-export default function GravitySun({ onWin }) {
+export default function GravitySun({ onWin, onSolved }) {
   const stageRef = useRef(null)
   const [cursor, setCursor] = useState(null)
   const [collected, setCollected] = useState([])
@@ -95,6 +95,7 @@ export default function GravitySun({ onWin }) {
         if (current.includes(fragment.id)) return current
         const next = [...current, fragment.id]
         if (next.length === fragments.length) {
+          onSolved?.()
           setWon(true)
           setTimeout(() => setShowFinale(true), 900)
           setTimeout(() => onWin(), 9400)

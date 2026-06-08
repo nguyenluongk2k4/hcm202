@@ -137,6 +137,14 @@ const lotusPetals = [
 
 const finaleWords = ['Niềm tin', 'Tri thức', 'Đạo đức', 'Lý tưởng', 'Cái đẹp', 'Di sản']
 const quoteLetters = 'TRỒNG NGƯỜI - GIEO CẢ TƯƠNG LAI'.split('')
+const growthToolDefaults = {
+  rain: { x: 18, y: 18 },
+  sun: { x: 82, y: 48 },
+}
+const growthToolTargets = {
+  rain: { x: 50, y: 73, radius: 25 },
+  sun: { x: 50, y: 48, radius: 34 },
+}
 
 function easeOutBack(x) {
   if (x <= 0) return 0
@@ -155,6 +163,18 @@ function getPathData(size) {
 function seededRatio(index, salt = 1) {
   const value = Math.sin(index * 91.173 + salt * 37.719) * 10000
   return value - Math.floor(value)
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function getGrowthResource(tool, position) {
+  const target = growthToolTargets[tool]
+  const dx = position.x - target.x
+  const dy = position.y - target.y
+  const distance = Math.sqrt(dx * dx + dy * dy)
+  return distance <= target.radius ? tool : null
 }
 
 function getGlyphIcon(key) {
@@ -181,7 +201,7 @@ function getCurvePath(start, end) {
   return `M ${start.x} ${start.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${end.x} ${end.y}`
 }
 
-export default function GrowSeed({ onWin }) {
+export default function GrowSeed({ onWin, onSolved }) {
   const [progress, setProgress] = useState(0)
   const [unlocked, setUnlocked] = useState([])
   const [isPressing, setIsPressing] = useState(false)
@@ -190,8 +210,14 @@ export default function GrowSeed({ onWin }) {
   const [glyphParticles, setGlyphParticles] = useState([])
   const [shockwave, setShockwave] = useState(false)
   const [finalePhase, setFinalePhase] = useState(0)
+  const [toolPositions, setToolPositions] = useState(growthToolDefaults)
+  const [activeTool, setActiveTool] = useState(null)
+  const [activeResource, setActiveResource] = useState(null)
 
   const intervalRef = useRef(null)
+  const gardenRef = useRef(null)
+  const activeResourceRef = useRef(null)
+  const unlockedRef = useRef([])
   const wonRef = useRef(false)
 
   const stageByKey = useMemo(() => {
@@ -251,37 +277,106 @@ export default function GrowSeed({ onWin }) {
     }))
   }, [])
 
+  const matureSeeds = useMemo(() => {
+    return Array.from({ length: 46 }).map((_, index) => ({
+      id: index,
+      angle: seededRatio(index, 41) * 360,
+      dist: 42 + seededRatio(index, 42) * 220,
+      delay: seededRatio(index, 43) * 1.25,
+      duration: 2.2 + seededRatio(index, 44) * 1.8,
+      size: 3 + seededRatio(index, 45) * 7,
+    }))
+  }, [])
+
   const stopGrowing = () => {
     setIsPressing(false)
+    setActiveResource(null)
+    activeResourceRef.current = null
     clearInterval(intervalRef.current)
     intervalRef.current = null
   }
 
-  const startGrowing = (event) => {
-    if (won || activeStage) return
-    event.preventDefault()
-    setIsPressing(true)
+  const startGrowing = () => {
+    if (won || activeStage || !activeResourceRef.current) return
     if (intervalRef.current) return
 
     intervalRef.current = setInterval(() => {
+      if (!activeResourceRef.current) return
       setProgress((current) => {
+        const step = activeResourceRef.current === 'rain' ? 0.34 : 0.31
         const nextStage = cultureStages.find(
           (stage) =>
             current < stage.threshold &&
-            current + 0.28 >= stage.threshold &&
-            !unlocked.includes(stage.key)
+            current + step >= stage.threshold &&
+            !unlockedRef.current.includes(stage.key)
         )
         if (nextStage) {
           clearInterval(intervalRef.current)
           intervalRef.current = null
           setIsPressing(false)
+          setActiveResource(null)
+          activeResourceRef.current = null
           setPulse(nextStage.key)
           return nextStage.threshold
         }
         if (current >= 100) return 100
-        return Math.min(100, current + 0.28)
+        return Math.min(100, current + step)
       })
     }, 28)
+  }
+
+  const updateToolPosition = (tool, event) => {
+    if (!gardenRef.current) return
+
+    const rect = gardenRef.current.getBoundingClientRect()
+    const position = {
+      x: clamp(((event.clientX - rect.left) / rect.width) * 100, 8, 92),
+      y: clamp(((event.clientY - rect.top) / rect.height) * 100, 14, 88),
+    }
+    const resource = getGrowthResource(tool, position)
+
+    setToolPositions((current) => ({ ...current, [tool]: position }))
+
+    if (resource && !activeStage && !won) {
+      activeResourceRef.current = resource
+      setActiveResource(resource)
+      setIsPressing(true)
+      startGrowing()
+    } else {
+      stopGrowing()
+    }
+  }
+
+  const startToolDrag = (tool, event) => {
+    if (won) return
+    event.preventDefault()
+    event.stopPropagation()
+    try {
+      event.currentTarget.setPointerCapture?.(event.pointerId)
+    } catch {
+      // Some browsers can drop pointer capture during fast drags.
+    }
+    setActiveTool(tool)
+    updateToolPosition(tool, event)
+  }
+
+  const moveToolDrag = (tool, event) => {
+    if (activeTool !== tool) return
+    event.preventDefault()
+    event.stopPropagation()
+    updateToolPosition(tool, event)
+  }
+
+  const endToolDrag = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    try {
+      event.currentTarget.releasePointerCapture?.(event.pointerId)
+    } catch {
+      // Capture may already be released if the pointer leaves the control.
+    }
+    setActiveTool(null)
+    stopGrowing()
   }
 
   const spawnGlyphParticles = (stage) => {
@@ -318,6 +413,10 @@ export default function GrowSeed({ onWin }) {
   }
 
   useEffect(() => {
+    unlockedRef.current = unlocked
+  }, [unlocked])
+
+  useEffect(() => {
     if (!isPressing && !activeStage && progress > 0 && progress < 100) {
       const decay = window.setInterval(() => {
         setProgress((current) => Math.max(0, current - 0.075))
@@ -330,6 +429,7 @@ export default function GrowSeed({ onWin }) {
   useEffect(() => {
     if (progress >= 100 && !wonRef.current) {
       wonRef.current = true
+      onSolved?.()
       stopGrowing()
       setWon(true)
       window.setTimeout(() => setShockwave(true), 180)
@@ -337,7 +437,7 @@ export default function GrowSeed({ onWin }) {
       window.setTimeout(() => setFinalePhase(2), 740)
       window.setTimeout(onWin, 11800)
     }
-  }, [onWin, progress])
+  }, [onSolved, onWin, progress])
 
   useEffect(() => {
     return () => { clearInterval(intervalRef.current) }
@@ -351,7 +451,7 @@ export default function GrowSeed({ onWin }) {
             ? 'Khu vườn đã nở: văn hóa trở thành ánh sáng sống trong từng con người.'
             : activeStage
               ? activeStage.prompt
-              : 'Giữ để vun trồng. Khi một biểu tượng bừng sáng, chạm vào nó để nối mạch văn hóa.'}
+              : 'Kéo mây mưa xuống vùng rễ hoặc kéo mặt trời lên tán cây để vun trồng. Khi biểu tượng bừng sáng, chạm vào nó để nối mạch văn hóa.'}
         </p>
 
         <div className="culture-stage-counter" aria-label="Tiến trình vun trồng">
@@ -368,11 +468,16 @@ export default function GrowSeed({ onWin }) {
       </div>
 
       <div
-        className={`culture-garden ${isPressing ? 'is-growing' : ''} ${activeStage ? 'has-stage' : ''} ${won ? 'is-won' : ''} ${shockwave ? 'is-shockwave' : ''}`}
-        onPointerDown={startGrowing}
-        onPointerUp={stopGrowing}
-        onPointerLeave={stopGrowing}
-        style={{ '--progress': `${progress}%`, touchAction: 'none' }}
+        ref={gardenRef}
+        className={`culture-garden ${isPressing ? 'is-growing' : ''} ${activeResource ? `is-${activeResource}` : ''} ${activeStage ? 'has-stage' : ''} ${won ? 'is-won' : ''} ${shockwave ? 'is-shockwave' : ''}`}
+        style={{
+          '--progress': `${progress}%`,
+          '--rain-x': `${toolPositions.rain.x}%`,
+          '--rain-y': `${toolPositions.rain.y}%`,
+          '--sun-x': `${toolPositions.sun.x}%`,
+          '--sun-y': `${toolPositions.sun.y}%`,
+          touchAction: 'none',
+        }}
       >
         <div className="culture-sky" />
         <div className="culture-aurora culture-aurora--left" />
@@ -381,6 +486,47 @@ export default function GrowSeed({ onWin }) {
         <div className="culture-orbit-ring" />
         <div className="culture-orbit-ring culture-orbit-ring--inner" />
         <div className="culture-water" />
+        <div className={`culture-drop-zone culture-drop-zone--rain ${activeResource === 'rain' ? 'is-active' : ''}`} aria-hidden="true" />
+        <div className={`culture-drop-zone culture-drop-zone--sun ${activeResource === 'sun' ? 'is-active' : ''}`} aria-hidden="true" />
+
+        <div className={`culture-rain-shower ${activeResource === 'rain' ? 'is-active' : ''}`} aria-hidden="true">
+          <span /><span /><span /><span /><span /><span />
+        </div>
+        <div className={`culture-sunbeam ${activeResource === 'sun' ? 'is-active' : ''}`} aria-hidden="true" />
+
+        <button
+          type="button"
+          className={`culture-drag-tool culture-drag-tool--rain ${activeTool === 'rain' ? 'is-dragging' : ''} ${activeResource === 'rain' ? 'is-feeding' : ''}`}
+          style={{ left: `${toolPositions.rain.x}%`, top: `${toolPositions.rain.y}%` }}
+          aria-label="Kéo mây mưa tới vùng rễ cây"
+          onPointerDown={(event) => startToolDrag('rain', event)}
+          onPointerMove={(event) => moveToolDrag('rain', event)}
+          onPointerUp={endToolDrag}
+          onPointerCancel={endToolDrag}
+        >
+          <span className="culture-cloud-shape" aria-hidden="true">
+            <i /><i /><i />
+          </span>
+          <span className="culture-cloud-drops" aria-hidden="true">
+            <i /><i /><i />
+          </span>
+        </button>
+
+        <button
+          type="button"
+          className={`culture-drag-tool culture-drag-tool--sun ${activeTool === 'sun' ? 'is-dragging' : ''} ${activeResource === 'sun' ? 'is-feeding' : ''}`}
+          style={{ left: `${toolPositions.sun.x}%`, top: `${toolPositions.sun.y}%` }}
+          aria-label="Kéo mặt trời tới tán cây"
+          onPointerDown={(event) => startToolDrag('sun', event)}
+          onPointerMove={(event) => moveToolDrag('sun', event)}
+          onPointerUp={endToolDrag}
+          onPointerCancel={endToolDrag}
+        >
+          <span className="culture-sun-rays" aria-hidden="true">
+            <i /><i /><i /><i /><i /><i /><i /><i />
+          </span>
+          <span className="culture-sun-core" aria-hidden="true" />
+        </button>
 
         {floatingLights.map((light) => (
           <i
@@ -498,7 +644,24 @@ export default function GrowSeed({ onWin }) {
           />
         ))}
 
-        <svg className="culture-tree-canvas" viewBox="0 0 520 440" aria-hidden="true">
+        {won && (
+          <div className="culture-mature-seeds" aria-hidden="true">
+            {matureSeeds.map((seed) => (
+              <i
+                key={seed.id}
+                style={{
+                  '--seed-angle': `${seed.angle}deg`,
+                  '--seed-dist': `${seed.dist}px`,
+                  '--seed-size': `${seed.size}px`,
+                  animationDelay: `${seed.delay}s`,
+                  animationDuration: `${seed.duration}s`,
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        <svg className={`culture-tree-canvas ${isPressing ? 'is-springing' : ''} ${won ? 'is-mature' : ''}`} viewBox="0 0 520 440" aria-hidden="true">
           <defs>
             <radialGradient id="cultureWaterGlow">
               <stop offset="0%" stopColor="#dbeafe" stopOpacity="0.92" />
@@ -678,6 +841,15 @@ export default function GrowSeed({ onWin }) {
                 <circle cx="0" cy="-162" r={28 * bloom} fill="#ffffff" opacity={Math.min(1, bloomPhase * 2)} filter="url(#cultureUltraGlow)" />
                 <circle cx="0" cy="-162" r={62 * bloom} fill="url(#culturePetalGold)" opacity="0.76" filter="url(#cultureGlow)" />
               </>
+            )}
+
+            {won && (
+              <g className="culture-mature-leaves" transform="translate(0 -150)">
+                <path d="M0 0 C-36 -20 -62 -9 -76 16 C-42 22 -18 17 0 0 Z" fill="#86efac" />
+                <path d="M0 -4 C42 -27 69 -10 82 18 C44 25 19 18 0 -4 Z" fill="#bbf7d0" />
+                <path d="M-4 -18 C-28 -52 -14 -79 14 -90 C27 -55 20 -31 -4 -18 Z" fill="#fde68a" />
+                <path d="M6 -18 C35 -54 66 -43 78 -16 C45 -7 24 -6 6 -18 Z" fill="#7dd3fc" />
+              </g>
             )}
           </g>
         </svg>

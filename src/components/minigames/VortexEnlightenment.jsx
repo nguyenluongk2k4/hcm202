@@ -70,7 +70,7 @@ function beamPath(start, mid, end = CORE) {
   return `M ${start.x} ${start.y} Q ${c1x} ${c1y} ${mid.x} ${mid.y} Q ${c2x} ${c2y} ${end.x} ${end.y}`
 }
 
-export default function VortexEnlightenment({ onWin }) {
+export default function VortexEnlightenment({ onWin, onSolved }) {
   const stageRef = useRef(null)
   const missIdRef = useRef(0)
   const lockIdRef = useRef(0)
@@ -158,6 +158,7 @@ export default function VortexEnlightenment({ onWin }) {
       }, 1300)
 
       if (nextLocked.length === sources.length) {
+        onSolved?.()
         setWon(true)
         setTimeout(() => setShowFinale(true), 760)
         setTimeout(() => onWin(), 9200)

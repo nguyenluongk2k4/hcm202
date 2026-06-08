@@ -10,7 +10,7 @@ function seededRatio(index, salt = 1) {
   return value - Math.floor(value)
 }
 
-export default function PolishGem({ onWin }) {
+export default function PolishGem({ onWin, onSolved }) {
   const [phase, setPhase] = useState('breaking')
   const [hits, setHits] = useState(0)
   const [progress, setProgress] = useState(0)
@@ -161,6 +161,7 @@ export default function PolishGem({ onWin }) {
     if (wonRef.current) return
 
     wonRef.current = true
+    onSolved?.()
     setPhase('won')
     setProgress(100)
     window.setTimeout(() => setShowFinale(true), 720)

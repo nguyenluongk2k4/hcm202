@@ -31,7 +31,7 @@ function routePath(region) {
   return `M ${VIETNAM.x} ${VIETNAM.y} Q ${midX} ${midY} ${region.x} ${region.y}`
 }
 
-export default function GlobalNetwork({ onWin }) {
+export default function GlobalNetwork({ onWin, onSolved }) {
   const stageRef = useRef(null)
   const [linked, setLinked] = useState([])
   const [drawing, setDrawing] = useState(null)
@@ -84,6 +84,7 @@ export default function GlobalNetwork({ onWin }) {
       setDrawing(null)
 
       if (nextLinked.length === regions.length) {
+        onSolved?.()
         setWon(true)
         setTimeout(() => setShowFinale(true), 820)
         setTimeout(() => onWin(), 10000)
