@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════
    HÀNH TINH ĐẠI ĐOÀN KẾT — ConnectFragments
-   Upgraded: colored edges, chromatic finale, aurora, prism
+   Hoa Sen Đại Đoàn Kết
 ═══════════════════════════════════════════════════ */
 
 .minigame-connect {
@@ -201,31 +201,69 @@
   stroke-dasharray: 9 7;
 }
 
+/* Live lotus that opens one petal at a time while the player connects groups */
+.unity-petal-field {
+  pointer-events: none;
+  transform-origin: 210px 280px;
+}
+
+.unity-live-petal {
+  opacity: 0.13;
+  stroke-width: 1.2;
+  stroke-opacity: 0.42;
+  filter: saturate(0.65) drop-shadow(0 0 0.35rem rgba(56, 189, 248, 0.22));
+  transition: opacity 260ms ease, filter 260ms ease, stroke-opacity 260ms ease;
+}
+
+.unity-live-petal.is-open {
+  opacity: 0.82;
+  stroke-opacity: 0.92;
+  filter:
+    saturate(1.18)
+    drop-shadow(0 0 0.85rem rgba(254, 240, 138, 0.52))
+    drop-shadow(0 0 1.45rem rgba(56, 189, 248, 0.24));
+  animation: unityPetalIgnite 0.48s ease both;
+}
+
+.unity-lotus-stem {
+  fill: rgba(52, 211, 153, 0.06);
+  stroke: rgba(52, 211, 153, 0.26);
+  stroke-width: 1.6;
+  pointer-events: none;
+  transition: fill 260ms ease, stroke 260ms ease, filter 260ms ease;
+}
+
+.unity-lotus-stem.is-open {
+  fill: rgba(52, 211, 153, 0.18);
+  stroke: rgba(167, 243, 208, 0.78);
+  filter: drop-shadow(0 0 0.9rem rgba(52, 211, 153, 0.52));
+}
+
 /* Guide lines */
 .unity-guide-line {
   fill: none;
-  stroke: rgba(56, 189, 248, 0.15);
-  stroke-width: 1.2;
-  stroke-dasharray: 3 6;
+  stroke: rgba(248, 251, 255, 0.17);
+  stroke-width: 1.35;
+  stroke-dasharray: 4 7;
   stroke-linecap: round;
 }
 
 /* Locked edges */
 .unity-locked-line-bg {
   fill: none;
-  stroke: rgba(0, 240, 255, 0.35);
-  stroke-width: 6;
+  stroke: color-mix(in srgb, var(--edge-color, #00f0ff), transparent 55%);
+  stroke-width: 7;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .unity-locked-line {
   fill: none;
-  stroke: #00f0ff;
-  stroke-width: 2.2;
+  stroke: var(--edge-color, #00f0ff);
+  stroke-width: 2.6;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.6));
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--edge-color, #00f0ff), transparent 20%));
 }
 
 /* Active drag */
@@ -274,7 +312,7 @@
   fill: rgba(248,251,255,0.92);
   font-size: 6.5px;
   font-weight: 900;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
   text-anchor: middle;
   text-transform: uppercase;
   paint-order: stroke;
@@ -283,6 +321,23 @@
   pointer-events: none;
   transition: transform 220ms ease;
   transform-origin: 0px 0px;
+}
+
+.unity-node-group .unity-node-value {
+  fill: #fef08a;
+  font-size: 4.8px;
+  font-weight: 850;
+  opacity: 0.92;
+  text-transform: none;
+  stroke-width: 0.85px;
+}
+
+.unity-node-group.is-core .unity-node-label {
+  font-size: 7.2px;
+}
+
+.unity-node-group.is-core .unity-node-value {
+  font-size: 4.6px;
 }
 
 .unity-node-group.is-lit .unity-node-halo {
@@ -737,6 +792,12 @@
   50%     { stroke: rgba(52,211,153,1); filter: drop-shadow(0 0 0.8rem rgba(52,211,153,0.6)); }
 }
 
+@keyframes unityPetalIgnite {
+  0%   { opacity: 0.16; }
+  55%  { opacity: 1; filter: drop-shadow(0 0 1.9rem rgba(254, 240, 138, 0.8)); }
+  100% { opacity: 0.82; }
+}
+
 @keyframes unityFrameTurn { to { transform: rotate(360deg); } }
 @keyframes unityLineFlow  { to { stroke-dashoffset: -28; } }
 
@@ -780,7 +841,10 @@
 @media (max-width: 720px) {
   .minigame-connect { width: min(100%, 33rem); min-height: 34rem; gap: 0.85rem; padding: 0.65rem; }
   .unity-stage      { width: min(100%, 30rem); }
-  .unity-node-group text { font-size: 5.5px; stroke-width: 0.8px; }
+  .unity-node-group text { font-size: 5.4px; stroke-width: 0.8px; }
+  .unity-node-group .unity-node-value { font-size: 4.3px; }
+  .unity-node-group.is-core .unity-node-label { font-size: 6.5px; }
+  .unity-node-group.is-core .unity-node-value { font-size: 4px; }
   .unity-progress-notes { width: min(88%, 16rem); font-size: 0.62rem; }
   .unity-finale-people { display: none; }
 }

@@ -1,56 +1,94 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './ConnectFragments.css'
 
-// Thêm 4 nodes mới để game khó hơn
+const CORE_NODE_ID = 0
+
 const unityNodes = [
-  { id: 0,  label: 'Mục tiêu',    x: 210, y: 45  },
-  { id: 1,  label: 'Tin tưởng',   x: 265, y: 120 },
-  { id: 2,  label: 'Tôn trọng',   x: 375, y: 195 },
-  { id: 3,  label: 'Lắng nghe',   x: 310, y: 290 },
-  { id: 4,  label: 'Chia sẻ',     x: 210, y: 370 },
-  { id: 5,  label: 'Trách nhiệm', x: 110, y: 290 },
-  { id: 6,  label: 'Hợp tác',     x: 45,  y: 195 },
-  { id: 7,  label: 'Bao dung',    x: 155, y: 120 },
-  { id: 8,  label: 'Nhân dân',    x: 210, y: 220, core: true },
-  { id: 9,  label: 'Kỷ luật',     x: 275, y: 175 },
-  { id: 10, label: 'Sáng tạo',    x: 255, y: 255 },
-  { id: 11, label: 'Hi sinh',     x: 165, y: 255 },
-  { id: 12, label: 'Nghĩa tình',  x: 145, y: 175 },
+  { id: CORE_NODE_ID, label: 'Tổ quốc', sublabel: 'Độc lập dân tộc', x: 210, y: 286, core: true },
+  {
+    id: 1,
+    label: 'Công nhân',
+    value: 'Yêu nước',
+    x: 210,
+    y: 56,
+    color: '#fde047',
+    petal: { id: 'cong-nhan', angle: 0, scale: 1.16, size: 'L', grad: 'unityPetalGold' },
+  },
+  {
+    id: 2,
+    label: 'Nông dân',
+    value: 'Gần dân',
+    x: 154,
+    y: 86,
+    color: '#34d399',
+    petal: { id: 'nong-dan', angle: -28, scale: 1.08, size: 'L', grad: 'unityPetalEmerald' },
+  },
+  {
+    id: 3,
+    label: 'Trí thức',
+    value: 'Tri thức',
+    x: 266,
+    y: 86,
+    color: '#60a5fa',
+    petal: { id: 'tri-thuc', angle: 28, scale: 1.08, size: 'L', grad: 'unityPetalBlue' },
+  },
+  {
+    id: 4,
+    label: 'Thanh niên',
+    value: 'Trách nhiệm',
+    x: 100,
+    y: 164,
+    color: '#38bdf8',
+    petal: { id: 'thanh-nien', angle: -56, scale: 0.98, size: 'M', grad: 'unityPetalInner' },
+  },
+  {
+    id: 5,
+    label: 'Phụ nữ',
+    value: 'Nhân ái',
+    x: 320,
+    y: 164,
+    color: '#f783ac',
+    petal: { id: 'phu-nu', angle: 56, scale: 0.98, size: 'M', grad: 'unityPetalOuter' },
+  },
+  {
+    id: 6,
+    label: 'Dân tộc',
+    value: 'Tôn trọng',
+    x: 132,
+    y: 240,
+    color: '#a7f3d0',
+    petal: { id: 'dan-toc', angle: -34, scale: 0.86, size: 'M', grad: 'unityPetalEmerald' },
+  },
+  {
+    id: 7,
+    label: 'Tôn giáo',
+    value: 'Bao dung',
+    x: 288,
+    y: 240,
+    color: '#fef3c7',
+    petal: { id: 'ton-giao', angle: 34, scale: 0.86, size: 'M', grad: 'unityPetalBlue' },
+  },
+  {
+    id: 8,
+    label: 'Kiều bào',
+    value: 'Chung mục tiêu',
+    x: 210,
+    y: 354,
+    color: '#fb7185',
+    petal: { id: 'kieu-bao', angle: 0, scale: 0.76, size: 'S', grad: 'unityPetalInner' },
+  },
 ]
 
-const targetEdges = [
-  '0-1', '1-2', '2-3', '3-4', '4-5', '5-6', '6-7', '0-7', // octagon outer
-  '0-8', '2-8', '4-8', '6-8',                              // core spokes
-  '1-9', '2-9', '3-10', '4-10',                            // inner connectors (sorted)
-  '5-11', '6-11', '7-12', '0-12',                          // more connectors (sorted)
-]
+const petalNodes = unityNodes.filter(node => !node.core)
+const targetEdges = petalNodes.map(node => edgeId(CORE_NODE_ID, node.id))
 
-const SNAP_RADIUS = 82
+const SNAP_RADIUS = 96
 
-// Colors for each edge — rainbow palette
-const EDGE_COLORS = [
-  '#ff6b6b', '#ffa94d', '#ffd43b', '#a9e34b',
-  '#69db7c', '#38d9a9', '#4dabf7', '#748ffc',
-  '#da77f2', '#f783ac', '#ff8787', '#ffc078',
-  '#ffe066', '#c0eb75', '#63e6be', '#74c0fc',
-  '#9775fa', '#f783ac', '#ff6b6b', '#ffa94d',
-]
-
-const finaleWords = ['Chung sức', 'Đồng lòng', 'Nhân dân', 'Đại đoàn kết']
-
-const lotusPetals = [
-  { id: 'outer-left', angle: -62, scale: 1.08, size: 'L', grad: 'unityPetalOuter', drawOrder: 0 },
-  { id: 'outer-mid-left', angle: -34, scale: 1.16, size: 'L', grad: 'unityPetalBlue', drawOrder: 1 },
-  { id: 'outer-center', angle: 0, scale: 1.24, size: 'L', grad: 'unityPetalGold', drawOrder: 2 },
-  { id: 'outer-mid-right', angle: 34, scale: 1.16, size: 'L', grad: 'unityPetalBlue', drawOrder: 3 },
-  { id: 'outer-right', angle: 62, scale: 1.08, size: 'L', grad: 'unityPetalOuter', drawOrder: 4 },
-  { id: 'middle-left', angle: -42, scale: 0.96, size: 'M', grad: 'unityPetalEmerald', drawOrder: 5 },
-  { id: 'middle-cl', angle: -14, scale: 1.08, size: 'M', grad: 'unityPetalInner', drawOrder: 6 },
-  { id: 'middle-cr', angle: 14, scale: 1.08, size: 'M', grad: 'unityPetalInner', drawOrder: 7 },
-  { id: 'middle-right', angle: 42, scale: 0.96, size: 'M', grad: 'unityPetalEmerald', drawOrder: 8 },
-  { id: 'inner-left', angle: -18, scale: 0.82, size: 'S', grad: 'unityPetalInner', drawOrder: 9 },
-  { id: 'inner-center', angle: 0, scale: 0.92, size: 'S', grad: 'unityPetalGold', drawOrder: 10 },
-  { id: 'inner-right', angle: 18, scale: 0.82, size: 'S', grad: 'unityPetalInner', drawOrder: 11 },
+const finalePetals = [
+  ...petalNodes.map(node => node.petal),
+  { id: 'inner-left', angle: -18, scale: 0.82, size: 'S', grad: 'unityPetalInner' },
+  { id: 'inner-center', angle: 0, scale: 0.92, size: 'S', grad: 'unityPetalGold' },
+  { id: 'inner-right', angle: 18, scale: 0.82, size: 'S', grad: 'unityPetalInner' },
 ]
 
 function getPathData(size) {
@@ -63,44 +101,30 @@ function edgeId(a, b) {
   return [a, b].sort((x, y) => x - y).join('-')
 }
 
+function canConnect(start, node, completedEdges) {
+  if (node.id === start.id) return false
+  if (!start.core && !node.core) return false
+
+  const id = edgeId(start.id, node.id)
+  return targetEdges.includes(id) && !completedEdges.includes(id)
+}
+
 function seededRatio(index, salt = 1) {
   const value = Math.sin(index * 82.917 + salt * 31.415) * 10000
   return value - Math.floor(value)
 }
 
-function curvedPath(start, end, strength = 0.12) {
-  // Center is (210, 210)
-  if (start.id === 8 || end.id === 8) {
-    return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
-  }
-
+function curvedPath(start, end, strength = 0.18) {
   const midX = (start.x + end.x) / 2;
   const midY = (start.y + end.y) / 2;
-  const vx = midX - 210;
-  const vy = midY - 210;
-  const dist = Math.hypot(vx, vy);
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const distance = Math.hypot(dx, dy) || 1;
+  const direction = end.x >= start.x ? 1 : -1;
+  const controlX = midX - (dy / distance) * 44 * strength * direction;
+  const controlY = midY + (dx / distance) * 44 * strength * direction;
 
-  // Checks if both node ids are part of the outer perimeter
-  const isOuter =
-    start.id !== undefined &&
-    end.id !== undefined &&
-    ((start.id < 8 && end.id < 8) || (start.id === 0 && end.id === 7) || (start.id === 7 && end.id === 0));
-
-  if (isOuter && dist > 0) {
-    // If it is the bottom base of the lotus, curve inwards to represent the stem/base
-    const isBottomBase =
-      (start.id === 4 && (end.id === 5 || end.id === 3)) ||
-      (end.id === 4 && (start.id === 5 || start.id === 3));
-
-    const bend = 24;
-    const directionSign = isBottomBase ? -1 : 1;
-    const controlX = midX + (vx / dist) * bend * directionSign;
-    const controlY = midY + (vy / dist) * bend * directionSign;
-    return `M ${start.x} ${start.y} Q ${controlX} ${controlY} ${end.x} ${end.y}`;
-  }
-
-  // Draw straight lines for inner geometric links
-  return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+  return `M ${start.x} ${start.y} Q ${controlX} ${controlY} ${end.x} ${end.y}`;
 }
 
 export default function ConnectFragments({ onWin, onSolved }) {
@@ -110,6 +134,7 @@ export default function ConnectFragments({ onWin, onSolved }) {
   const [showFinale, setShowFinale]   = useState(false)
   const [edgeParticles, setEdgeParticles] = useState([])
   const svgRef = useRef(null)
+  const dragRef = useRef(null)
   const wonRef = useRef(false)
   const particleSeqRef = useRef(0)
 
@@ -154,54 +179,46 @@ export default function ConnectFragments({ onWin, onSolved }) {
     if (!drag || won) return undefined
 
     const move = (event) => {
+      const currentDrag = dragRef.current
+      if (!currentDrag || !svgRef.current) return
+
       const rect = svgRef.current.getBoundingClientRect()
       const x = ((event.clientX - rect.left) / rect.width) * 420
       const y = ((event.clientY - rect.top) / rect.height) * 420
 
-      // Find if there is a close valid target node within SNAP_RADIUS
       const availableTargets = unityNodes
-        .filter(node => {
-          if (node.id === drag.start.id) return false
-          const id = edgeId(drag.start.id, node.id)
-          return targetEdges.includes(id) && !edges.includes(id)
-        })
+        .filter(node => canConnect(currentDrag.start, node, edges))
         .map(node => ({ ...node, distance: Math.hypot(node.x - x, node.y - y) }))
         .sort((a, b) => a.distance - b.distance)
 
       const closest = availableTargets[0]
-      if (closest && closest.distance < SNAP_RADIUS) {
-        setDrag(current => ({
-          ...current,
-          x: closest.x,
-          y: closest.y,
-          snappedNodeId: closest.id
-        }))
-      } else {
-        setDrag(current => ({
-          ...current,
-          x: x,
-          y: y,
-          snappedNodeId: null
-        }))
-      }
+      const nextDrag = closest && closest.distance < SNAP_RADIUS
+        ? { ...currentDrag, x: closest.x, y: closest.y, snappedNodeId: closest.id }
+        : { ...currentDrag, x, y, snappedNodeId: null }
+
+      dragRef.current = nextDrag
+      setDrag(nextDrag)
     }
 
     const up = () => {
-      if (drag.snappedNodeId !== null && drag.snappedNodeId !== undefined) {
-        const end = unityNodes.find(n => n.id === drag.snappedNodeId)
+      const currentDrag = dragRef.current
+
+      if (currentDrag?.snappedNodeId !== null && currentDrag?.snappedNodeId !== undefined) {
+        const end = unityNodes.find(n => n.id === currentDrag.snappedNodeId)
         if (end) {
-          const id = edgeId(drag.start.id, end.id)
+          const id = edgeId(currentDrag.start.id, end.id)
           if (targetEdges.includes(id) && !edges.includes(id)) {
             const next = [...edges, id]
             const edgeIndex = targetEdges.indexOf(id)
             setEdges(next)
-            spawnEdgeParticles((drag.start.x + end.x) / 2, (drag.start.y + end.y) / 2, edgeIndex)
+            spawnEdgeParticles((currentDrag.start.x + end.x) / 2, (currentDrag.start.y + end.y) / 2, edgeIndex)
             if (next.length === targetEdges.length) {
               window.setTimeout(complete, 600)
             }
           }
         }
       }
+      dragRef.current = null
       setDrag(null)
     }
 
@@ -212,6 +229,17 @@ export default function ConnectFragments({ onWin, onSolved }) {
       window.removeEventListener('pointerup', up)
     }
   }, [complete, drag, edges, won])
+
+  const handleNodePointerDown = (event, node) => {
+    if (wonRef.current || !unityNodes.some(target => canConnect(node, target, edges))) return
+
+    event.preventDefault()
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+
+    const nextDrag = { start: node, x: node.x, y: node.y, snappedNodeId: null }
+    dragRef.current = nextDrag
+    setDrag(nextDrag)
+  }
 
   return (
     <div className={`minigame-connect ${showFinale ? 'is-final-scene' : ''}`}>
@@ -233,8 +261,8 @@ export default function ConnectFragments({ onWin, onSolved }) {
 
       <p className="minigame-instruction">
         {won
-          ? 'Mạng lưới đoàn kết đã sáng lên — sức mạnh lớn nhất bắt đầu từ lòng dân.'
-          : `Kéo nối các điểm sáng dựng mạng đại đoàn kết. (${edges.length}/${targetEdges.length})`}
+          ? 'Hoa sen đại đoàn kết đã nở — khi toàn dân chung một mục tiêu, sức mạnh dân tộc sáng lên.'
+          : `Kéo từ tâm Tổ quốc đến từng cánh sen để kết nối khối đại đoàn kết. (${edges.length}/${targetEdges.length})`}
       </p>
 
       <div className={`unity-stage ${won ? 'is-won' : ''}`}>
@@ -319,7 +347,7 @@ export default function ConnectFragments({ onWin, onSolved }) {
               <line x1="210" y1="280" x2="370" y2="130" className="lotus-ray" />
             </g>
 
-            {lotusPetals.map((petal) => (
+            {finalePetals.map((petal) => (
               <path
                 key={`finale-petal-${petal.id}`}
                 d={getPathData(petal.size)}
@@ -343,7 +371,7 @@ export default function ConnectFragments({ onWin, onSolved }) {
             {/* Network flower fill (glows up and fills when won, rotates and fades out with the board) */}
             {won && (
               <g className="unity-board-lotus-fill">
-                {lotusPetals.map((petal) => (
+                {finalePetals.map((petal) => (
                   <path
                     key={`board-fill-${petal.id}`}
                     d={getPathData(petal.size)}
@@ -355,6 +383,29 @@ export default function ConnectFragments({ onWin, onSolved }) {
               </g>
             )}
 
+            <g className="unity-petal-field">
+              {petalNodes.map(node => {
+                const edge = edgeId(CORE_NODE_ID, node.id)
+                const isOpen = edges.includes(edge) || won
+
+                return (
+                  <path
+                    key={`live-petal-${node.petal.id}`}
+                    d={getPathData(node.petal.size)}
+                    transform={`translate(210, 280) rotate(${node.petal.angle}) scale(${node.petal.scale})`}
+                    fill={`url(#${node.petal.grad})`}
+                    stroke={`url(#${node.petal.grad})`}
+                    className={`unity-live-petal ${isOpen ? 'is-open' : ''}`}
+                  />
+                )
+              })}
+            </g>
+
+            <path
+              className={`unity-lotus-stem ${edges.includes(edgeId(CORE_NODE_ID, 8)) || won ? 'is-open' : ''}`}
+              d="M 210 286 C 198 318 204 346 210 382 C 216 346 222 318 210 286"
+            />
+
             {/* Guide lines */}
             {targetEdges.map(edge => {
               if (edges.includes(edge)) return null
@@ -362,13 +413,14 @@ export default function ConnectFragments({ onWin, onSolved }) {
               return <path key={`guide-${edge}`} d={curvedPath(unityNodes[a], unityNodes[b])} className="unity-guide-line" />
             })}
 
-            {/* Locked edges — monochromatic light path */}
+            {/* Locked edges */}
             {edges.map((edge) => {
               const [a, b] = edge.split('-').map(Number)
               const n1 = unityNodes[a]
               const n2 = unityNodes[b]
+              const edgeColor = n1.core ? n2.color : n1.color
               return (
-                <g key={`locked-${edge}`} className="unity-locked-edge">
+                <g key={`locked-${edge}`} className="unity-locked-edge" style={{ '--edge-color': edgeColor }}>
                   <path d={curvedPath(n1, n2)} className="unity-locked-line-bg" filter="url(#unityStrongGlow)" />
                   <path d={curvedPath(n1, n2)} className="unity-locked-line" filter="url(#unityGlow)" />
                 </g>
@@ -404,7 +456,7 @@ export default function ConnectFragments({ onWin, onSolved }) {
                   key={node.id}
                   className={`unity-node-group ${node.core ? 'is-core' : ''} ${isLit ? 'is-lit' : ''} ${completionRatio >= 1 ? 'is-full' : ''} ${isSnapped ? 'is-snapped' : ''}`}
                   transform={`translate(${node.x}, ${node.y})`}
-                  onPointerDown={() => { if (!wonRef.current) setDrag({ start: node, x: node.x, y: node.y, snappedNodeId: null }) }}
+                  onPointerDown={(event) => handleNodePointerDown(event, node)}
                 >
                   <circle r={node.core ? 36 : 26} className="unity-node-hitbox" />
                   <circle r={node.core ? 20 : 13} className="unity-node-halo" />
@@ -418,7 +470,12 @@ export default function ConnectFragments({ onWin, onSolved }) {
                   )}
                   
                   <circle r={node.core ? 10 : 5.5} className="unity-node-core" filter="url(#unityGlow)" />
-                  <text y={node.core ? 28 : 20}>{node.label}</text>
+                  <text className="unity-node-label" y={node.core ? 28 : 20}>{node.label}</text>
+                  {(node.value || node.sublabel) && (
+                    <text className="unity-node-value" y={node.core ? 39 : 31}>
+                      {node.value || node.sublabel}
+                    </text>
+                  )}
                 </g>
               )
             })}
@@ -449,8 +506,9 @@ export default function ConnectFragments({ onWin, onSolved }) {
               Thành công, thành công, <strong>đại thành công</strong>."
             </blockquote>
             <p>
-              Một điểm sáng thì đẹp. Muôn điểm sáng chung hướng
-              thì thành sức mạnh dân tộc không gì lay chuyển được.
+              Mỗi cánh sen là một lực lượng trong nhân dân. Khi cùng hướng về
+              Tổ quốc, lòng yêu nước và sự tôn trọng khác biệt tạo nên sức mạnh
+              đại đoàn kết dân tộc.
             </p>
           </div>
         </div>
