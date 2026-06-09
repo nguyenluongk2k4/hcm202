@@ -204,7 +204,7 @@
 /* Guide lines */
 .unity-guide-line {
   fill: none;
-  stroke: rgba(56, 189, 248, 0.15);
+  stroke: rgba(253, 224, 71, 0.15); /* Gold guide lines */
   stroke-width: 1.2;
   stroke-dasharray: 3 6;
   stroke-linecap: round;
@@ -213,7 +213,7 @@
 /* Locked edges */
 .unity-locked-line-bg {
   fill: none;
-  stroke: rgba(0, 240, 255, 0.35);
+  stroke: rgba(253, 224, 71, 0.35);
   stroke-width: 6;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -221,17 +221,17 @@
 
 .unity-locked-line {
   fill: none;
-  stroke: #00f0ff;
+  stroke: #fde047;
   stroke-width: 2.2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.6));
+  filter: drop-shadow(0 0 5px rgba(253, 224, 71, 0.7));
 }
 
 /* Active drag */
 .unity-active-line-glow {
   fill: none;
-  stroke: rgba(0, 240, 255, 0.35);
+  stroke: rgba(253, 224, 71, 0.35);
   stroke-width: 6;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -239,11 +239,11 @@
 
 .unity-active-line {
   fill: none;
-  stroke: #00f0ff;
+  stroke: #fde047;
   stroke-width: 2.2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.6));
+  filter: drop-shadow(0 0 5px rgba(253, 224, 71, 0.7));
 }
 
 /* Nodes */
@@ -314,7 +314,7 @@
 
 /* Scale inner elements on Snap */
 .unity-node-group.is-snapped .unity-node-halo {
-  stroke: #10b981;
+  stroke: #ef4444; /* Đỏ cờ khi snap */
   transform: scale(1.18);
 }
 
@@ -352,13 +352,13 @@
 }
 
 .unity-node-group.is-snapped .unity-node-telemetry-inner {
-  stroke: #10b981;
+  stroke: #ef4444;
   stroke-width: 1.5;
   opacity: 0.95;
 }
 
 .unity-node-group.is-snapped .unity-node-telemetry-outer {
-  stroke: #34d399;
+  stroke: #f87171;
   stroke-width: 1;
   opacity: 0.9;
 }
@@ -450,51 +450,51 @@
   transition: width 0.28s ease;
 }
 
-/* ── Background light lotus silhouette ── */
-.unity-light-lotus {
-  opacity: 0;
-  transform: scale(0.3);
-  transform-origin: 210px 280px;
+/* ── Vietnam Flag Background Animation ── */
+.unity-vn-flag-anim {
   pointer-events: none;
 }
 
-.unity-light-lotus.is-blooming {
-  /* Starts blooming at 4.0s (after the board has fully disappeared), completing at 6.0s (2s duration) */
-  animation: unityLotusBloomLarge 2.0s 4.0s cubic-bezier(0.16, 1, 0.3, 1) both;
+.unity-vn-flag-anim .vn-flag-star {
+  opacity: 0;
+  transform-origin: 0 0;
+  filter: drop-shadow(0 0 1rem rgba(254, 240, 138, 0.8));
 }
 
-@keyframes unityLotusBloomLarge {
+.unity-vn-flag-anim .vn-flag-bg {
+  opacity: 0;
+  transform-origin: 0 0;
+}
+
+.unity-vn-flag-anim.is-animating .vn-flag-star {
+  animation: vnStarEmerge 0.8s 3.8s cubic-bezier(0.1, 0.8, 0.1, 1) both;
+}
+
+.unity-vn-flag-anim.is-animating .vn-flag-bg {
+  animation: vnBgExpand 0.8s 3.8s cubic-bezier(0.1, 0.8, 0.1, 1) both;
+}
+
+@keyframes vnStarEmerge {
   0% {
     opacity: 0;
-    transform: scale(0.3);
+    transform: scale(0) rotate(-180deg);
   }
   100% {
-    opacity: 0.98;
-    transform: scale(1.35); /* Fits beautifully in viewport */
+    opacity: 1;
+    transform: scale(3.5) rotate(0deg);
+    filter: drop-shadow(0 0 3rem rgba(254, 240, 138, 1));
   }
 }
 
-.unity-light-lotus .lotus-petal {
-  stroke-width: 1.5;
-  filter: drop-shadow(0 0 1.2rem rgba(254, 240, 138, 0.6));
-  animation: unityPetalGlowPulse 4s ease-in-out infinite alternate;
-}
-
-@keyframes unityPetalGlowPulse {
+@keyframes vnBgExpand {
   0% {
-    filter: drop-shadow(0 0 1rem rgba(254, 240, 138, 0.5));
+    opacity: 0;
+    transform: scale(0);
   }
   100% {
-    filter: drop-shadow(0 0 2.2rem rgba(254, 240, 138, 0.85)) drop-shadow(0 0 4rem rgba(96, 165, 250, 0.4));
+    opacity: 1;
+    transform: scale(1.2);
   }
-}
-
-/* Radiant light rays styling */
-.unity-light-lotus .lotus-ray {
-  stroke: rgba(254, 240, 138, 0.28);
-  stroke-width: 3.5;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 1.2rem rgba(254, 240, 138, 0.65));
 }
 
 /* ── Lotus Flower Board Rotation ── */
@@ -515,13 +515,13 @@
   transition: opacity 0.15s ease, visibility 0.15s ease !important;
 }
 
-/* Network flower fill (glows up and fills when won) */
-.unity-board-lotus-fill {
-  animation: boardLotusFillGlow 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-  transform-origin: 210px 280px; /* Center of the lotus shape */
+/* Network star fill (glows up and fills when won) */
+.unity-board-star-fill {
+  transform-origin: 210px 210px;
+  animation: boardStarFillGlow 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes boardLotusFillGlow {
+@keyframes boardStarFillGlow {
   0% {
     opacity: 0;
     transform: scale(0.6);
@@ -529,7 +529,7 @@
   100% {
     opacity: 0.95;
     transform: scale(1);
-    filter: drop-shadow(0 0 1.5rem rgba(254, 240, 138, 0.85)); /* Gold glow matching the colored lotus */
+    filter: drop-shadow(0 0 1.5rem rgba(254, 240, 138, 0.85)); /* Gold glow */
   }
 }
 
@@ -582,7 +582,7 @@
   background: rgba(3, 7, 18, 0.6);
   backdrop-filter: none;
   opacity: 0;
-  animation: unityBgReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: unityBgReveal 1.2s 7.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* L10: Message card */
@@ -609,8 +609,8 @@
   backdrop-filter: blur(20px);
   opacity: 0;
   transform: translateY(2rem) scale(0.92);
-  /* Delayed reveal to appear exactly 2.0 seconds after the background lotus has completed blooming (6.0s + 2.0s = 8.0s) */
-  animation: unityMessageReveal 1.2s 8.0s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* Delayed reveal: Flag fully out at 4.6s + ~3s hold = 7.5s */
+  animation: unityMessageReveal 1.2s 7.5s cubic-bezier(0.16, 1, 0.3, 1) both;
   pointer-events: auto;
 }
 
@@ -630,8 +630,8 @@
   content: '';
   opacity: 0;
   transform: translateX(-100%);
-  /* Prism shine starts sweeping 1s after the card reveals (8.0s + 1.0s = 9.0s) */
-  animation: unityCardShine 8s 9.0s ease-in-out infinite;
+  /* Prism shine starts sweeping 1s after the card reveals (7.5s + 1.0s = 8.5s) */
+  animation: unityCardShine 8s 8.5s ease-in-out infinite;
 }
 
 /* Badge */

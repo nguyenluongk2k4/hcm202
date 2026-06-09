@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
+import bacHoNeon from '../../assets/bac_ho_neon.png'
 import './TypeToAct.css'
 
 const targetTiles = [
@@ -26,8 +27,8 @@ const pledgeSteps = [
   { label: 'Kiểm chứng', range: [7, 8] },
 ]
 
-const SUMMARY_REVEAL_DELAY = 560
-const SUMMARY_EXIT_DELAY = 5200
+const SUMMARY_REVEAL_DELAY = 600
+const SUMMARY_EXIT_DELAY = 15000
 
 function seededRatio(index, salt = 0) {
   const value = Math.sin(index * 38.61 + salt * 17.23) * 10000
@@ -60,29 +61,20 @@ export default function TypeToAct({ onWin, onSolved }) {
     [],
   )
 
-  // Keep finale particles selective so this scene stays smooth.
+  // Majestic floating embers for the background
   const finaleSparks = useMemo(() =>
-    Array.from({ length: 28 }).map((_, i) => ({
+    Array.from({ length: 40 }).map((_, i) => ({
       id:       i,
-      angle:    seededRatio(i, 20) * 360,
-      dist:     70 + seededRatio(i, 21) * 260,
-      delay:    seededRatio(i, 22) * 1.0,
-      duration: 1.8 + seededRatio(i, 23) * 1.8,
-      size:     3 + seededRatio(i, 24) * 6,
+      left:     `${10 + seededRatio(i, 20) * 80}%`,
+      top:      `${30 + seededRatio(i, 21) * 60}%`,
+      delay:    seededRatio(i, 22) * 2.0,
+      duration: 3.0 + seededRatio(i, 23) * 2.0,
+      size:     2 + seededRatio(i, 24) * 5,
+      maxOpacity: 0.4 + seededRatio(i, 25) * 0.6,
     })),
   [])
 
-  // Finale ink trails
-  const finaleInkLines = useMemo(() =>
-    Array.from({ length: 6 }).map((_, i) => ({
-      id:    i,
-      top:   `${20 + seededRatio(i, 30) * 60}%`,
-      delay: `${seededRatio(i, 31) * 0.6}s`,
-      width: `${50 + seededRatio(i, 32) * 50}%`,
-      left:  seededRatio(i, 33) > 0.5 ? '0' : 'auto',
-      right: seededRatio(i, 33) > 0.5 ? 'auto' : '0',
-    })),
-  [])
+
 
   const handlePoolClick = (index) => {
     if (won || errorState) return
@@ -322,75 +314,47 @@ export default function TypeToAct({ onWin, onSolved }) {
       {/* ════════════════ EPIC FINALE ════════════════ */}
       {showFinale && (
         <div className="style-finale" aria-live="polite">
-          {/* Layer 1: Sweeping background rays */}
-          <div className="style-finale-rays">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <i
-                key={i}
-                style={{
-                  '--ray-angle': `${i * 36}deg`,
-                  '--ray-delay': `${seededRatio(i, 40) * 0.5}s`,
-                }}
-              />
-            ))}
-          </div>
+          {/* Layer 1: Dark Space */}
+          <div className="style-finale-space" />
 
-          {/* Layer 2: Road perspective */}
-          <div className="style-finale-road" />
-
-          {/* Layer 3: Sun */}
-          <div className="style-finale-sun" />
-
-          {/* Layer 4: Ink lines sweeping across */}
-          <div className="style-finale-inks">
-            {finaleInkLines.map((line) => (
-              <span
-                key={line.id}
-                style={{
-                  top:            line.top,
-                  left:           line.left,
-                  right:          line.right,
-                  '--ink-width':  line.width,
-                  animationDelay: line.delay,
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Layer 5: Floating tile notebook — the full sentence */}
-          <div className="style-finale-notebook">
-            {targetTiles.map((tile, index) => (
-              <span key={tile.id} style={{ '--delay': `${index * 0.09}s` }}>
-                {tile.text}
-              </span>
-            ))}
-          </div>
-
-          {/* Layer 6: Desk signals rising */}
-          <div className="style-finale-signals">
-            {deskSignals.map((signal, index) => (
-              <i key={signal} style={{ '--index': index, '--signal-top': `${58 + (index % 2) * 10}%` }}>
-                {signal}
-              </i>
-            ))}
-          </div>
-
-          {/* Layer 7: Sparks */}
+          {/* Layer 2: Majestic Embers */}
           {finaleSparks.map((spark) => (
             <i
               key={spark.id}
               className="style-finale-spark"
               style={{
-                '--angle':      `${spark.angle}deg`,
-                '--dist':       `${spark.dist}px`,
+                '--left':       spark.left,
+                '--top':        spark.top,
                 '--spark-size': `${spark.size}px`,
+                '--max-opacity': spark.maxOpacity,
                 animationDelay:    `${spark.delay}s`,
                 animationDuration: `${spark.duration}s`,
               }}
             />
           ))}
 
-          {/* Layer 8: Message card */}
+          {/* Layer 3: Glowing Sentence */}
+          <div className="style-finale-sentence">
+            <div className="style-sentence-line">
+              {targetTiles.slice(0, 4).map((tile, i) => (
+                <span key={tile.id} style={{ '--word-delay': `${i * 0.15}s` }}>{tile.text}</span>
+              ))}
+            </div>
+            <div className="style-sentence-line">
+              {targetTiles.slice(4).map((tile, i) => (
+                <span key={tile.id} style={{ '--word-delay': `${(i + 4) * 0.15}s` }}>{tile.text}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Layer 4: Portrait PNG */}
+          <img 
+            src={bacHoNeon}
+            alt="Chân dung Bác Hồ"
+            className="style-bac-ho-png"
+          />
+
+
           <div className="style-message-card">
             <div className="style-message-badge">
               <span className="style-message-badge-dot" />

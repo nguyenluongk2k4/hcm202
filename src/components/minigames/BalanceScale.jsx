@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import quocHuyPng from '../../assets/quoc_huy.png'
 import './BalanceScale.css'
 
 const mandates = [
@@ -120,8 +121,8 @@ export default function BalanceScale({ onWin, onSolved }) {
     onSolved?.()
     setWon(true)
     setAngle(0)
-    window.setTimeout(() => setShowFinale(true), 720)
-    window.setTimeout(onWin, 12000)
+    window.setTimeout(() => setShowFinale(true), 4000)
+    window.setTimeout(onWin, 15000)
   }
 
   const handleStrike = () => {
@@ -233,7 +234,7 @@ export default function BalanceScale({ onWin, onSolved }) {
           />
 
           {/* Foundation */}
-          <g className="gov-scale-foundation">
+          <g className={`gov-scale-foundation ${won ? 'is-won-blink' : ''}`}>
             <path d="M154 408 L306 408 L280 360 L180 360 Z" />
             <rect x="178" y="338" width="104" height="26" rx="8" />
             <rect x="216" y="176" width="28" height="164" rx="7" />
@@ -242,7 +243,7 @@ export default function BalanceScale({ onWin, onSolved }) {
 
           {/* Beam */}
           <g
-            className="gov-scale-beam"
+            className={`gov-scale-beam ${won ? 'is-won-blink' : ''}`}
             transform={`translate(230, 176) rotate(${won ? 0 : angle})`}
             style={{ transition: won ? 'transform 620ms cubic-bezier(0.16, 1, 0.3, 1)' : 'none' }}
           >
@@ -276,16 +277,30 @@ export default function BalanceScale({ onWin, onSolved }) {
           </g>
 
           {/* Seals */}
-          {seals.map((seal, index) => (
-            <g key={seal} className="gov-seal-mark" transform={`translate(${142 + index * 44}, 318)`}>
-              <circle r="18" />
-              <path d="M-8 0 L-2 7 L10 -8" />
-            </g>
-          ))}
+          <g>
+            {seals.map((seal, index) => {
+              const startX = 142 + index * 44;
+              const startY = 318;
+              const targetX = 230 - startX;
+              const targetY = 176 - startY;
+              
+              return (
+                <g key={seal} transform={`translate(${startX}, ${startY})`}>
+                  <g 
+                    className={`gov-seal-mark ${won ? 'is-won-seal-collide' : ''}`}
+                    style={won ? { '--target-x': `${targetX}px`, '--target-y': `${targetY}px`, '--delay': `${1 + index * 0.2}s` } : {}}
+                  >
+                    <circle r="18" />
+                    <path d="M-8 0 L-2 7 L10 -8" />
+                  </g>
+                </g>
+              )
+            })}
+          </g>
 
           {/* Gavel */}
           <g
-            className={`gov-gavel ${hammerStrike ? 'is-striking' : ''} ${isReady ? 'is-ready' : ''}`}
+            className={`gov-gavel ${hammerStrike ? 'is-striking' : ''} ${isReady ? 'is-ready' : ''} ${won ? 'is-won-blink' : ''}`}
             transform="translate(378, 396)"
             onPointerDown={(e) => { e.preventDefault(); handleStrike() }}
           >
@@ -309,87 +324,38 @@ export default function BalanceScale({ onWin, onSolved }) {
               )}
             </g>
           </g>
+
+          {/* Core Explosion */}
+          {won && (
+            <circle cx="230" cy="176" r="10" className="gov-core-explosion" />
+          )}
         </svg>
       </div>
 
-      {/* ══════════ CHROMATIC FINALE ══════════ */}
+      {/* ══════════ QUOC HUY FINALE ══════════ */}
       {showFinale && (
         <div className="gov-finale" aria-live="polite">
-          {/* L1: Dawn background */}
-          <div className="gov-finale-dawn" />
+          {/* L2: Quoc Huy PNG */}
+          <img 
+            src={quocHuyPng}
+            alt="Quốc huy Việt Nam"
+            className="gov-quoc-huy-png"
+          />
 
-          {/* L2: Chromatic shockwave rings */}
-          {colorRings.map(ring => (
-            <div
-              key={ring.id}
-              className="gov-finale-shockwave"
-              style={{
-                '--ring-hue':   ring.hue,
-                '--ring-size':  `${ring.size}rem`,
-                animationDelay: `${ring.delay}s`,
-              }}
-            />
-          ))}
-
-          {/* L3: Light rays */}
-          <div className="gov-finale-rays">
-            {lightRays.map(ray => (
-              <i
-                key={ray.id}
-                style={{
-                  '--ray-angle':  `${ray.angle}deg`,
-                  '--ray-hue':    ray.hue,
-                  '--ray-length': `${ray.length}vmax`,
-                  '--ray-delay':  `${ray.delay}s`,
-                  animationDelay: `${ray.delay}s`,
-                }}
-              />
+          {/* L3: Finale Seals */}
+          <div className="gov-finale-seals">
+            {mandates.map((mandate, index) => (
+              <div key={mandate.key} className="gov-finale-seal" style={{ '--delay': `${index * 0.15 + 1.2}s` }}>
+                <div className="gov-finale-seal-icon">
+                  <svg viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="16"/>
+                    <path d="M10 18 L16 25 L28 10"/>
+                  </svg>
+                </div>
+                <span>{mandate.title}</span>
+              </div>
             ))}
           </div>
-
-          {/* L4: Balance hall pillars */}
-          <div className="gov-finale-hall">
-            <span /><span /><span /><span /><span />
-          </div>
-
-          {/* L5: 3D rings */}
-          <div className="gov-finale-rings" />
-
-          {/* L6: Floating orbs */}
-          {scaleOrbs.map(orb => (
-            <i
-              key={orb.id}
-              className="gov-finale-orb"
-              style={{
-                left:              `${orb.x}%`,
-                top:               `${orb.y}%`,
-                '--orb-size':      `${orb.size}px`,
-                '--orb-hue':       orb.hue,
-                '--duration':      `${orb.duration}s`,
-                '--delay':         `${orb.delay}s`,
-                animationDelay:    `${orb.delay}s`,
-                animationDuration: `${orb.duration}s`,
-              }}
-            />
-          ))}
-
-          {/* L7: Chromatic sparks */}
-          {finaleSparks.map(spark => (
-            <i
-              key={spark.id}
-              className="gov-finale-spark"
-              style={{
-                '--spark-angle':    `${spark.angle}deg`,
-                '--spark-distance': `${spark.distance}px`,
-                '--spark-size':     `${spark.size}px`,
-                '--spark-hue':      spark.hue,
-                '--duration':       `${spark.duration}s`,
-                '--delay':          `${spark.delay}s`,
-                animationDelay:    `${spark.delay}s`,
-                animationDuration: `${spark.duration}s`,
-              }}
-            />
-          ))}
 
           {/* L8: Message card */}
           <div className="gov-message-card">

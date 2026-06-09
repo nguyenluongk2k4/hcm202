@@ -518,11 +518,7 @@
   z-index: 180;
   overflow: hidden;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 50% 46%, rgba(255,255,255,0.18), transparent 18%),
-    radial-gradient(circle at 18% 42%, rgba(56,189,248,0.18), transparent 28%),
-    radial-gradient(circle at 84% 42%, rgba(167,139,250,0.14), transparent 28%),
-    linear-gradient(180deg, #020617 0%, #0b1f3f 48%, #171022 100%);
+  background: linear-gradient(180deg, #020617 0%, #0b1f3f 48%, #171022 100%);
   animation: govFinaleArrive 12s ease both;
 }
 
@@ -547,155 +543,83 @@
   animation: govDawnOpen 12s cubic-bezier(0.16,1,0.3,1) both;
 }
 
-/* L2: Chromatic shockwaves */
-.gov-finale-shockwave {
+/* L2: Quoc Huy PNG */
+.gov-quoc-huy-png {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: var(--ring-size, 8rem);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: 2px solid hsl(var(--ring-hue, 200) 100% 72%);
-  box-shadow:
-    0 0 1.5rem hsl(var(--ring-hue, 200) 100% 72% / 0.7),
-    0 0 3rem hsl(var(--ring-hue, 200) 100% 72% / 0.3);
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.06);
-  will-change: transform, opacity;
-  animation: govShockwave 12s ease-out both;
-}
-
-/* L3: Light rays */
-.gov-finale-rays {
-  position: absolute;
-  left: 50%;
-  top: 46%;
-  z-index: 4;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
-.gov-finale-rays i {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 3px;
-  height: var(--ray-length, 45vmax);
-  border-radius: 999px;
-  background: linear-gradient(
-    180deg,
-    hsl(var(--ray-hue, 200) 100% 82% / 0.9) 0%,
-    hsl(var(--ray-hue, 200) 100% 70% / 0.48) 40%,
-    transparent 100%
-  );
-  transform-origin: 0 0;
-  transform: rotate(var(--ray-angle, 0deg));
-  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.9);
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
   mix-blend-mode: screen;
-  will-change: opacity;
-  animation: govRayExpand 12s var(--ray-delay, 0s) ease-out both;
+  pointer-events: none;
+  z-index: 20;
+  animation: govQuocHuyFlash 4.5s ease-out both;
 }
 
-/* L4: Hall pillars */
-.gov-finale-hall {
+@keyframes govQuocHuyFlash {
+  0% { opacity: 0; filter: brightness(1) saturate(1); transform: translate(-50%, -50%) scale(0.6); }
+  5% { opacity: 1; filter: brightness(1.5) saturate(1.2); transform: translate(-50%, -50%) scale(0.92); }
+  15%, 100% { opacity: 1; filter: brightness(1.1) saturate(1.05); transform: translate(-50%, -50%) scale(0.9); }
+}
+
+/* L3: Finale Seals */
+.gov-finale-seals {
   position: absolute;
   left: 50%;
-  bottom: -7%;
-  z-index: 5;
+  bottom: 8%;
+  z-index: 25;
   display: flex;
-  gap: clamp(0.7rem, 3vw, 2.2rem);
+  gap: clamp(0.6rem, 2.5vw, 2rem);
   transform: translateX(-50%);
 }
 
-.gov-finale-hall span {
-  display: block;
-  width: clamp(2.4rem, 7vw, 5rem);
-  height: clamp(9rem, 24vw, 15rem);
-  border-radius: 999px 999px 0 0;
-  background:
-    radial-gradient(ellipse at 50% 14%, #ffffff 0 10%, #fef08a 11% 22%, transparent 23%),
-    linear-gradient(180deg, rgba(219,234,254,0.84), rgba(30,64,175,0.32) 62%, transparent);
-  filter: drop-shadow(0 0 1.4rem rgba(219,234,254,0.32));
+.gov-finale-seal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
   opacity: 0;
-  transform: translateY(9rem) scaleY(0.3);
-  transform-origin: 50% 100%;
-  animation: govHallRise 8s ease-out both;
+  transform: translateY(2rem) scale(0.8);
+  animation: govFinaleSealPop 2s var(--delay) cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.gov-finale-hall span:nth-child(2),
-.gov-finale-hall span:nth-child(4) { animation-delay: 170ms; }
-.gov-finale-hall span:nth-child(3) { animation-delay: 320ms; }
-
-/* L5: 3D rings */
-.gov-finale-rings,
-.gov-finale-rings::before,
-.gov-finale-rings::after {
-  position: absolute;
-  left: 50%;
-  top: 52%;
+.gov-finale-seal-icon {
+  width: clamp(2.5rem, 5vw, 3.5rem);
+  height: clamp(2.5rem, 5vw, 3.5rem);
+  display: grid;
+  place-items: center;
   border-radius: 50%;
-  content: '';
-  transform: translate(-50%, -50%) rotateX(66deg) scale(0.45);
-}
-
-.gov-finale-rings {
-  width: min(86vw, 44rem);
-  aspect-ratio: 1;
-  border: 1px solid rgba(254,240,138,0.44);
-  box-shadow: 0 0 2rem rgba(254,240,138,0.28), inset 0 0 2rem rgba(56,189,248,0.16);
-  animation: govFinaleRing 12s ease-out both;
-}
-
-.gov-finale-rings::before {
-  width: 72%;
-  aspect-ratio: 1;
-  border: 1px solid rgba(167,139,250,0.38);
-  box-shadow: 0 0 1.6rem rgba(167,139,250,0.26);
-  animation: govFinaleRing 12s 180ms ease-out both reverse;
-}
-
-.gov-finale-rings::after {
-  width: 124%;
-  aspect-ratio: 1;
-  border: 1px solid rgba(125,211,252,0.28);
-  box-shadow: 0 0 2rem rgba(125,211,252,0.22);
-  animation: govFinaleRing 12s 320ms ease-out both;
-}
-
-/* L6: Floating orbs */
-.gov-finale-orb {
-  position: absolute;
-  z-index: 14;
-  width: var(--orb-size, 10px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: hsl(var(--orb-hue, 0) 100% 80%);
+  background: radial-gradient(circle at 30% 30%, #fef08a, #f59e0b);
   box-shadow:
-    0 0 0.6rem hsl(var(--orb-hue, 0) 100% 72%),
-    0 0 1.4rem hsl(var(--orb-hue, 0) 100% 72% / 0.4);
-  opacity: 0;
-  pointer-events: none;
-  will-change: transform, opacity;
-  animation: govOrbFloat var(--duration) var(--delay) ease-in-out both;
+    0 0 1.2rem rgba(254, 240, 138, 0.4),
+    inset 0 0 0.5rem rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(254, 240, 138, 0.8);
 }
 
-/* L7: Chromatic sparks */
-.gov-finale-spark {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 16;
-  width: var(--spark-size);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: hsl(var(--spark-hue, 0) 100% 82%);
-  box-shadow:
-    0 0 0.8rem hsl(var(--spark-hue, 0) 100% 72%),
-    0 0 1.6rem hsl(var(--spark-hue, 0) 100% 72% / 0.4);
-  opacity: 0;
-  pointer-events: none;
-  will-change: transform, opacity;
-  animation: govFinaleSpark var(--duration) var(--delay) cubic-bezier(0.1,0.8,0.2,1) forwards;
+.gov-finale-seal-icon svg {
+  width: 55%;
+  height: 55%;
+  fill: none;
+  stroke: #14532d;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gov-finale-seal span {
+  color: #fef9c3;
+  font-size: clamp(0.65rem, 1.2vw, 0.85rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 0.6rem rgba(254, 240, 138, 0.6);
+}
+
+@keyframes govFinaleSealPop {
+  0% { opacity: 0; transform: translateY(2rem) scale(0.8); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* L8: Message card */
@@ -725,7 +649,7 @@
   backdrop-filter: blur(16px);
   opacity: 0;
   transform: translate(-50%, calc(-50% + 2.2rem)) scale(0.9);
-  animation: govMessageReveal 12s 0.7s cubic-bezier(0.16,1,0.3,1) both;
+  animation: govMessageReveal 8s 4.5s cubic-bezier(0.16,1,0.3,1) both;
   overflow: hidden;
 }
 
@@ -911,41 +835,41 @@
   100%{ opacity: 0.88; filter: saturate(1.4) brightness(1.06); transform: scale(1); }
 }
 
-@keyframes govShockwave {
-  0%  { opacity: 1; transform: translate(-50%, -50%) scale(0.06); }
-  12% { opacity: 1; }
-  100%{ opacity: 0; transform: translate(-50%, -50%) scale(12); }
+/* ── SVG Scale Blinking & Seal Explosion ── */
+.is-won-blink {
+  animation: scaleBlink 3.5s ease-in forwards;
 }
 
-@keyframes govRayExpand {
-  0%     { opacity: 0; }
-  10%    { opacity: 0.88; }
-  55%    { opacity: 0.56; }
-  100%   { opacity: 0; }
+@keyframes scaleBlink {
+  0%, 20%, 40%, 60% { filter: brightness(1) drop-shadow(0 0 5px #fbbf24); }
+  10%, 30%, 50%, 70% { filter: brightness(1.8) drop-shadow(0 0 20px #fef08a); }
+  85% { filter: brightness(3) drop-shadow(0 0 40px #ffffff); opacity: 1; }
+  100% { filter: brightness(5); opacity: 0; }
 }
 
-@keyframes govFinaleRing {
-  0%  { opacity: 0; transform: translate(-50%, -50%) rotateX(66deg) scale(0.38); }
-  20% { opacity: 0.88; }
-  100%{ opacity: 0.2; transform: translate(-50%, -50%) rotateX(66deg) scale(1.22); }
+.is-won-seal-collide {
+  animation: sealCollide 1s var(--delay) cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
 }
 
-@keyframes govHallRise {
-  0%  { opacity: 0; transform: translateY(9rem) scaleY(0.3); }
-  22% { opacity: 0.9; }
-  100%{ opacity: 0.74; transform: translateY(0) scaleY(1); }
+@keyframes sealCollide {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); filter: brightness(1); opacity: 1; }
+  30% { transform: translate(0, -40px) rotate(180deg) scale(1.2); filter: brightness(2); opacity: 1; }
+  100% { transform: translate(var(--target-x), var(--target-y)) rotate(720deg) scale(0); filter: brightness(4); opacity: 0; }
 }
 
-@keyframes govOrbFloat {
-  0%       { opacity: 0; transform: translateY(1rem) scale(0.4); }
-  18%      { opacity: 1; }
-  70%, 100%{ opacity: 0; transform: translateY(-4rem) scale(0); }
+.gov-core-explosion {
+  fill: #ffffff;
+  filter: drop-shadow(0 0 20px #fef08a) drop-shadow(0 0 40px #f59e0b);
+  opacity: 0;
+  transform-origin: 230px 176px;
+  animation: coreExplode 1.2s 2.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
 }
 
-@keyframes govFinaleSpark {
-  0%  { opacity: 0; transform: translate(-50%, -50%) rotate(var(--spark-angle)) translateY(0) scale(1); }
-  10% { opacity: 1; }
-  100%{ opacity: 0; transform: translate(-50%, -50%) rotate(var(--spark-angle)) translateY(calc(var(--spark-distance) * -1)) scale(0); }
+@keyframes coreExplode {
+  0% { transform: scale(0); opacity: 0; }
+  20% { transform: scale(5); opacity: 1; }
+  60% { transform: scale(40); opacity: 1; }
+  100% { transform: scale(100); opacity: 0; }
 }
 
 @keyframes govMessageReveal {

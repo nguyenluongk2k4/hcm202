@@ -969,7 +969,17 @@
     radial-gradient(circle at 50% 43%, rgba(255, 255, 255, 0.28), transparent 14%),
     radial-gradient(circle at 50% 62%, rgba(254, 240, 138, 0.22), transparent 38%),
     linear-gradient(180deg, rgba(2, 6, 23, 0.04), rgba(5, 20, 50, 0.72));
-  animation: cultureFinaleArrive 11.4s ease both;
+  animation: cultureFinaleArrive 8s 4.5s ease both;
+}
+
+@keyframes cultureLotusFlash {
+  0% { filter: brightness(1) saturate(1); }
+  7% { filter: brightness(1.5) saturate(1.2); }
+  15%, 100% { filter: brightness(1.1) saturate(1.05); }
+}
+
+.culture-lotus-png.is-won-glow {
+  animation: cultureLotusFlash 4.5s ease-out both;
 }
 
 .culture-finale-shockwave {
@@ -1232,7 +1242,7 @@
   opacity: 0;
   overflow: hidden;
   transform: translateY(2rem) scale(0.92);
-  animation: cultureMessageReveal 10.8s ease both;
+  animation: cultureMessageReveal 8s 4.5s ease both;
 }
 
 .culture-message-card::before,
@@ -1248,7 +1258,7 @@
   background: linear-gradient(110deg, transparent 0 28%, rgba(255, 255, 255, 0.24) 44%, transparent 62% 100%);
   opacity: 0;
   transform: translateX(-100%);
-  animation: cultureMessageShine 8.4s 1.4s ease-in-out both;
+  animation: cultureMessageShine 8.4s 5.5s ease-in-out both;
 }
 
 .culture-message-card::after {
@@ -1610,8 +1620,7 @@
 
 @keyframes cultureFinaleArrive {
   0% { opacity: 0; }
-  6%, 94% { opacity: 1; }
-  100% { opacity: 0.9; }
+  10%, 100% { opacity: 1; }
 }
 
 @keyframes cultureShockwaveExpand {
@@ -1687,8 +1696,8 @@
 }
 
 @keyframes cultureMessageReveal {
-  0%, 18% { opacity: 0; transform: translateY(2rem) scale(0.92); }
-  34%, 100% { opacity: 1; transform: translateY(0) scale(1); }
+  0% { opacity: 0; transform: translateY(2rem) scale(0.92); }
+  10%, 100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes cultureMessageShine {

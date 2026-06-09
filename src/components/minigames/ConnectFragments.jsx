@@ -1,28 +1,36 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './ConnectFragments.css'
 
-// Thêm 4 nodes mới để game khó hơn
+// Đồ thị dạng Ngôi Sao 5 cánh (tượng trưng cho sự đoàn kết hội tụ)
 const unityNodes = [
-  { id: 0,  label: 'Mục tiêu',    x: 210, y: 45  },
-  { id: 1,  label: 'Tin tưởng',   x: 265, y: 120 },
-  { id: 2,  label: 'Tôn trọng',   x: 375, y: 195 },
-  { id: 3,  label: 'Lắng nghe',   x: 310, y: 290 },
-  { id: 4,  label: 'Chia sẻ',     x: 210, y: 370 },
-  { id: 5,  label: 'Trách nhiệm', x: 110, y: 290 },
-  { id: 6,  label: 'Hợp tác',     x: 45,  y: 195 },
-  { id: 7,  label: 'Bao dung',    x: 155, y: 120 },
-  { id: 8,  label: 'Nhân dân',    x: 210, y: 220, core: true },
-  { id: 9,  label: 'Kỷ luật',     x: 275, y: 175 },
-  { id: 10, label: 'Sáng tạo',    x: 255, y: 255 },
-  { id: 11, label: 'Hi sinh',     x: 165, y: 255 },
-  { id: 12, label: 'Nghĩa tình',  x: 145, y: 175 },
+  { id: 0, label: 'Nhân dân',    x: 210, y: 210, core: true },
+  
+  // Vòng ngoài (5 đỉnh ngôi sao)
+  { id: 1, label: 'Mục tiêu',    x: 210, y: 40 },
+  { id: 2, label: 'Tôn trọng',   x: 371, y: 157 },
+  { id: 3, label: 'Trách nhiệm', x: 310, y: 347 },
+  { id: 4, label: 'Bao dung',    x: 110, y: 347 },
+  { id: 5, label: 'Hợp tác',     x: 49,  y: 157 },
+  
+  // Vòng trong (ngũ giác lõi)
+  { id: 6, label: 'Tin tưởng',   x: 251, y: 153 },
+  { id: 7, label: 'Lắng nghe',   x: 277, y: 232 },
+  { id: 8, label: 'Chia sẻ',     x: 210, y: 280 },
+  { id: 9, label: 'Kỷ luật',     x: 143, y: 232 },
+  { id: 10, label: 'Sáng tạo',   x: 169, y: 153 },
 ]
 
 const targetEdges = [
-  '0-1', '1-2', '2-3', '3-4', '4-5', '5-6', '6-7', '0-7', // octagon outer
-  '0-8', '2-8', '4-8', '6-8',                              // core spokes
-  '1-9', '2-9', '3-10', '4-10',                            // inner connectors (sorted)
-  '5-11', '6-11', '7-12', '0-12',                          // more connectors (sorted)
+  // Lõi ra vòng trong
+  '0-6', '0-7', '0-8', '0-9', '0-10',
+  // Vòng ngũ giác bên trong
+  '6-7', '7-8', '8-9', '9-10', '6-10',
+  // Các tia ra đỉnh sao
+  '1-6', '1-10',
+  '2-6', '2-7',
+  '3-7', '3-8',
+  '4-8', '4-9',
+  '5-9', '5-10'
 ]
 
 const SNAP_RADIUS = 82
@@ -68,38 +76,8 @@ function seededRatio(index, salt = 1) {
   return value - Math.floor(value)
 }
 
-function curvedPath(start, end, strength = 0.12) {
-  // Center is (210, 210)
-  if (start.id === 8 || end.id === 8) {
-    return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
-  }
-
-  const midX = (start.x + end.x) / 2;
-  const midY = (start.y + end.y) / 2;
-  const vx = midX - 210;
-  const vy = midY - 210;
-  const dist = Math.hypot(vx, vy);
-
-  // Checks if both node ids are part of the outer perimeter
-  const isOuter =
-    start.id !== undefined &&
-    end.id !== undefined &&
-    ((start.id < 8 && end.id < 8) || (start.id === 0 && end.id === 7) || (start.id === 7 && end.id === 0));
-
-  if (isOuter && dist > 0) {
-    // If it is the bottom base of the lotus, curve inwards to represent the stem/base
-    const isBottomBase =
-      (start.id === 4 && (end.id === 5 || end.id === 3)) ||
-      (end.id === 4 && (start.id === 5 || start.id === 3));
-
-    const bend = 24;
-    const directionSign = isBottomBase ? -1 : 1;
-    const controlX = midX + (vx / dist) * bend * directionSign;
-    const controlY = midY + (vy / dist) * bend * directionSign;
-    return `M ${start.x} ${start.y} Q ${controlX} ${controlY} ${end.x} ${end.y}`;
-  }
-
-  // Draw straight lines for inner geometric links
+function curvedPath(start, end) {
+  // Với bản đồ ngôi sao, vẽ các nét thẳng hình học sẽ đẹp và sắc sảo nhất
   return `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
 }
 
@@ -308,29 +286,18 @@ export default function ConnectFragments({ onWin, onSolved }) {
             </filter>
           </defs>
 
-          {/* Glowing light lotus in the background, visible/blooming when won (rendered outside the board group so it persists) */}
-          <g className={`unity-light-lotus ${won ? 'is-blooming' : ''}`}>
-            {/* Radiant light rays behind the lotus */}
-            <g className="lotus-rays">
-              <line x1="210" y1="280" x2="210" y2="40" className="lotus-ray" />
-              <line x1="210" y1="280" x2="120" y2="70" className="lotus-ray" />
-              <line x1="210" y1="280" x2="300" y2="70" className="lotus-ray" />
-              <line x1="210" y1="280" x2="50" y2="130" className="lotus-ray" />
-              <line x1="210" y1="280" x2="370" y2="130" className="lotus-ray" />
-            </g>
-
-            {lotusPetals.map((petal) => (
-              <path
-                key={`finale-petal-${petal.id}`}
-                d={getPathData(petal.size)}
-                transform={`translate(210, 280) rotate(${petal.angle}) scale(${petal.scale})`}
-                fill={`url(#${petal.grad})`}
-                fillOpacity="0.95"
-                stroke={`url(#${petal.grad})`}
-                strokeWidth="1.5"
-                className={`lotus-petal ${petal.id}`}
-              />
-            ))}
+          {/* Ngôi sao và lá cờ Việt Nam thay thế cho hoa sen */}
+          <g className={`unity-vn-flag-anim ${won ? 'is-animating' : ''}`} transform="translate(210, 210)">
+            <circle 
+              className="vn-flag-bg" 
+              cx="0" cy="0" r="600" 
+              fill="#da251d" 
+            />
+            <path 
+              className="vn-flag-star"
+              d="M 0 -50 L 11.2 -15.4 L 47.5 -15.4 L 18.1 5.9 L 29.3 40.4 L 0 19.1 L -29.3 40.4 L -18.1 5.9 L -47.5 -15.4 L -11.2 -15.4 Z"
+              fill="#ffff00"
+            />
           </g>
 
           {/* Group wrapper to rotate and scale the entire lotus board when won */}
@@ -340,18 +307,14 @@ export default function ConnectFragments({ onWin, onSolved }) {
               <circle cx="210" cy="210" r="196" />
             </g>
 
-            {/* Network flower fill (glows up and fills when won, rotates and fades out with the board) */}
+            {/* Lấp đầy ngôi sao bằng một luồng sáng mờ khi hoàn thành để tạo hiệu ứng "tụ năng lượng" */}
             {won && (
-              <g className="unity-board-lotus-fill">
-                {lotusPetals.map((petal) => (
-                  <path
-                    key={`board-fill-${petal.id}`}
-                    d={getPathData(petal.size)}
-                    transform={`translate(210, 280) rotate(${petal.angle}) scale(${petal.scale * 0.72})`}
-                    fill={`url(#${petal.grad})`}
-                    className="board-petal-fill"
-                  />
-                ))}
+              <g className="unity-board-star-fill">
+                <path 
+                  d="M 210 40 L 251 153 L 371 157 L 277 232 L 310 347 L 210 280 L 110 347 L 143 232 L 49 157 L 169 153 Z"
+                  fill="url(#unityCoreGradient)"
+                  fillOpacity="0.35"
+                />
               </g>
             )}
 

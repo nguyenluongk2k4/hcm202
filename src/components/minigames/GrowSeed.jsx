@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import './GrowSeed.css'
+import lotusSvg from '../../assets/lotus_svg.svg'
+import lotusPng from '../../assets/lotus.png'
+import LotusPaths from './LotusPaths'
 
 const cultureStages = [
   {
@@ -18,7 +21,7 @@ const cultureStages = [
     value: 'Tiếng nói',
     prompt: 'Kết nối tiếng nói chung để ký ức không bị đứt đoạn.',
     threshold: 18,
-    x: 27,
+    x: 12,
     y: 72,
     color: '#7dd3fc',
   },
@@ -28,7 +31,7 @@ const cultureStages = [
     value: 'Tri thức',
     prompt: 'Dẫn dòng tri thức xuống rễ cây để văn hóa có nền tảng.',
     threshold: 29,
-    x: 73,
+    x: 88,
     y: 72,
     color: '#38bdf8',
   },
@@ -38,7 +41,7 @@ const cultureStages = [
     value: 'Đạo đức',
     prompt: 'Thắp ngọn đèn đạo đức để tri thức không đi lệch hướng.',
     threshold: 40,
-    x: 18,
+    x: 6,
     y: 52,
     color: '#34d399',
   },
@@ -48,7 +51,7 @@ const cultureStages = [
     value: 'Kỷ luật',
     prompt: 'Khóa nhịp kỷ luật để hành động không chỉ là cảm hứng nhất thời.',
     threshold: 51,
-    x: 82,
+    x: 94,
     y: 52,
     color: '#a7f3d0',
   },
@@ -58,7 +61,7 @@ const cultureStages = [
     value: 'Lý tưởng',
     prompt: 'Đưa lý tưởng lên cao để mọi lựa chọn có phương hướng.',
     threshold: 62,
-    x: 31,
+    x: 12,
     y: 34,
     color: '#fef08a',
   },
@@ -68,7 +71,7 @@ const cultureStages = [
     value: 'Con người',
     prompt: 'Đánh thức mầm người toàn diện: biết học, biết sống, biết cống hiến.',
     threshold: 73,
-    x: 69,
+    x: 88,
     y: 34,
     color: '#ffffff',
   },
@@ -78,7 +81,7 @@ const cultureStages = [
     value: 'Cái đẹp',
     prompt: 'Vun cái đẹp trong cách nghĩ, cách nói và cách đối xử.',
     threshold: 83,
-    x: 17,
+    x: 6,
     y: 17,
     color: '#f0abfc',
   },
@@ -88,7 +91,7 @@ const cultureStages = [
     value: 'Di sản',
     prompt: 'Trao di sản cho thế hệ kế tiếp bằng một đường sáng bền bỉ.',
     threshold: 92,
-    x: 83,
+    x: 94,
     y: 17,
     color: '#93c5fd',
   },
@@ -120,20 +123,7 @@ const cultureLinks = [
   ['ethics', 'discipline'],
 ]
 
-const lotusPetals = [
-  { id: 'outer-left', angle: -62, scale: 1.08, size: 'L', grad: 'culturePetalOuter', drawOrder: 0 },
-  { id: 'outer-mid-left', angle: -34, scale: 1.16, size: 'L', grad: 'culturePetalBlue', drawOrder: 1 },
-  { id: 'outer-center', angle: 0, scale: 1.24, size: 'L', grad: 'culturePetalGold', drawOrder: 2 },
-  { id: 'outer-mid-right', angle: 34, scale: 1.16, size: 'L', grad: 'culturePetalBlue', drawOrder: 3 },
-  { id: 'outer-right', angle: 62, scale: 1.08, size: 'L', grad: 'culturePetalOuter', drawOrder: 4 },
-  { id: 'middle-left', angle: -42, scale: 0.96, size: 'M', grad: 'culturePetalEmerald', drawOrder: 5 },
-  { id: 'middle-cl', angle: -14, scale: 1.08, size: 'M', grad: 'culturePetalInner', drawOrder: 6 },
-  { id: 'middle-cr', angle: 14, scale: 1.08, size: 'M', grad: 'culturePetalInner', drawOrder: 7 },
-  { id: 'middle-right', angle: 42, scale: 0.96, size: 'M', grad: 'culturePetalEmerald', drawOrder: 8 },
-  { id: 'inner-left', angle: -18, scale: 0.82, size: 'S', grad: 'culturePetalInner', drawOrder: 9 },
-  { id: 'inner-center', angle: 0, scale: 0.92, size: 'S', grad: 'culturePetalGold', drawOrder: 10 },
-  { id: 'inner-right', angle: 18, scale: 0.82, size: 'S', grad: 'culturePetalInner', drawOrder: 11 },
-]
+
 
 const finaleWords = ['Niềm tin', 'Tri thức', 'Đạo đức', 'Lý tưởng', 'Cái đẹp', 'Di sản']
 const quoteLetters = 'TRỒNG NGƯỜI - GIEO CẢ TƯƠNG LAI'.split('')
@@ -228,7 +218,7 @@ export default function GrowSeed({ onWin, onSolved }) {
     (stage) => progress >= stage.threshold && !unlocked.includes(stage.key)
   )
   const activeIndex = activeStage ? cultureStages.findIndex((stage) => stage.key === activeStage.key) : -1
-  const drawPhase = Math.min(1, progress / 84)
+  const drawPhase = Math.min(1, progress / 100)
   const bloomPhase = Math.max(0, (progress - 82) / 18)
   const bloom = easeOutBack(bloomPhase)
 
@@ -698,11 +688,11 @@ export default function GrowSeed({ onWin, onSolved }) {
               <stop offset="50%" stopColor="#fde047" />
               <stop offset="100%" stopColor="#ffffff" />
             </linearGradient>
-            <filter id="cultureGlow">
+            <filter id="cultureGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="5" result="blur" />
               <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
-            <filter id="cultureStrongGlow">
+            <filter id="cultureStrongGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="10" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
@@ -710,7 +700,7 @@ export default function GrowSeed({ onWin, onSolved }) {
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            <filter id="cultureUltraGlow">
+            <filter id="cultureUltraGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="18" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
@@ -722,44 +712,6 @@ export default function GrowSeed({ onWin, onSolved }) {
           </defs>
 
           <ellipse cx="260" cy="392" rx="190" ry="36" fill="url(#cultureWaterGlow)" opacity={0.2 + progress / 120} />
-
-          <path
-            className="culture-stem culture-stem--main"
-            d="M260 386 C250 337 268 296 256 251 C246 212 214 193 230 154 C242 124 276 111 290 78"
-            fill="none"
-            stroke="url(#cultureStem)"
-            strokeWidth="13"
-            strokeLinecap="round"
-            pathLength="100"
-            strokeDasharray="100"
-            strokeDashoffset={100 - Math.min(100, progress * 1.04)}
-            filter="url(#cultureGlow)"
-          />
-          <path
-            className="culture-stem culture-stem--branch"
-            d="M258 268 C220 246 189 222 162 182 M262 242 C305 220 340 194 374 148"
-            fill="none"
-            stroke="#a7f3d0"
-            strokeWidth="6"
-            strokeLinecap="round"
-            pathLength="100"
-            strokeDasharray="100"
-            strokeDashoffset={100 - Math.max(0, (progress - 24) * 1.28)}
-            filter="url(#cultureGlow)"
-          />
-          <path
-            className="culture-stem culture-stem--branch culture-stem--gold"
-            d="M240 210 C200 198 168 176 148 140 M272 200 C318 186 354 162 386 120"
-            fill="none"
-            stroke="#fde047"
-            strokeWidth="4"
-            strokeLinecap="round"
-            pathLength="100"
-            strokeDasharray="100"
-            strokeDashoffset={100 - Math.max(0, (progress - 46) * 1.7)}
-            filter="url(#cultureGlow)"
-            opacity="0.72"
-          />
 
           {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => (
             <g
@@ -776,83 +728,33 @@ export default function GrowSeed({ onWin, onSolved }) {
             </g>
           ))}
 
-          {bloomPhase > 0 && (
-            <circle
-              cx="260" cy="108"
-              r={bloomPhase * 480}
-              fill="url(#culturePetalGold)"
-              opacity={(1 - bloomPhase) * 0.36}
-              filter="url(#cultureUltraGlow)"
-              style={{ mixBlendMode: 'screen' }}
-            />
-          )}
+          <g>
+            <LotusPaths drawPhase={drawPhase} won={won} bloomPhase={bloomPhase} />
 
-          <g transform="translate(260, 280)">
-            {lotusPetals.map((petal) => {
-              const duration = 0.2
-              const stagger = (1 - duration) / (lotusPetals.length - 1)
-              const startDraw = petal.drawOrder * stagger
-              const endDraw = startDraw + duration
-              let localDrawProgress = 0
-              if (drawPhase >= endDraw) localDrawProgress = 1
-              else if (drawPhase > startDraw) localDrawProgress = (drawPhase - startDraw) / (endDraw - startDraw)
-
-              const strokeOffset = 100 - localDrawProgress * 100
-              const fillOpacity = localDrawProgress === 1 ? 0.18 + bloomPhase * 0.78 : 0
-              const strokeOpacity = drawPhase > 0 ? 1 - bloomPhase * 0.62 : 0
-              const isDrawing = localDrawProgress > 0 && localDrawProgress < 1
-              const currentAngle = petal.angle * (0.74 + 0.26 * bloom)
-              const currentScale = petal.scale * (0.74 + 0.26 * bloom)
-
-              return (
-                <g key={petal.id} transform={`rotate(${currentAngle}) scale(${currentScale})`}>
-                  <path
-                    d={getPathData(petal.size)}
-                    fill={`url(#${petal.grad})`}
-                    fillOpacity={fillOpacity}
-                    stroke={`url(#${petal.grad})`}
-                    strokeWidth={isDrawing ? 5 : 2.4}
-                    strokeOpacity={strokeOpacity}
-                    strokeLinecap="round"
-                    pathLength="100"
-                    strokeDasharray="100"
-                    strokeDashoffset={strokeOffset}
-                    filter={isDrawing || bloomPhase > 0 ? 'url(#cultureGlow)' : 'none'}
-                  />
-                  {isDrawing && (
-                    <path
-                      d={getPathData(petal.size)}
-                      fill="none"
-                      stroke="#ffffff"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                      pathLength="100"
-                      strokeDasharray="1 100"
-                      strokeDashoffset={strokeOffset}
-                      filter="url(#cultureStrongGlow)"
-                    />
-                  )}
-                </g>
-              )
-            })}
-
-            {bloomPhase > 0 && (
-              <>
-                <circle cx="0" cy="-162" r={28 * bloom} fill="#ffffff" opacity={Math.min(1, bloomPhase * 2)} filter="url(#cultureUltraGlow)" />
-                <circle cx="0" cy="-162" r={62 * bloom} fill="url(#culturePetalGold)" opacity="0.76" filter="url(#cultureGlow)" />
-              </>
-            )}
-
-            {won && (
-              <g className="culture-mature-leaves" transform="translate(0 -150)">
-                <path d="M0 0 C-36 -20 -62 -9 -76 16 C-42 22 -18 17 0 0 Z" fill="#86efac" />
-                <path d="M0 -4 C42 -27 69 -10 82 18 C44 25 19 18 0 -4 Z" fill="#bbf7d0" />
-                <path d="M-4 -18 C-28 -52 -14 -79 14 -90 C27 -55 20 -31 -4 -18 Z" fill="#fde68a" />
-                <path d="M6 -18 C35 -54 66 -43 78 -16 C45 -7 24 -6 6 -18 Z" fill="#7dd3fc" />
-              </g>
-            )}
           </g>
         </svg>
+
+        {bloomPhase > 0 && (
+          <img 
+            src={lotusPng} 
+            alt=""
+            className={won ? 'culture-lotus-png is-won-glow' : 'culture-lotus-png'}
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              transform: `translate(-50%, -50%) scale(${0.85 + bloomPhase * 0.15})`,
+              width: '85%',
+              height: '85%',
+              objectFit: 'contain',
+              opacity: Math.min(1, bloomPhase * 1.5),
+              mixBlendMode: 'screen',
+              transition: 'all 2s ease-out',
+              pointerEvents: 'none',
+              zIndex: 20
+            }}
+          />
+        )}
 
         <div className="culture-stage-list">
           {cultureStages.map((stage) => (
@@ -881,89 +783,6 @@ export default function GrowSeed({ onWin, onSolved }) {
 
         {won && finalePhase >= 2 && (
           <div className="culture-finale" aria-live="polite">
-            <div className="culture-finale-shockwave" />
-            <div className="culture-finale-shockwave culture-finale-shockwave--2" />
-            <div className="culture-finale-sun" />
-
-            <div className="culture-finale-rays">
-              {finaleRays.map((ray) => (
-                <i
-                  key={ray.id}
-                  style={{
-                    '--ray-angle': `${ray.angle}deg`,
-                    '--ray-delay': `${ray.delay}s`,
-                    '--ray-length': `${ray.length}vmax`,
-                  }}
-                />
-              ))}
-            </div>
-
-            <div className="culture-finale-mandala">
-              <span /><span /><span /><span />
-            </div>
-
-            <svg className="culture-finale-network" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              {cultureLinks.map(([from, to], index) => {
-                const start = stageByKey[from]
-                const end = stageByKey[to]
-                return (
-                  <path
-                    key={`${from}-${to}`}
-                    d={getCurvePath(start, end)}
-                    pathLength="100"
-                    style={{ animationDelay: `${0.45 + index * 0.08}s` }}
-                  />
-                )
-              })}
-              {cultureStages.map((stage, index) => (
-                <circle
-                  key={stage.key}
-                  cx={stage.x}
-                  cy={stage.y}
-                  r="1.3"
-                  style={{ '--stage-color': stage.color, animationDelay: `${0.6 + index * 0.08}s` }}
-                />
-              ))}
-            </svg>
-
-            <div className="culture-finale-garden">
-              <span /><span /><span /><span /><span /><span /><span />
-            </div>
-
-            {finaleOrbs.map((orb) => (
-              <i
-                key={orb.id}
-                className="culture-finale-orb"
-                style={{
-                  '--orb-angle': `${orb.angle}deg`,
-                  '--orb-dist': `${orb.dist}px`,
-                  '--orb-size': `${orb.size}px`,
-                  animationDelay: `${orb.delay}s`,
-                  animationDuration: `${orb.duration}s`,
-                }}
-              />
-            ))}
-
-            {finalePetals.map((petal) => (
-              <i
-                key={petal.id}
-                className={`culture-finale-petal culture-finale-petal--${petal.color}`}
-                style={{
-                  left: `${petal.left}%`,
-                  '--sway': `${petal.sway}px`,
-                  '--petal-scale': petal.scale,
-                  '--petal-rotate': `${petal.rotate}deg`,
-                  animationDelay: `${petal.delay}s`,
-                  animationDuration: `${petal.duration}s`,
-                }}
-              />
-            ))}
-
-            <div className="culture-word-orbit">
-              {finaleWords.map((word, index) => (
-                <span key={word} style={{ '--orbit-index': index }}>{word}</span>
-              ))}
-            </div>
 
             <div className="culture-message-card">
               <div className="culture-message-badge">
@@ -974,7 +793,7 @@ export default function GrowSeed({ onWin, onSolved }) {
                 {quoteLetters.map((letter, index) => (
                   <span
                     key={`${letter}-${index}`}
-                    style={{ animationDelay: `${0.55 + index * 0.042}s` }}
+                    style={{ animationDelay: `${4.8 + index * 0.042}s` }}
                   >
                     {letter === ' ' ? '\u00a0' : letter}
                   </span>

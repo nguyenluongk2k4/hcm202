@@ -1,19 +1,51 @@
 import { useMemo, useRef, useState } from 'react'
+import senVangNeon from '../../assets/sen_vang_neon.png'
 import './HeartConstellation.css'
 
 const heartNodes = [
-  { id: 'ton-trong', label: 'Tôn trọng', x: 50, y: 27, align: 'top' },
-  { id: 'lang-nghe', label: 'Lắng nghe', x: 62, y: 18, align: 'right' },
-  { id: 'chia-se', label: 'Chia sẻ', x: 76, y: 24, align: 'right' },
-  { id: 'bao-ve', label: 'Bảo vệ', x: 84, y: 40, align: 'right' },
-  { id: 'nang-do', label: 'Nâng đỡ', x: 79, y: 58, align: 'right' },
-  { id: 'trach-nhiem', label: 'Trách nhiệm', x: 66, y: 73, align: 'bottom' },
-  { id: 'con-nguoi', label: 'Con người', x: 50, y: 88, align: 'bottom' },
-  { id: 'tu-te', label: 'Tử tế', x: 34, y: 73, align: 'bottom' },
-  { id: 'cham-lo', label: 'Chăm lo', x: 21, y: 58, align: 'left' },
-  { id: 'dong-cam', label: 'Đồng cảm', x: 16, y: 40, align: 'left' },
-  { id: 'tin-tuong', label: 'Tin tưởng', x: 24, y: 24, align: 'left' },
-  { id: 'doan-ket', label: 'Đoàn kết', x: 38, y: 18, align: 'left' },
+  // EAST COAST
+  { id: 'p0', label: 'Tôn trọng', x: 33, y: 10, align: 'left' },
+  { id: 'p1', label: 'Lắng nghe', x: 42, y: 5, align: 'top' },
+  { id: 'p2', label: '', x: 50, y: 7, align: 'top' },
+  { id: 'p3', label: 'Chia sẻ', x: 55, y: 13, align: 'right' },
+  { id: 'p4', label: '', x: 53, y: 19, align: 'right' },
+  { id: 'p5', label: 'Bảo vệ', x: 49, y: 24, align: 'right' },
+  { id: 'p6', label: '', x: 46, y: 30, align: 'right' },
+  { id: 'p7', label: 'Nâng đỡ', x: 44, y: 36, align: 'right' },
+  { id: 'p8', label: '', x: 46, y: 42, align: 'right' },
+  { id: 'p9', label: 'Trách nhiệm', x: 49, y: 47, align: 'right' },
+  { id: 'p10', label: '', x: 53, y: 51, align: 'right' },
+  { id: 'p11', label: 'Con người', x: 56, y: 54, align: 'right' },
+  { id: 'p12', label: '', x: 59, y: 58, align: 'right' },
+  { id: 'p13', label: 'Tử tế', x: 62, y: 63, align: 'right' },
+  { id: 'p14', label: '', x: 65, y: 68, align: 'right' },
+  { id: 'p15', label: 'Chăm lo', x: 68, y: 73, align: 'right' },
+  { id: 'p16', label: '', x: 64, y: 78, align: 'right' },
+  { id: 'p17', label: 'Đồng cảm', x: 60, y: 82, align: 'right' },
+  { id: 'p18', label: '', x: 55, y: 86, align: 'right' },
+  { id: 'p19', label: 'Nhân ái', x: 50, y: 89, align: 'bottom' },
+  { id: 'p20', label: '', x: 45, y: 93, align: 'bottom' },
+  { id: 'p21', label: 'Đoàn kết', x: 40, y: 96, align: 'bottom' },
+
+  // WEST COAST
+  { id: 'p22', label: '', x: 35, y: 90, align: 'left' },
+  { id: 'p23', label: 'Vị tha', x: 38, y: 86, align: 'left' },
+  { id: 'p24', label: '', x: 45, y: 82, align: 'left' },
+  { id: 'p25', label: 'Khoan dung', x: 49, y: 76, align: 'left' },
+  { id: 'p26', label: '', x: 52, y: 69, align: 'left' },
+  { id: 'p27', label: 'Gắn bó', x: 50, y: 60, align: 'left' },
+  { id: 'p28', label: '', x: 48, y: 55, align: 'left' },
+  { id: 'p29', label: 'Yêu thương', x: 44, y: 50, align: 'left' },
+  { id: 'p30', label: '', x: 41, y: 45, align: 'left' },
+  { id: 'p31', label: 'Hòa bình', x: 38, y: 40, align: 'left' },
+  { id: 'p32', label: '', x: 35, y: 35, align: 'left' },
+  { id: 'p33', label: 'Tự hào', x: 33, y: 30, align: 'left' },
+  { id: 'p34', label: '', x: 29, y: 23, align: 'left' },
+  { id: 'p35', label: 'Kiên cường', x: 25, y: 15, align: 'left' },
+
+  // ISLANDS
+  { id: 'hoang-sa', label: 'Hoàng Sa', x: 78, y: 52, align: 'top' },
+  { id: 'truong-sa', label: 'Trường Sa', x: 85, y: 80, align: 'bottom' },
 ]
 
 const finaleWords = ['Người tốt', 'Việc tốt', 'Nhân ái', 'Tôn trọng', 'Chăm lo', 'Nâng đỡ']
@@ -23,16 +55,14 @@ const humanityPhases = [
   { label: 'Hành động', text: 'biến yêu thương thành việc tốt', start: 8, end: 11 },
 ]
 
-const harmonyLinks = [
-  ['ton-trong', 'con-nguoi'],
-  ['lang-nghe', 'cham-lo'],
-  ['chia-se', 'nang-do'],
-  ['bao-ve', 'trach-nhiem'],
-  ['dong-cam', 'tu-te'],
-  ['tin-tuong', 'doan-ket'],
-]
 
-const heartAuraPath = 'M 50 27 C 59 8 80 12 86 31 C 93 53 73 69 50 90 C 27 69 7 53 14 31 C 20 12 41 8 50 27'
+
+
+const mainlandIds = Array.from({length: 36}, (_, i) => `p${i}`)
+const polygonPoints = mainlandIds.map(id => {
+  const node = heartNodes.find(n => n.id === id)
+  return `${node.x},${node.y}`
+}).join(' ')
 
 function seededRatio(index, salt = 0) {
   const value = Math.sin(index * 33.73 + salt * 19.17) * 10000
@@ -43,11 +73,8 @@ function distance(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y)
 }
 
-function curvedPath(from, to) {
-  const midX = (from.x + to.x) / 2
-  const midY = (from.y + to.y) / 2
-  const bend = from.x < 50 && to.x < 50 ? -3 : from.x > 50 && to.x > 50 ? 3 : 0
-  return `M ${from.x} ${from.y} Q ${midX + bend} ${midY - 2} ${to.x} ${to.y}`
+function straightPath(from, to) {
+  return `M ${from.x} ${from.y} L ${to.x} ${to.y}`
 }
 
 export default function HeartConstellation({ onWin, onSolved }) {
@@ -97,7 +124,7 @@ export default function HeartConstellation({ onWin, onSolved }) {
       onSolved?.()
       setWon(true)
       setTimeout(() => setShowFinale(true), 820)
-      setTimeout(() => onWin(), 10000)
+      setTimeout(() => onWin(), 25000)
     }
   }
 
@@ -144,12 +171,6 @@ export default function HeartConstellation({ onWin, onSolved }) {
         ))}
         <div className="humanity-nebula" aria-hidden="true" />
 
-        <div className="humanity-center">
-          <span className="humanity-heart-aura" />
-          <span className="humanity-heart-core" />
-          <strong>Con người<br />là trung tâm</strong>
-        </div>
-
         <div className="humanity-stellar-compass" aria-hidden="true">
           {humanityPhases.map((phase) => {
             const phaseLit = lit.length > phase.start
@@ -179,30 +200,26 @@ export default function HeartConstellation({ onWin, onSolved }) {
               </feMerge>
             </filter>
           </defs>
-          <path className="humanity-heart-silhouette humanity-heart-silhouette--glow" d={heartAuraPath} />
-          <path className="humanity-heart-silhouette humanity-heart-silhouette--line" d={heartAuraPath} />
-          {heartNodes.map((node, index) => {
-            const next = heartNodes[(index + 1) % heartNodes.length]
+
+          <polygon 
+            points={polygonPoints} 
+            className={`humanity-vietnam-surface ${showFinale ? 'is-won' : ''}`}
+          />
+
+          {mainlandIds.map((nodeId, index) => {
+            const nextId = mainlandIds[(index + 1) % mainlandIds.length]
+            const node = heartNodes.find(n => n.id === nodeId)
+            const next = heartNodes.find(n => n.id === nextId)
             const active = lit.includes(node.id) && lit.includes(next.id)
             return (
               <g key={node.id} className={active ? 'is-lit' : ''}>
-                <path className="humanity-orbit-beam humanity-orbit-beam--base" d={curvedPath(node, next)} />
-                <path className="humanity-orbit-beam humanity-orbit-beam--core" d={curvedPath(node, next)} />
-                {active && <path className="humanity-orbit-beam humanity-orbit-beam--runner" d={curvedPath(node, next)} />}
+                <path className="humanity-orbit-beam humanity-orbit-beam--base" d={straightPath(node, next)} />
+                <path className="humanity-orbit-beam humanity-orbit-beam--core" d={straightPath(node, next)} />
+                {active && <path className="humanity-orbit-beam humanity-orbit-beam--runner" d={straightPath(node, next)} />}
               </g>
             )
           })}
-          {harmonyLinks.map(([fromId, toId]) => {
-            const from = nodeById[fromId]
-            const to = nodeById[toId]
-            const active = lit.includes(fromId) && lit.includes(toId)
-            return (
-              <g key={`${fromId}-${toId}`} className={active ? 'is-lit' : ''}>
-                <path className="humanity-cross-beam humanity-cross-beam--base" d={curvedPath(from, to)} />
-                {active && <path className="humanity-cross-beam humanity-cross-beam--runner" d={curvedPath(from, to)} />}
-              </g>
-            )
-          })}
+
           {trail.map((point, index) => {
             const next = trail[index + 1]
             if (!next) return null
@@ -257,46 +274,21 @@ export default function HeartConstellation({ onWin, onSolved }) {
 
       {showFinale && (
         <div className="humanity-finale" aria-hidden="true">
-          <div className="humanity-finale-garden" />
-          <div className="humanity-finale-heart" />
-          <svg className="humanity-finale-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            {heartNodes.map((node, index) => {
-              const next = heartNodes[(index + 1) % heartNodes.length]
-              return <path key={node.id} d={curvedPath(node, next)} style={{ animationDelay: `${0.2 + index * 0.045}s` }} />
-            })}
-            {harmonyLinks.map(([fromId, toId], index) => (
-              <path
-                key={`${fromId}-${toId}`}
-                d={curvedPath(nodeById[fromId], nodeById[toId])}
-                style={{ animationDelay: `${0.72 + index * 0.06}s` }}
-              />
-            ))}
-          </svg>
-          <div className="humanity-finale-petals">
-            {Array.from({ length: 22 }).map((_, index) => (
-              <i
-                key={index}
-                style={{
-                  '--left': `${4 + seededRatio(index, 21) * 92}%`,
-                  '--delay': `${seededRatio(index, 24) * 1.6}s`,
-                  '--duration': `${3.8 + seededRatio(index, 27) * 3.4}s`,
-                  '--size': `${10 + seededRatio(index, 30) * 16}px`,
-                }}
-              />
-            ))}
-          </div>
-          <div className="humanity-finale-words">
-            {finaleWords.map((word, index) => (
-              <span key={word} style={{ '--delay': `${index * 0.12}s` }}>
-                {word}
-              </span>
-            ))}
-          </div>
+          <div className="humanity-finale-space" />
+          
+          <img 
+            src={senVangNeon} 
+            alt="Đóa sen vàng" 
+            className="humanity-finale-flower-img" 
+          />
+          
           <div className="humanity-message-card">
             <span>Hành tinh đã mở khóa</span>
             <h3>TƯ TƯỞNG NHÂN VĂN</h3>
-            <strong>Mỗi người tốt, mỗi việc tốt là một bông hoa đẹp trong khu vườn chung của xã hội.</strong>
-            <p>Yêu thương con người không dừng ở cảm xúc: nó trở thành tôn trọng, chăm lo, nâng đỡ và trách nhiệm với cộng đồng.</p>
+            <strong>"Mỗi người tốt, mỗi việc tốt là một bông hoa đẹp"</strong>
+            <p>
+              Yêu thương con người không dừng ở cảm xúc: nó trở thành hành động. Mỗi việc tốt bạn làm sẽ tạo thêm một điểm sáng, đan kết lại thành một đóa hoa vũ trụ trường tồn.
+            </p>
           </div>
         </div>
       )}
