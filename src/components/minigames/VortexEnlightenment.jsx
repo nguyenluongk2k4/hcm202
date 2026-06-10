@@ -1,197 +1,150 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import './VortexEnlightenment.css'
-
-const CORE = { x: 50, y: 44 }
 
 const sources = [
   {
     id: 'yeu-nuoc',
     title: 'Chủ nghĩa yêu nước Việt Nam',
     short: 'Yêu nước',
-    color: '#f8c24d',
-    start: { x: 11, y: 56 },
-    filters: [
-      { id: 'ca-nhan', label: 'Danh vọng cá nhân', x: 29, y: 32 },
-      { id: 'thuong-dan', label: 'Yêu nước thương dân', x: 29, y: 48 },
-      { id: 'dung-ngoai', label: 'Đứng ngoài thời cuộc', x: 29, y: 64 },
+    color: '#ffd45a',
+    start: { x: 11, y: 27 },
+    nodes: [
+      { id: 'yeu-nuoc-1', x: 28, y: 24, correct: 90, label: 'Yêu nước thương dân' },
+      { id: 'yeu-nuoc-2', x: 39, y: 36, correct: 0, label: 'Khát vọng độc lập', labelPosition: 'top' },
     ],
-    correct: 'thuong-dan',
-  },
-  {
-    id: 'tinh-hoa',
-    title: 'Tinh hoa văn hóa nhân loại',
-    short: 'Tinh hoa',
-    color: '#67e8f9',
-    start: { x: 89, y: 56 },
-    filters: [
-      { id: 'sao-chep', label: 'Sao chép nguyên xi', x: 71, y: 32 },
-      { id: 'chon-loc', label: 'Chọn lọc giá trị tiến bộ', x: 71, y: 48 },
-      { id: 'dong-kin', label: 'Khép kín tri thức', x: 71, y: 64 },
+    segments: [
+      'M 11 27 C 17 21, 22 20, 28 24',
+      'M 28 24 C 33 25, 36 31, 39 36',
+      'M 39 36 C 43 40, 46 45, 50 49',
     ],
-    correct: 'chon-loc',
   },
   {
     id: 'mac-lenin',
     title: 'Chủ nghĩa Mác - Lênin',
     short: 'Mác - Lênin',
-    color: '#fb7185',
-    start: { x: 50, y: 88 },
-    filters: [
-      { id: 'ly-luan', label: 'Lý luận giải phóng', x: 36, y: 71 },
-      { id: 'khau-hieu', label: 'Học thuộc khẩu hiệu', x: 50, y: 74 },
-      { id: 'tach-roi', label: 'Tách khỏi thực tiễn', x: 64, y: 71 },
+    color: '#ff6f91',
+    start: { x: 14, y: 78 },
+    nodes: [
+      { id: 'mac-lenin-1', x: 29, y: 70, correct: 270, label: 'Lý luận giải phóng', labelPosition: 'top' },
+      { id: 'mac-lenin-2', x: 39, y: 62, correct: 180, label: 'Giải phóng con người' },
     ],
-    correct: 'ly-luan',
+    segments: [
+      'M 14 78 C 19 73, 24 72, 29 70',
+      'M 29 70 C 33 69, 36 65, 39 62',
+      'M 39 62 C 43 57, 46 53, 50 49',
+    ],
+  },
+  {
+    id: 'tinh-hoa',
+    title: 'Tinh hoa văn hóa nhân loại',
+    short: 'Tinh hoa',
+    color: '#6ee7ff',
+    start: { x: 89, y: 35 },
+    nodes: [
+      { id: 'tinh-hoa-1', x: 74, y: 32, correct: 180, label: 'Chọn lọc tinh hoa', labelPosition: 'top' },
+      { id: 'tinh-hoa-2', x: 63, y: 40, correct: 90, label: 'Tự do - bình đẳng', labelPosition: 'top' },
+    ],
+    segments: [
+      'M 89 35 C 84 30, 79 29, 74 32',
+      'M 74 32 C 69 33, 66 36, 63 40',
+      'M 63 40 C 59 43, 55 46, 50 49',
+    ],
   },
 ]
 
-const finaleWords = ['Yêu nước', 'Chọn lọc', 'Lý luận', 'Thực tiễn', 'Giải phóng']
+const allNodes = sources.flatMap((source) =>
+  source.nodes.map((node) => ({ ...node, sourceId: source.id })),
+)
+
+const finaleWords = ['Yêu nước', 'Mác - Lênin', 'Tinh hoa', 'Hội tụ', 'Giải phóng']
 
 const finaleStatements = [
-  'Từ lòng yêu nước',
-  'qua chọn lọc tinh hoa',
-  'đến lý luận giải phóng',
+  'Từ lòng yêu nước Việt Nam',
+  'qua tinh hoa văn hóa nhân loại',
+  'đến ánh sáng Mác - Lênin',
 ]
+
+function initialRotation(node, index) {
+  return (node.correct + (index % 3 === 0 ? 180 : index % 3 === 1 ? 90 : 270)) % 360
+}
 
 function seededRatio(index, salt = 0) {
   const value = Math.sin(index * 41.37 + salt * 23.91) * 10000
   return value - Math.floor(value)
 }
 
-function distance(a, b) {
-  return Math.hypot(a.x - b.x, a.y - b.y)
-}
-
-function beamPath(start, mid, end = CORE) {
-  const c1x = (start.x + mid.x) / 2
-  const c1y = start.y - 7
-  const c2x = (mid.x + end.x) / 2
-  const c2y = mid.y - 4
-  return `M ${start.x} ${start.y} Q ${c1x} ${c1y} ${mid.x} ${mid.y} Q ${c2x} ${c2y} ${end.x} ${end.y}`
-}
-
 export default function VortexEnlightenment({ onWin, onSolved }) {
-  const stageRef = useRef(null)
-  const missIdRef = useRef(0)
-  const lockIdRef = useRef(0)
-  const [locked, setLocked] = useState([])
-  const [dragging, setDragging] = useState(null)
-  const [miss, setMiss] = useState(null)
-  const [lockBursts, setLockBursts] = useState([])
+  const [rotations, setRotations] = useState(() =>
+    Object.fromEntries(allNodes.map((node, index) => [node.id, initialRotation(node, index)])),
+  )
   const [won, setWon] = useState(false)
   const [showFinale, setShowFinale] = useState(false)
 
   const stars = useMemo(
     () =>
-      Array.from({ length: 36 }, (_, index) => ({
+      Array.from({ length: 42 }, (_, index) => ({
         id: index,
         left: `${5 + seededRatio(index, 1) * 90}%`,
-        top: `${4 + seededRatio(index, 3) * 88}%`,
-        size: 1.5 + seededRatio(index, 6) * 4,
+        top: `${5 + seededRatio(index, 3) * 84}%`,
+        size: 1.4 + seededRatio(index, 6) * 4,
         delay: `${seededRatio(index, 9) * 5}s`,
         duration: `${4 + seededRatio(index, 12) * 7}s`,
       })),
     [],
   )
 
-  const pointFromEvent = (event) => {
-    const rect = stageRef.current?.getBoundingClientRect()
-    if (!rect) return { x: 50, y: 50 }
-    return {
-      x: Math.max(4, Math.min(96, ((event.clientX - rect.left) / rect.width) * 100)),
-      y: Math.max(6, Math.min(94, ((event.clientY - rect.top) / rect.height) * 100)),
-    }
-  }
+  const isNodeSolved = (node, nextRotations = rotations) => nextRotations[node.id] === node.correct
 
-  const getNearestGate = (source, point) => {
-    const nearest = source.filters
-      .map((filter) => ({ ...filter, distance: distance(point, filter) }))
-      .sort((a, b) => a.distance - b.distance)[0]
+  const getFlowLevel = (source, nextRotations = rotations) => {
+    let level = 0
 
-    if (!nearest || nearest.distance > 14) return null
-    return {
-      id: nearest.id,
-      isCorrect: nearest.id === source.correct,
-      point: nearest,
-    }
-  }
-
-  const startDrag = (event, index) => {
-    if (won || locked.includes(sources[index].id)) return
-    event.preventDefault()
-    setDragging({ index, point: pointFromEvent(event), candidate: null })
-  }
-
-  const moveDrag = (event) => {
-    if (!dragging) return
-    const point = pointFromEvent(event)
-    setDragging((current) => {
-      if (!current) return current
-      const source = sources[current.index]
-      return { ...current, point, candidate: getNearestGate(source, point) }
-    })
-  }
-
-  const endDrag = (event) => {
-    if (!dragging) return
-
-    const source = sources[dragging.index]
-    const releasePoint = pointFromEvent(event)
-    const correctGate = source.filters.find((filter) => filter.id === source.correct)
-    const nearestGate = getNearestGate(source, releasePoint)
-    const passedCorrectGate = correctGate && nearestGate?.isCorrect
-
-    if (passedCorrectGate) {
-      const nextLocked = [...locked, source.id]
-      const burst = {
-        id: `${source.id}-${lockIdRef.current += 1}`,
-        sourceId: source.id,
-        color: source.color,
-        x: correctGate.x,
-        y: correctGate.y,
+    for (const node of source.nodes) {
+      if (isNodeSolved(node, nextRotations)) {
+        level += 1
+      } else {
+        break
       }
-      setLocked(nextLocked)
-      setLockBursts((items) => [...items.slice(-5), burst])
-      setDragging(null)
-      setTimeout(() => {
-        setLockBursts((items) => items.filter((item) => item.id !== burst.id))
-      }, 1300)
+    }
 
-      if (nextLocked.length === sources.length) {
+    return level
+  }
+
+  const isSourceSolved = (source, nextRotations = rotations) =>
+    getFlowLevel(source, nextRotations) === source.nodes.length
+
+  const solvedCount = allNodes.filter((node) => isNodeSolved(node)).length
+  const solvedSources = sources.filter((source) => isSourceSolved(source))
+  const completedSources = solvedSources.length
+  const coreColor = solvedSources[solvedSources.length - 1]?.color || '#6ee7ff'
+  const progress = won ? 100 : (solvedCount / allNodes.length) * 100
+
+  const rotateNode = (node) => {
+    if (won || isNodeSolved(node)) return
+
+    setRotations((current) => {
+      const next = { ...current, [node.id]: (current[node.id] + 90) % 360 }
+      const solvedAfterClick = allNodes.every((item) => next[item.id] === item.correct)
+
+      if (solvedAfterClick) {
         onSolved?.()
         setWon(true)
         setTimeout(() => setShowFinale(true), 760)
         setTimeout(() => onWin(), 9200)
       }
-      return
-    }
 
-    setMiss({
-      id: `${source.id}-${missIdRef.current += 1}`,
-      sourceId: source.id,
-      point: nearestGate?.point || releasePoint,
-      gateId: nearestGate?.id || null,
+      return next
     })
-    setDragging(null)
   }
-
-  const progress = won ? 100 : (locked.length / sources.length) * 100
 
   return (
     <div className={`minigame-vortex ${showFinale ? 'is-final-scene' : ''}`}>
       <p className="minigame-instruction">
         {won
-          ? 'Ba nguồn sáng đã đi qua chọn lọc và hội tụ thành con đường tư tưởng.'
-          : 'Kéo từng lõi sáng qua bộ lọc đúng để hội tụ vào lăng kính trung tâm.'}
+          ? 'Ba dòng suối ánh sáng đã gặp nhau, làm sáng lõi Tư tưởng Hồ Chí Minh.'
+          : 'Bấm xoay từng van để mở đường cho ba dòng suối ánh sáng chảy về trung tâm.'}
       </p>
 
-      <div
-        ref={stageRef}
-        className={`origin-stage ${won ? 'is-won' : ''}`}
-        onPointerMove={moveDrag}
-        onPointerUp={endDrag}
-        onPointerCancel={() => setDragging(null)}
-      >
+      <div className={`origin-stage core-level-${completedSources} ${won ? 'is-won' : ''}`}>
         {stars.map((star) => (
           <span
             key={star.id}
@@ -206,22 +159,22 @@ export default function VortexEnlightenment({ onWin, onSolved }) {
             }}
           />
         ))}
-        <div className="origin-nebula" aria-hidden="true" />
-        <div className="origin-depth-grid" aria-hidden="true" />
-        <div className="origin-prism-floor" aria-hidden="true" />
-        <div className="origin-scan-sweep" aria-hidden="true" />
 
-        <svg className="origin-beams" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <div className="origin-aurora" aria-hidden="true" />
+        <div className="origin-map-lines" aria-hidden="true" />
+        <div className="origin-horizon" aria-hidden="true" />
+
+        <svg className="origin-flow-map" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <defs>
             {sources.map((source) => (
-              <linearGradient key={source.id} id={`originDragBeam-${source.id}`} x1="0%" x2="100%" y1="0%" y2="0%">
-                <stop offset="0%" stopColor={source.color} stopOpacity="0" />
-                <stop offset="45%" stopColor={source.color} stopOpacity="0.9" />
-                <stop offset="100%" stopColor="#ffffff" stopOpacity="0.92" />
+              <linearGradient key={source.id} id={`originRiver-${source.id}`} x1="0%" x2="100%" y1="0%" y2="0%">
+                <stop offset="0%" stopColor={source.color} stopOpacity="0.08" />
+                <stop offset="45%" stopColor={source.color} stopOpacity="0.96" />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity="1" />
               </linearGradient>
             ))}
-            <filter id="originBeamGlow">
-              <feGaussianBlur stdDeviation="0.9" result="blur" />
+            <filter id="originRiverGlow">
+              <feGaussianBlur stdDeviation="1.1" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -229,149 +182,135 @@ export default function VortexEnlightenment({ onWin, onSolved }) {
             </filter>
           </defs>
 
-          {sources.map((source, sourceIndex) => (
-            <g key={`${source.id}-filter-rays`} className="origin-filter-rays">
-              {source.filters.map((filter) => {
-                const isCorrect = filter.id === source.correct
-                const isLocked = locked.includes(source.id)
-                const isCandidate = dragging?.index === sourceIndex && dragging?.candidate?.id === filter.id
-                return (
-                  <path
-                    key={filter.id}
-                    className={`${isCorrect ? 'is-correct-route' : 'is-decoy-route'} ${isLocked && isCorrect ? 'is-locked-route' : ''} ${isCandidate ? 'is-candidate-route' : ''}`}
-                    d={beamPath(source.start, filter)}
-                    stroke={`url(#originDragBeam-${source.id})`}
-                  />
-                )
-              })}
+          {sources.map((source) => (
+            <g key={`${source.id}-bed`}>
+              {source.segments.map((path, index) => (
+                <path key={`${source.id}-bed-${index}`} className="origin-stream-bed" d={path} />
+              ))}
             </g>
           ))}
 
           {sources.map((source) => {
-            const lockedGate = source.filters.find((filter) => filter.id === source.correct)
-            const isLocked = locked.includes(source.id)
+            const flowLevel = getFlowLevel(source)
+
             return (
-              <path
-                key={source.id}
-                className={`origin-beam ${isLocked ? 'is-locked' : ''}`}
-                d={beamPath(source.start, lockedGate)}
-                stroke={`url(#originDragBeam-${source.id})`}
-              />
+              <g key={`${source.id}-flow`} style={{ '--source-color': source.color }}>
+                {source.segments.map((path, index) => {
+                  const isActive = index <= flowLevel
+
+                  return (
+                    <g key={`${source.id}-segment-${index}`} className={isActive ? 'is-active' : ''}>
+                      {isActive && <path className="origin-stream-glow" d={path} stroke={source.color} />}
+                      <path
+                        className={`origin-stream-current ${isActive ? 'is-active' : ''}`}
+                        d={path}
+                        stroke={`url(#originRiver-${source.id})`}
+                      />
+                      {isActive && (
+                        <>
+                          <circle className="origin-stream-drop" r="0.52" fill={source.color}>
+                            <animateMotion dur="1.75s" repeatCount="indefinite" path={path} />
+                          </circle>
+                          <circle className="origin-stream-drop origin-stream-drop--late" r="0.36" fill="#ffffff">
+                            <animateMotion dur="1.75s" begin="0.7s" repeatCount="indefinite" path={path} />
+                          </circle>
+                        </>
+                      )}
+                    </g>
+                  )
+                })}
+              </g>
             )
           })}
-
-          {dragging && (
-            <path
-              className="origin-drag-beam"
-              d={`M ${sources[dragging.index].start.x} ${sources[dragging.index].start.y} Q ${(sources[dragging.index].start.x + dragging.point.x) / 2} ${dragging.point.y - 10} ${dragging.point.x} ${dragging.point.y}`}
-              stroke={`url(#originDragBeam-${sources[dragging.index].id})`}
-            />
-          )}
         </svg>
 
-        <div className="origin-core" aria-hidden="true">
+        <div className="origin-core" style={{ '--core-primary': coreColor }} aria-hidden="true">
           <span className="origin-core-aura" />
-          <span className="origin-core-rays">
-            <i /><i /><i />
-          </span>
+          <span className="origin-core-rings" />
           <span className="origin-core-prism" />
           <strong>Tư tưởng<br />Hồ Chí Minh</strong>
+          <span className="origin-core-progress">{completedSources}/3 dòng</span>
         </div>
 
-        {sources.map((source, sourceIndex) => {
-          const isLocked = locked.includes(source.id)
+        {sources.map((source) => {
+          const flowLevel = getFlowLevel(source)
+          const sourceSolved = isSourceSolved(source)
+          const blockedNode = source.nodes[flowLevel]
+
           return (
             <div key={source.id} className="origin-source-group" style={{ '--source-color': source.color }}>
-              <button
-                type="button"
-                className={`origin-source-orb ${isLocked ? 'is-locked' : ''} ${dragging?.index === sourceIndex ? 'is-dragging' : ''}`}
+              <div
+                className={`origin-source-well ${sourceSolved ? 'is-complete' : ''}`}
                 style={{ left: `${source.start.x}%`, top: `${source.start.y}%` }}
-                onPointerDown={(event) => startDrag(event, sourceIndex)}
               >
                 <span />
                 <b>{source.short}</b>
-              </button>
-
-              <div className="origin-source-title" style={{ left: `${source.start.x}%`, top: `${source.start.y + 10}%` }}>
+              </div>
+              <div
+                className="origin-source-title"
+                style={{ left: `${source.start.x}%`, top: `${source.start.y + 10}%` }}
+              >
                 {source.title}
               </div>
 
-              {source.filters.map((filter) => {
-                const isCorrect = filter.id === source.correct
-                const isCandidate = dragging?.index === sourceIndex && dragging?.candidate?.id === filter.id
-                const missedThisGate = miss?.sourceId === source.id && miss?.gateId === filter.id
+              {blockedNode && (
+                <span
+                  className="origin-blocked-pulse"
+                  style={{ left: `${blockedNode.x}%`, top: `${blockedNode.y}%` }}
+                />
+              )}
+
+              {source.nodes.map((node) => {
+                const nodeSolved = isNodeSolved(node)
                 return (
-                  <div
-                    key={filter.id}
-                    className={[
-                      'origin-filter-gate',
-                      isLocked && isCorrect ? 'is-active' : '',
-                      isCandidate ? 'is-candidate' : '',
-                      isCandidate && isCorrect ? 'is-correct-candidate' : '',
-                      isCandidate && !isCorrect ? 'is-wrong-candidate' : '',
-                      missedThisGate ? 'is-rejected' : '',
-                    ].join(' ')}
-                    style={{ left: `${filter.x}%`, top: `${filter.y}%` }}
+                  <button
+                    key={node.id}
+                    type="button"
+                    className={`origin-valve origin-valve--label-${node.labelPosition || 'bottom'} ${nodeSolved ? 'is-correct' : ''}`}
+                    style={{
+                      left: `${node.x}%`,
+                      top: `${node.y}%`,
+                      '--source-color': source.color,
+                      '--angle': `${rotations[node.id]}deg`,
+                    }}
+                    onClick={() => rotateNode(node)}
+                    aria-label={`Xoay van ${node.label}`}
                   >
-                    <i />
-                    <span>{filter.label}</span>
-                  </div>
+                    <span className="origin-valve-orbit" />
+                    <span className="origin-valve-channel" />
+                    <span className="origin-knowledge-chip">
+                      <small>Mảnh kiến thức</small>
+                      <b>{node.label}</b>
+                    </span>
+                  </button>
                 )
               })}
             </div>
           )
         })}
 
-        {dragging && (
-          <div
-            className="origin-drag-orb"
-            style={{
-              left: `${dragging.point.x}%`,
-              top: `${dragging.point.y}%`,
-              '--source-color': sources[dragging.index].color,
-            }}
-          />
-        )}
-
-        {miss && (
-          <span
-            key={miss.id}
-            className="origin-miss-pulse"
-            style={{
-              left: `${miss.point.x}%`,
-              top: `${miss.point.y}%`,
-              '--source-color': sources.find((source) => source.id === miss.sourceId)?.color,
-            }}
-          />
-        )}
-
-        {lockBursts.map((burst) => (
-          <span
-            key={burst.id}
-            className="origin-lock-burst"
-            style={{ left: `${burst.x}%`, top: `${burst.y}%`, '--source-color': burst.color }}
-          >
-            <i /><i /><i /><i /><i /><i />
-          </span>
-        ))}
-
         <div className="origin-guide">
           {sources.map((source) => (
-            <span key={source.id} className={locked.includes(source.id) ? 'is-lit' : ''}>
+            <span
+              key={source.id}
+              className={isSourceSolved(source) ? 'is-lit' : ''}
+              style={{ '--source-color': source.color }}
+            >
               {source.short}
             </span>
           ))}
         </div>
-        <div className="origin-ritual-panel" aria-hidden="true">
+
+        <div className="origin-river-panel" aria-hidden="true">
           {sources.map((source, index) => (
             <span
               key={source.id}
-              className={locked.includes(source.id) ? 'is-complete' : dragging?.index === index ? 'is-active' : ''}
+              className={isSourceSolved(source) ? 'is-complete' : ''}
               style={{ '--source-color': source.color }}
             >
               <i />
               <b>{index + 1}</b>
-              {source.short}
+              {source.title}
             </span>
           ))}
         </div>
@@ -415,8 +354,8 @@ export default function VortexEnlightenment({ onWin, onSolved }) {
           <div className="origin-message-card">
             <span>Hành tinh đã mở khóa</span>
             <h3>NGUỒN GỐC TƯ TƯỞNG</h3>
-            <strong>Tư tưởng lớn không sinh ra từ một tia sáng đơn lẻ, mà từ khả năng chọn lọc và biến tri thức thành con đường cứu nước.</strong>
-            <p>Từ lòng yêu nước, tiếp thu tinh hoa nhân loại và lý luận cách mạng, ánh sáng đúng nhất là ánh sáng soi được hành động vì con người.</p>
+            <strong>Tư tưởng Hồ Chí Minh là sự kết hợp hài hòa giữa chủ nghĩa yêu nước Việt Nam, chủ nghĩa Mác - Lênin và tinh hoa văn hóa nhân loại.</strong>
+            <p>Ba dòng suối hội tụ thành ánh sáng trung tâm: từ lòng yêu nước, qua tiếp thu có chọn lọc những giá trị tiến bộ, đến con đường giải phóng dân tộc, giải phóng giai cấp và giải phóng con người.</p>
           </div>
         </div>
       )}
