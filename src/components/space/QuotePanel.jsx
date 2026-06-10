@@ -1,47 +1,74 @@
+import { useEffect, useRef } from 'react'
+
 export default function QuotePanel({ quote, onClose }) {
+  const audioRef = useRef(null)
+
+  useEffect(() => {
+    const audio = audioRef.current
+
+    return () => {
+      audio?.pause()
+    }
+  }, [quote])
+
   if (!quote) {
     return null
   }
 
   const speakQuote = () => {
-    if (!('speechSynthesis' in window)) {
-      return
-    }
+    const audio = audioRef.current
+    if (!audio) return
 
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(quote.text)
-    utterance.lang = 'vi-VN'
-    utterance.rate = 0.86
-    utterance.pitch = 0.92
-    window.speechSynthesis.speak(utterance)
+    audio.currentTime = 0
+    audio.play().catch(() => {})
+  }
+
+  const stopSpeaking = () => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    audio.pause()
+    audio.currentTime = 0
+  }
+
+  const closePanel = () => {
+    stopSpeaking()
+    onClose()
   }
 
   return (
-    <aside className="quote-panel" aria-live="polite">
+    <aside className="quote-panel" aria-live="polite" aria-label={quote.title}>
       <div className="panel-top">
-        <p className="eyebrow">Bookmark ký ức</p>
-        <button type="button" onClick={onClose} aria-label="Đóng bookmark">
+        <div>
+          <p className="eyebrow">Chuyên đề ký ức</p>
+          <h2>{quote.title}</h2>
+        </div>
+        <button type="button" onClick={closePanel} aria-label="Đóng bookmark">
           ×
         </button>
       </div>
-      <blockquote>{quote.text}</blockquote>
-      <p className="quote-source">{quote.source}</p>
+
+      <div className="quote-panel-scroll">
+        <blockquote>{quote.text}</blockquote>
+
+        <section className="quote-content">
+          <span>Nội dung chuyên đề</span>
+          {quote.content?.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+        </section>
+      </div>
+
       <div className="quote-actions">
-        <button type="button" onClick={speakQuote}>
-          Nghe bằng giọng đọc hệ thống
+        <button type="button" onClick={speakQuote} disabled={!quote.audio}>
+          Nghe toàn bộ chuyên đề
         </button>
-        <button type="button" onClick={() => window.speechSynthesis?.cancel()}>
-          Dừng
+        <button type="button" onClick={stopSpeaking} disabled={!quote.audio}>
+          Dừng đọc
         </button>
       </div>
-      <div className="quote-meaning">
-        <span>Ý nghĩa</span>
-        <p>{quote.meaning}</p>
-      </div>
-      <div className="quote-prompt">
-        <span>Liên hệ</span>
-        <p>{quote.prompt}</p>
-      </div>
+
+      <audio ref={audioRef} src={quote.audio} preload="metadata" />
     </aside>
   )
 }
