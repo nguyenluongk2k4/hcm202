@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import originFinaleImage from '../../assets/nguon_goc_tu_tuong.png'
 import './VortexEnlightenment.css'
 
 const sources = [
@@ -6,356 +7,454 @@ const sources = [
     id: 'yeu-nuoc',
     title: 'Chủ nghĩa yêu nước Việt Nam',
     short: 'Yêu nước',
-    color: '#ffd45a',
-    start: { x: 11, y: 27 },
-    nodes: [
-      { id: 'yeu-nuoc-1', x: 28, y: 24, correct: 90, label: 'Yêu nước thương dân' },
-      { id: 'yeu-nuoc-2', x: 39, y: 36, correct: 0, label: 'Khát vọng độc lập', labelPosition: 'top' },
-    ],
-    segments: [
-      'M 11 27 C 17 21, 22 20, 28 24',
-      'M 28 24 C 33 25, 36 31, 39 36',
-      'M 39 36 C 43 40, 46 45, 50 49',
-    ],
+    accent: '#f5c65b',
+    path: 'M 16 34 C 27 26, 35 33, 48 48',
   },
   {
     id: 'mac-lenin',
     title: 'Chủ nghĩa Mác - Lênin',
     short: 'Mác - Lênin',
-    color: '#ff6f91',
-    start: { x: 14, y: 78 },
-    nodes: [
-      { id: 'mac-lenin-1', x: 29, y: 70, correct: 270, label: 'Lý luận giải phóng', labelPosition: 'top' },
-      { id: 'mac-lenin-2', x: 39, y: 62, correct: 180, label: 'Giải phóng con người' },
-    ],
-    segments: [
-      'M 14 78 C 19 73, 24 72, 29 70',
-      'M 29 70 C 33 69, 36 65, 39 62',
-      'M 39 62 C 43 57, 46 53, 50 49',
-    ],
+    accent: '#e45f62',
+    path: 'M 17 76 C 31 70, 35 57, 48 50',
   },
   {
     id: 'tinh-hoa',
     title: 'Tinh hoa văn hóa nhân loại',
     short: 'Tinh hoa',
-    color: '#6ee7ff',
-    start: { x: 89, y: 35 },
-    nodes: [
-      { id: 'tinh-hoa-1', x: 74, y: 32, correct: 180, label: 'Chọn lọc tinh hoa', labelPosition: 'top' },
-      { id: 'tinh-hoa-2', x: 63, y: 40, correct: 90, label: 'Tự do - bình đẳng', labelPosition: 'top' },
-    ],
-    segments: [
-      'M 89 35 C 84 30, 79 29, 74 32',
-      'M 74 32 C 69 33, 66 36, 63 40',
-      'M 63 40 C 59 43, 55 46, 50 49',
-    ],
+    accent: '#66d8f0',
+    path: 'M 85 42 C 72 34, 64 41, 51 49',
   },
 ]
 
-const allNodes = sources.flatMap((source) =>
-  source.nodes.map((node) => ({ ...node, sourceId: source.id })),
-)
-
-const finaleWords = ['Yêu nước', 'Mác - Lênin', 'Tinh hoa', 'Hội tụ', 'Giải phóng']
-
-const finaleStatements = [
-  'Từ lòng yêu nước Việt Nam',
-  'qua tinh hoa văn hóa nhân loại',
-  'đến ánh sáng Mác - Lênin',
+const fragments = [
+  {
+    id: 'ml-01',
+    sourceId: 'mac-lenin',
+    label: 'Con đường giải phóng dân tộc',
+    note: 'Mảnh 01',
+  },
+  {
+    id: 'vh-01',
+    sourceId: 'tinh-hoa',
+    label: 'Tự do, bình đẳng, bác ái',
+    note: 'Mảnh 02',
+  },
+  {
+    id: 'yn-01',
+    sourceId: 'yeu-nuoc',
+    label: 'Lòng yêu nước thương dân',
+    note: 'Mảnh 03',
+  },
+  {
+    id: 'yn-02',
+    sourceId: 'yeu-nuoc',
+    label: 'Khát vọng độc lập',
+    note: 'Mảnh 04',
+  },
+  {
+    id: 'ml-02',
+    sourceId: 'mac-lenin',
+    label: 'Giải phóng giai cấp, con người',
+    note: 'Mảnh 05',
+  },
+  {
+    id: 'vh-02',
+    sourceId: 'tinh-hoa',
+    label: 'Tiếp thu có chọn lọc',
+    note: 'Mảnh 06',
+  },
 ]
 
-function initialRotation(node, index) {
-  return (node.correct + (index % 3 === 0 ? 180 : index % 3 === 1 ? 90 : 270)) % 360
+const fragmentLayout = {
+  'ml-01': { left: 43, top: 30, rotate: -4 },
+  'vh-01': { left: 59, top: 68, rotate: 3 },
+  'yn-01': { left: 31, top: 61, rotate: -2 },
+  'yn-02': { left: 46, top: 76, rotate: 2 },
+  'ml-02': { left: 63, top: 46, rotate: -3 },
+  'vh-02': { left: 72, top: 60, rotate: 4 },
 }
 
-function seededRatio(index, salt = 0) {
-  const value = Math.sin(index * 41.37 + salt * 23.91) * 10000
-  return value - Math.floor(value)
-}
-
-export default function VortexEnlightenment({ onWin, onSolved }) {
-  const [rotations, setRotations] = useState(() =>
-    Object.fromEntries(allNodes.map((node, index) => [node.id, initialRotation(node, index)])),
-  )
-  const [won, setWon] = useState(false)
-  const [showFinale, setShowFinale] = useState(false)
-
-  const stars = useMemo(
-    () =>
-      Array.from({ length: 42 }, (_, index) => ({
-        id: index,
-        left: `${5 + seededRatio(index, 1) * 90}%`,
-        top: `${5 + seededRatio(index, 3) * 84}%`,
-        size: 1.4 + seededRatio(index, 6) * 4,
-        delay: `${seededRatio(index, 9) * 5}s`,
-        duration: `${4 + seededRatio(index, 12) * 7}s`,
-      })),
-    [],
-  )
-
-  const isNodeSolved = (node, nextRotations = rotations) => nextRotations[node.id] === node.correct
-
-  const getFlowLevel = (source, nextRotations = rotations) => {
-    let level = 0
-
-    for (const node of source.nodes) {
-      if (isNodeSolved(node, nextRotations)) {
-        level += 1
-      } else {
-        break
-      }
-    }
-
-    return level
+const starField = Array.from({ length: 54 }, (_, index) => {
+  const ratio = (salt) => {
+    const value = Math.sin(index * 39.47 + salt * 17.13) * 10000
+    return value - Math.floor(value)
   }
 
-  const isSourceSolved = (source, nextRotations = rotations) =>
-    getFlowLevel(source, nextRotations) === source.nodes.length
+  return {
+    id: index,
+    left: `${4 + ratio(1) * 92}%`,
+    top: `${4 + ratio(2) * 88}%`,
+    size: `${1 + ratio(3) * 3.4}px`,
+    delay: `${ratio(4) * 5.6}s`,
+    duration: `${4.8 + ratio(5) * 6}s`,
+  }
+})
 
-  const solvedCount = allNodes.filter((node) => isNodeSolved(node)).length
-  const solvedSources = sources.filter((source) => isSourceSolved(source))
-  const completedSources = solvedSources.length
-  const coreColor = solvedSources[solvedSources.length - 1]?.color || '#6ee7ff'
-  const progress = won ? 100 : (solvedCount / allNodes.length) * 100
+export default function VortexEnlightenment({ onWin, onSolved }) {
+  const [activeFragmentId, setActiveFragmentId] = useState(null)
+  const [placed, setPlaced] = useState({})
+  const [wrongTargetId, setWrongTargetId] = useState(null)
+  const [lastPlacedId, setLastPlacedId] = useState(null)
+  const [dragState, setDragState] = useState(null)
+  const [returningId, setReturningId] = useState(null)
+  const [dropFeedback, setDropFeedback] = useState(null)
+  const [won, setWon] = useState(false)
+  const [finalePhase, setFinalePhase] = useState('idle')
 
-  const rotateNode = (node) => {
-    if (won || isNodeSolved(node)) return
+  const placedIds = Object.keys(placed)
+  const placedCount = placedIds.length
+  const progress = Math.round((placedCount / fragments.length) * 100)
 
-    setRotations((current) => {
-      const next = { ...current, [node.id]: (current[node.id] + 90) % 360 }
-      const solvedAfterClick = allNodes.every((item) => next[item.id] === item.correct)
+  const completedSources = useMemo(
+    () =>
+      sources.filter((source) =>
+        fragments
+          .filter((fragment) => fragment.sourceId === source.id)
+          .every((fragment) => placed[fragment.id] === source.id),
+      ),
+    [placed],
+  )
 
-      if (solvedAfterClick) {
-        onSolved?.()
-        setWon(true)
-        setTimeout(() => setShowFinale(true), 760)
-        setTimeout(() => onWin(), 9200)
-      }
+  const activeFragment = fragments.find((fragment) => fragment.id === activeFragmentId)
 
-      return next
+  useEffect(() => {
+    if (!won) return undefined
+
+    const imageTimer = window.setTimeout(() => setFinalePhase('image'), 3300)
+    const textTimer = window.setTimeout(() => setFinalePhase('text'), 7350)
+    const closeTimer = window.setTimeout(() => onWin(), 13000)
+
+    return () => {
+      window.clearTimeout(imageTimer)
+      window.clearTimeout(textTimer)
+      window.clearTimeout(closeTimer)
+    }
+  }, [onWin, won])
+
+  const isSourceComplete = (sourceId, nextPlaced = placed) =>
+    fragments
+      .filter((fragment) => fragment.sourceId === sourceId)
+      .every((fragment) => nextPlaced[fragment.id] === sourceId)
+
+  const finishCorrectDrop = (fragment, sourceId) => {
+    const nextPlaced = { ...placed, [fragment.id]: sourceId }
+    setPlaced(nextPlaced)
+    setLastPlacedId(fragment.id)
+    setActiveFragmentId(null)
+    setDropFeedback({ type: 'correct', sourceId })
+    window.setTimeout(() => setLastPlacedId(null), 720)
+    window.setTimeout(() => setDropFeedback(null), 860)
+
+    if (Object.keys(nextPlaced).length === fragments.length) {
+      onSolved?.()
+      setFinalePhase('maps')
+      setWon(true)
+    }
+  }
+
+  const showWrongDrop = (sourceId, fragmentId) => {
+    setWrongTargetId(sourceId)
+    setReturningId(fragmentId)
+    setDropFeedback({ type: 'wrong', sourceId })
+    window.setTimeout(() => setWrongTargetId(null), 520)
+    window.setTimeout(() => setReturningId(null), 520)
+    window.setTimeout(() => setDropFeedback(null), 620)
+  }
+
+  const getDropSource = (clientX, clientY) => {
+    for (const source of sources) {
+      const element = document.querySelector(`[data-origin-source="${source.id}"]`)
+      if (!element) continue
+
+      const rect = element.getBoundingClientRect()
+      const padding = 18
+      const inside =
+        clientX >= rect.left - padding &&
+        clientX <= rect.right + padding &&
+        clientY >= rect.top - padding &&
+        clientY <= rect.bottom + padding
+
+      if (inside) return source
+    }
+
+    return null
+  }
+
+  const placeFragment = (sourceId) => {
+    if (won || !activeFragment) return
+
+    if (activeFragment.sourceId !== sourceId) {
+      showWrongDrop(sourceId, activeFragment.id)
+      return
+    }
+
+    finishCorrectDrop(activeFragment, sourceId)
+  }
+
+  const selectFragment = (fragmentId) => {
+    if (won || placed[fragmentId]) return
+    setActiveFragmentId((current) => (current === fragmentId ? null : fragmentId))
+  }
+
+  const beginDrag = (event, fragment) => {
+    if (won || placed[fragment.id]) return
+
+    event.preventDefault()
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    setActiveFragmentId(fragment.id)
+    setDragState({
+      id: fragment.id,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      dx: 0,
+      dy: 0,
     })
   }
 
+  const moveDrag = (event) => {
+    if (!dragState) return
+
+    setDragState((current) => {
+      if (!current || current.pointerId !== event.pointerId) return current
+
+      return {
+        ...current,
+        dx: event.clientX - current.startX,
+        dy: event.clientY - current.startY,
+      }
+    })
+  }
+
+  const endDrag = (event, fragment) => {
+    if (!dragState || dragState.pointerId !== event.pointerId) return
+
+    const movedEnough = Math.abs(dragState.dx) + Math.abs(dragState.dy) > 8
+    const target = getDropSource(event.clientX, event.clientY)
+    event.currentTarget.releasePointerCapture?.(event.pointerId)
+    setDragState(null)
+
+    if (!movedEnough) {
+      selectFragment(fragment.id)
+      return
+    }
+
+    if (!target) {
+      setReturningId(fragment.id)
+      window.setTimeout(() => setReturningId(null), 420)
+      return
+    }
+
+    if (target.id !== fragment.sourceId) {
+      showWrongDrop(target.id, fragment.id)
+      return
+    }
+
+    finishCorrectDrop(fragment, target.id)
+  }
+
   return (
-    <div className={`minigame-vortex ${showFinale ? 'is-final-scene' : ''}`}>
-      <p className="minigame-instruction">
-        {won
-          ? 'Ba dòng suối ánh sáng đã gặp nhau, làm sáng lõi Tư tưởng Hồ Chí Minh.'
-          : 'Bấm xoay từng van để mở đường cho ba dòng suối ánh sáng chảy về trung tâm.'}
-      </p>
-
-      <div className={`origin-stage core-level-${completedSources} ${won ? 'is-won' : ''}`}>
-        {stars.map((star) => (
-          <span
-            key={star.id}
-            className="origin-star"
-            style={{
-              left: star.left,
-              top: star.top,
-              width: star.size,
-              height: star.size,
-              animationDelay: star.delay,
-              animationDuration: star.duration,
-            }}
-          />
-        ))}
-
-        <div className="origin-aurora" aria-hidden="true" />
-        <div className="origin-map-lines" aria-hidden="true" />
-        <div className="origin-horizon" aria-hidden="true" />
-
-        <svg className="origin-flow-map" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            {sources.map((source) => (
-              <linearGradient key={source.id} id={`originRiver-${source.id}`} x1="0%" x2="100%" y1="0%" y2="0%">
-                <stop offset="0%" stopColor={source.color} stopOpacity="0.08" />
-                <stop offset="45%" stopColor={source.color} stopOpacity="0.96" />
-                <stop offset="100%" stopColor="#ffffff" stopOpacity="1" />
-              </linearGradient>
-            ))}
-            <filter id="originRiverGlow">
-              <feGaussianBlur stdDeviation="1.1" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {sources.map((source) => (
-            <g key={`${source.id}-bed`}>
-              {source.segments.map((path, index) => (
-                <path key={`${source.id}-bed-${index}`} className="origin-stream-bed" d={path} />
-              ))}
-            </g>
-          ))}
-
-          {sources.map((source) => {
-            const flowLevel = getFlowLevel(source)
-
-            return (
-              <g key={`${source.id}-flow`} style={{ '--source-color': source.color }}>
-                {source.segments.map((path, index) => {
-                  const isActive = index <= flowLevel
-
-                  return (
-                    <g key={`${source.id}-segment-${index}`} className={isActive ? 'is-active' : ''}>
-                      {isActive && <path className="origin-stream-glow" d={path} stroke={source.color} />}
-                      <path
-                        className={`origin-stream-current ${isActive ? 'is-active' : ''}`}
-                        d={path}
-                        stroke={`url(#originRiver-${source.id})`}
-                      />
-                      {isActive && (
-                        <>
-                          <circle className="origin-stream-drop" r="0.52" fill={source.color}>
-                            <animateMotion dur="1.75s" repeatCount="indefinite" path={path} />
-                          </circle>
-                          <circle className="origin-stream-drop origin-stream-drop--late" r="0.36" fill="#ffffff">
-                            <animateMotion dur="1.75s" begin="0.7s" repeatCount="indefinite" path={path} />
-                          </circle>
-                        </>
-                      )}
-                    </g>
-                  )
-                })}
-              </g>
-            )
-          })}
-        </svg>
-
-        <div className="origin-core" style={{ '--core-primary': coreColor }} aria-hidden="true">
-          <span className="origin-core-aura" />
-          <span className="origin-core-rings" />
-          <span className="origin-core-prism" />
-          <strong>Tư tưởng<br />Hồ Chí Minh</strong>
-          <span className="origin-core-progress">{completedSources}/3 dòng</span>
-        </div>
-
-        {sources.map((source) => {
-          const flowLevel = getFlowLevel(source)
-          const sourceSolved = isSourceSolved(source)
-          const blockedNode = source.nodes[flowLevel]
-
-          return (
-            <div key={source.id} className="origin-source-group" style={{ '--source-color': source.color }}>
-              <div
-                className={`origin-source-well ${sourceSolved ? 'is-complete' : ''}`}
-                style={{ left: `${source.start.x}%`, top: `${source.start.y}%` }}
-              >
-                <span />
-                <b>{source.short}</b>
-              </div>
-              <div
-                className="origin-source-title"
-                style={{ left: `${source.start.x}%`, top: `${source.start.y + 10}%` }}
-              >
-                {source.title}
-              </div>
-
-              {blockedNode && (
-                <span
-                  className="origin-blocked-pulse"
-                  style={{ left: `${blockedNode.x}%`, top: `${blockedNode.y}%` }}
-                />
-              )}
-
-              {source.nodes.map((node) => {
-                const nodeSolved = isNodeSolved(node)
-                return (
-                  <button
-                    key={node.id}
-                    type="button"
-                    className={`origin-valve origin-valve--label-${node.labelPosition || 'bottom'} ${nodeSolved ? 'is-correct' : ''}`}
-                    style={{
-                      left: `${node.x}%`,
-                      top: `${node.y}%`,
-                      '--source-color': source.color,
-                      '--angle': `${rotations[node.id]}deg`,
-                    }}
-                    onClick={() => rotateNode(node)}
-                    aria-label={`Xoay van ${node.label}`}
-                  >
-                    <span className="origin-valve-orbit" />
-                    <span className="origin-valve-channel" />
-                    <span className="origin-knowledge-chip">
-                      <small>Mảnh kiến thức</small>
-                      <b>{node.label}</b>
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          )
-        })}
-
-        <div className="origin-guide">
-          {sources.map((source) => (
-            <span
-              key={source.id}
-              className={isSourceSolved(source) ? 'is-lit' : ''}
-              style={{ '--source-color': source.color }}
-            >
-              {source.short}
-            </span>
-          ))}
-        </div>
-
-        <div className="origin-river-panel" aria-hidden="true">
-          {sources.map((source, index) => (
-            <span
-              key={source.id}
-              className={isSourceSolved(source) ? 'is-complete' : ''}
-              style={{ '--source-color': source.color }}
-            >
-              <i />
-              <b>{index + 1}</b>
-              {source.title}
-            </span>
-          ))}
-        </div>
+    <div className={`minigame-vortex origin-lab ${won ? 'is-won' : ''}`}>
+      <div className="origin-lab-copy">
+        <span>Khởi nguyên</span>
+        <p>
+          Chọn một mảnh tri thức, rồi đặt vào đúng nguồn sáng để ba mạch tư tưởng hội tụ ở trung tâm.
+        </p>
       </div>
 
-      <div className="origin-progress" aria-hidden="true">
+      <section className="origin-lab-shell" aria-label="Ba nguồn gốc tư tưởng Hồ Chí Minh">
+        <div className="origin-lab-stage">
+          <div className="origin-stars" aria-hidden="true">
+            {starField.map((star) => (
+              <span
+                key={star.id}
+                style={{
+                  left: star.left,
+                  top: star.top,
+                  width: star.size,
+                  height: star.size,
+                  animationDelay: star.delay,
+                  animationDuration: star.duration,
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="origin-stage-map" aria-hidden="true" />
+          <div className="origin-stage-orbit" aria-hidden="true" />
+
+          <svg className="origin-energy-map" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              {sources.map((source) => (
+                <linearGradient key={source.id} id={`originLine-${source.id}`} x1="0%" x2="100%" y1="0%" y2="0%">
+                  <stop offset="0%" stopColor={source.accent} stopOpacity="0.08" />
+                  <stop offset="52%" stopColor={source.accent} stopOpacity="0.92" />
+                  <stop offset="100%" stopColor="#ffffff" stopOpacity="1" />
+                </linearGradient>
+              ))}
+              <filter id="originLineGlow">
+                <feGaussianBlur stdDeviation="1.2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {sources.map((source) => {
+              const complete = isSourceComplete(source.id)
+
+              return (
+                <g key={source.id} className={complete ? 'is-complete' : ''}>
+                  <path className="origin-line-bed" d={source.path} />
+                  <path
+                    className="origin-line-current"
+                    d={source.path}
+                    stroke={`url(#originLine-${source.id})`}
+                    style={{ '--source-color': source.accent }}
+                  />
+                  {complete && (
+                    <>
+                      <circle className="origin-line-spark" r="0.52" fill={source.accent}>
+                        <animateMotion dur="1.8s" repeatCount="indefinite" path={source.path} />
+                      </circle>
+                      <circle className="origin-line-spark origin-line-spark--late" r="0.34" fill="#ffffff">
+                        <animateMotion dur="1.8s" begin="0.72s" repeatCount="indefinite" path={source.path} />
+                      </circle>
+                    </>
+                  )}
+                </g>
+              )
+            })}
+          </svg>
+
+          <div className={`origin-core-vault is-level-${completedSources.length}`}>
+            <div className="origin-core-inner">
+              <span className="origin-core-halo" />
+              <span className="origin-core-symbol">Tư tưởng<br />Hồ Chí Minh</span>
+              <strong>{completedSources.length}/3</strong>
+            </div>
+          </div>
+
+          <div className="origin-source-grid">
+            {sources.map((source) => {
+              const sourceFragments = fragments.filter((fragment) => fragment.sourceId === source.id)
+              const complete = isSourceComplete(source.id)
+              const capturedFragments = sourceFragments.filter((fragment) => placed[fragment.id] === source.id)
+              const count = capturedFragments.length
+
+              return (
+                <button
+                  key={source.id}
+                  type="button"
+                  data-origin-source={source.id}
+                  className={`origin-source-card ${complete ? 'is-complete' : ''} ${
+                    wrongTargetId === source.id ? 'is-wrong' : ''
+                  } ${dropFeedback?.sourceId === source.id ? `is-${dropFeedback.type}-drop` : ''} ${
+                    dragState ? 'is-drop-ready' : ''
+                  }`}
+                  style={{ '--source-color': source.accent }}
+                  onClick={() => placeFragment(source.id)}
+                  disabled={won}
+                >
+                  <span className="origin-source-ring" />
+                  <span className="origin-source-meta">{source.short}</span>
+                  <strong>{source.title}</strong>
+                  <span className="origin-source-count">{count}/{sourceFragments.length} mảnh</span>
+                  <span className="origin-source-slots">
+                    {sourceFragments.map((fragment) => (
+                      <i
+                        key={fragment.id}
+                        className={placed[fragment.id] === source.id ? 'is-filled' : ''}
+                        title={fragment.label}
+                      />
+                    ))}
+                  </span>
+                  <span className="origin-source-captured" aria-hidden="true">
+                    {capturedFragments.map((fragment) => (
+                      <i
+                        key={fragment.id}
+                        className={lastPlacedId === fragment.id ? 'is-new' : ''}
+                        title={fragment.label}
+                      >
+                        {fragment.label}
+                      </i>
+                    ))}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="origin-fragment-bank" aria-label="Mảnh tri thức">
+            {fragments.map((fragment, index) => {
+              const isPlaced = Boolean(placed[fragment.id])
+              const isActive = activeFragmentId === fragment.id
+              const layout = fragmentLayout[fragment.id]
+              const isDragging = dragState?.id === fragment.id
+              const dragTransform = isDragging
+                ? `translate3d(calc(-50% + ${dragState.dx}px), calc(-50% + ${dragState.dy}px), 0) rotate(${layout.rotate + 1.5}deg) scale(1.04)`
+                : undefined
+
+              return (
+                <button
+                  key={fragment.id}
+                  type="button"
+                  className={`origin-fragment ${isActive ? 'is-active' : ''} ${isPlaced ? 'is-placed' : ''} ${
+                    lastPlacedId === fragment.id ? 'is-fresh' : ''
+                  } ${isDragging ? 'is-dragging' : ''} ${returningId === fragment.id ? 'is-returning' : ''
+                  }`}
+                  style={{
+                    '--source-color': '#8fb6c8',
+                    '--stagger': `${index * 0.045}s`,
+                    '--chip-left': `${layout.left}%`,
+                    '--chip-top': `${layout.top}%`,
+                    '--chip-rotate': `${layout.rotate}deg`,
+                    transform: dragTransform,
+                  }}
+                  onPointerDown={(event) => beginDrag(event, fragment)}
+                  onPointerMove={moveDrag}
+                  onPointerUp={(event) => endDrag(event, fragment)}
+                  onPointerCancel={(event) => {
+                    if (dragState?.pointerId === event.pointerId) {
+                      setDragState(null)
+                      setReturningId(fragment.id)
+                      window.setTimeout(() => setReturningId(null), 420)
+                    }
+                  }}
+                  disabled={won}
+                >
+                  <span>{fragment.note}</span>
+                  <strong>{fragment.label}</strong>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      <div className="origin-progress-rail" aria-hidden="true">
         <span style={{ width: `${progress}%` }} />
       </div>
 
-      {showFinale && (
-        <div className="origin-finale" aria-hidden="true">
-          <div className="origin-finale-light" />
-          <div className="origin-finale-vortex" />
-          <div className="origin-finale-prism" />
-          <div className="origin-finale-source-lines">
-            {sources.map((source, index) => (
-              <span key={source.id} style={{ '--source-color': source.color, '--index': index }} />
-            ))}
+      {won && (
+        <div className={`origin-finale origin-finale--${finalePhase}`} role="status" aria-live="polite">
+          <div className="origin-finale-map-light" aria-hidden="true" />
+          <div className="origin-finale-image-shell">
+            <div className="origin-finale-image-core">
+              <img src={originFinaleImage} alt="" />
+            </div>
           </div>
-          <div className="origin-finale-orbits">
-            {sources.map((source, index) => (
-              <span key={source.id} style={{ '--index': index, '--source-color': source.color }}>
-                {source.short}
-              </span>
-            ))}
-          </div>
-          <div className="origin-finale-words">
-            {finaleWords.map((word, index) => (
-              <i key={word} style={{ '--delay': `${index * 0.13}s` }}>
-                {word}
-              </i>
-            ))}
-          </div>
-          <div className="origin-finale-statements">
-            {finaleStatements.map((text, index) => (
-              <strong key={text} style={{ '--delay': `${1.05 + index * 0.24}s` }}>
-                {text}
-              </strong>
-            ))}
-          </div>
-          <div className="origin-message-card">
-            <span>Hành tinh đã mở khóa</span>
+          <div className="origin-finale-text">
+            <span>Khởi nguyên · Hành tinh đã mở khóa</span>
             <h3>NGUỒN GỐC TƯ TƯỞNG</h3>
-            <strong>Tư tưởng Hồ Chí Minh là sự kết hợp hài hòa giữa chủ nghĩa yêu nước Việt Nam, chủ nghĩa Mác - Lênin và tinh hoa văn hóa nhân loại.</strong>
-            <p>Ba dòng suối hội tụ thành ánh sáng trung tâm: từ lòng yêu nước, qua tiếp thu có chọn lọc những giá trị tiến bộ, đến con đường giải phóng dân tộc, giải phóng giai cấp và giải phóng con người.</p>
+            <blockquote>
+              “Lúc đầu, chính chủ nghĩa yêu nước, chứ chưa phải chủ nghĩa cộng sản, đã đưa tôi tin theo Lênin.”
+            </blockquote>
+            <p>
+              Từ lòng yêu nước Việt Nam, qua tinh hoa văn hóa nhân loại, đến ánh sáng Mác - Lênin, các nguồn mạch ấy
+              hội tụ thành nền tảng tư tưởng Hồ Chí Minh.
+            </p>
           </div>
         </div>
       )}

@@ -42,9 +42,9 @@ export default function BalanceScale({ onWin, onSolved }) {
       hue:      Math.round(seededRatio(index, 77) * 360),
     })), [])
 
-  // Finale: chromatic sparks
+  // Finale: chromatic sparks (reduced for performance)
   const finaleSparks = useMemo(() =>
-    Array.from({ length: 44 }).map((_, index) => ({
+    Array.from({ length: 12 }).map((_, index) => ({
       id:       index,
       angle:    seededRatio(index, 6) * 360,
       distance: 110 + seededRatio(index, 7) * 380,
@@ -54,12 +54,12 @@ export default function BalanceScale({ onWin, onSolved }) {
       hue:      Math.round(seededRatio(index, 78) * 360),
     })), [])
 
-  // Finale: light rays
+  // Finale: light rays (reduced)
   const lightRays = useMemo(() =>
-    Array.from({ length: 12 }).map((_, i) => ({
+    Array.from({ length: 6 }).map((_, i) => ({
       id:     i,
-      angle:  i * 30,
-      hue:    (i * 24) % 360,
+      angle:  i * 60,
+      hue:    (i * 48) % 360,
       delay:  seededRatio(i, 80) * 0.8,
       length: 35 + seededRatio(i, 81) * 45,
     })), [])
@@ -73,9 +73,9 @@ export default function BalanceScale({ onWin, onSolved }) {
       size:  6 + i * 12,
     })), [])
 
-  // Finale: scales sparks
+  // Finale: scales sparks (reduced)
   const scaleOrbs = useMemo(() =>
-    Array.from({ length: 8 }).map((_, i) => ({
+    Array.from({ length: 4 }).map((_, i) => ({
       id:       i,
       x:        20 + seededRatio(i, 82) * 60,
       y:        20 + seededRatio(i, 83) * 60,
@@ -197,15 +197,15 @@ export default function BalanceScale({ onWin, onSolved }) {
         <svg viewBox="0 0 460 460" className="gov-scale-svg">
           <defs>
             <linearGradient id="govGold" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%"   stopColor="#854d0e" />
-              <stop offset="28%"  stopColor="#fef3c7" />
-              <stop offset="56%"  stopColor="#facc15" />
-              <stop offset="100%" stopColor="#78350f" />
+              <stop offset="0%"   stopColor="#334155" />
+              <stop offset="28%"  stopColor="#cbd5e1" />
+              <stop offset="56%"  stopColor="#f1f5f9" />
+              <stop offset="100%" stopColor="#1e293b" />
             </linearGradient>
             <linearGradient id="govBlue" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stopColor="#dbeafe" />
-              <stop offset="52%"  stopColor="#38bdf8" />
-              <stop offset="100%" stopColor="#1d4ed8" />
+              <stop offset="0%"   stopColor="#7dd3fc" />
+              <stop offset="52%"  stopColor="#0284c7" />
+              <stop offset="100%" stopColor="#082f49" />
             </linearGradient>
             <radialGradient id="govSeal">
               <stop offset="0%"   stopColor="#ffffff" />

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import cayTreImg from '../../assets/cay_tre.png'
 import './PolishGem.css'
 
 const TOTAL_HITS = 9
+const DUST_COMPLETE_PROGRESS = 68
 const virtues = ['Cần', 'Kiệm', 'Liêm', 'Chính']
-const dustWords = ['Ích kỷ', 'Lãng phí', 'Giả dối', 'Vô trách nhiệm']
 
 function seededRatio(index, salt = 1) {
   const value = Math.sin(index * 88.217 + salt * 39.733) * 10000
@@ -16,14 +17,17 @@ export default function PolishGem({ onWin, onSolved }) {
   const [progress, setProgress] = useState(0)
   const [isShaking, setIsShaking] = useState(false)
   const [isScrubbing, setIsScrubbing] = useState(false)
-  const [flarePos, setFlarePos] = useState({ x: -999, y: -999 })
   const [shards, setShards] = useState([])
   const [sparkles, setSparkles] = useState([])
-  const [showFinale, setShowFinale] = useState(false)
+  const [finaleStep, setFinaleStep] = useState(0) // 0: none, 1: collapsing, 2: image, 3: text
 
   const canvasRef = useRef(null)
+  const wrapRef = useRef(null)
+  const flareRef = useRef(null)
   const drawingRef = useRef(false)
   const lastPosRef = useRef(null)
+  const opaqueRef = useRef(0)
+  const throttleRef = useRef(0)
   const wonRef = useRef(false)
   const shardSeqRef = useRef(0)
   const sparkleSeqRef = useRef(0)
@@ -40,54 +44,36 @@ export default function PolishGem({ onWin, onSolved }) {
     }))
   }, [])
 
-  const finaleSparks = useMemo(() => {
-    return Array.from({ length: 44 }).map((_, index) => ({
-      id: index,
-      angle: seededRatio(index, 7) * 360,
-      distance: 120 + seededRatio(index, 8) * 380,
-      delay: seededRatio(index, 9) * 0.85,
-      duration: 2.3 + seededRatio(index, 10) * 2.5,
-      size: 3 + seededRatio(index, 11) * 7,
-    }))
-  }, [])
-
   const initDustCanvas = () => {
     const canvas = canvasRef.current
     if (!canvas) return
 
     const ctx = canvas.getContext('2d')
-    ctx.clearRect(0, 0, 280, 280)
+    ctx.clearRect(0, 0, 240, 240)
     ctx.globalCompositeOperation = 'source-over'
 
-    const gradient = ctx.createRadialGradient(112, 92, 16, 140, 140, 150)
-    gradient.addColorStop(0, 'rgba(105, 63, 20, 0.96)')
-    gradient.addColorStop(0.58, 'rgba(41, 25, 12, 0.96)')
-    gradient.addColorStop(1, 'rgba(6, 10, 18, 0.96)')
+    const gradient = ctx.createRadialGradient(120, 120, 20, 120, 120, 120)
+    gradient.addColorStop(0, 'rgba(2, 10, 6, 0.75)') // Semi-transparent dark green
+    gradient.addColorStop(1, 'rgba(0, 4, 2, 0.92)') // Very dark edges
 
     ctx.fillStyle = gradient
     ctx.beginPath()
-    ctx.arc(140, 140, 132, 0, Math.PI * 2)
+    // Exactly match SVG points
+    ctx.moveTo(120, 18)
+    ctx.lineTo(205, 70)
+    ctx.lineTo(205, 154)
+    ctx.lineTo(120, 224)
+    ctx.lineTo(35, 154)
+    ctx.lineTo(35, 70)
+    ctx.closePath()
     ctx.fill()
 
-    for (let i = 0; i < 72; i += 1) {
-      const x = 20 + seededRatio(i, 12) * 240
-      const y = 20 + seededRatio(i, 13) * 240
-      const radius = 6 + seededRatio(i, 14) * 24
-      const alpha = 0.18 + seededRatio(i, 15) * 0.4
-
-      ctx.fillStyle = i % 2 === 0 ? `rgba(0, 0, 0, ${alpha})` : `rgba(146, 64, 14, ${alpha})`
-      ctx.beginPath()
-      ctx.arc(x, y, radius, 0, Math.PI * 2)
-      ctx.fill()
+    const imageData = ctx.getImageData(0, 0, 240, 240)
+    let initialOpaque = 0
+    for (let i = 3; i < imageData.data.length; i += 4) {
+      if (imageData.data[i] >= 120) initialOpaque += 1
     }
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)'
-    ctx.font = '700 15px Inter, Arial, sans-serif'
-    ctx.textAlign = 'center'
-    dustWords.forEach((word, index) => {
-      const angle = (Math.PI * 2 * index) / dustWords.length - Math.PI / 2
-      ctx.fillText(word, 140 + Math.cos(angle) * 72, 145 + Math.sin(angle) * 72)
-    })
+    opaqueRef.current = initialOpaque
   }
 
   useEffect(() => {
@@ -142,8 +128,8 @@ export default function PolishGem({ onWin, onSolved }) {
 
       return {
         id: `${burstId}-${index}-${Math.round(x)}-${Math.round(y)}`,
-        x: x - 140,
-        y: y - 140,
+        x: `${(x / 240) * 100}%`,
+        y: `${(y / 240) * 100}%`,
         dx: `${Math.cos(angle) * distance}px`,
         dy: `${Math.sin(angle) * distance}px`,
         size: `${4 + seededRatio(index, x + y + 110) * 8}px`,
@@ -164,22 +150,27 @@ export default function PolishGem({ onWin, onSolved }) {
     onSolved?.()
     setPhase('won')
     setProgress(100)
-    window.setTimeout(() => setShowFinale(true), 720)
-    window.setTimeout(onWin, 10200)
+    window.setTimeout(() => setFinaleStep(1), 720)
+    window.setTimeout(() => setFinaleStep(2), 2220) // 1.5s after collapse
+    window.setTimeout(() => setFinaleStep(3), 5720) // 3.5s after image
+    window.setTimeout(onWin, 15000)
   }
 
   const updateProgress = (ctx) => {
-    const imageData = ctx.getImageData(0, 0, 280, 280)
-    let transparentCount = 0
+    const imageData = ctx.getImageData(0, 0, 240, 240)
+    let currentOpaque = 0
 
     for (let i = 3; i < imageData.data.length; i += 4) {
-      if (imageData.data[i] < 120) transparentCount += 1
+      if (imageData.data[i] >= 120) currentOpaque += 1
     }
 
-    const nextProgress = Math.min(100, Math.round((transparentCount / (280 * 280)) * 100))
+    if (opaqueRef.current === 0) return
+
+    const erased = opaqueRef.current - currentOpaque
+    const nextProgress = Math.min(100, Math.round((erased / opaqueRef.current) * 100))
     setProgress(nextProgress)
 
-    if (nextProgress >= 76) complete()
+    if (nextProgress >= DUST_COMPLETE_PROGRESS) complete()
   }
 
   const eraseAt = (x, y) => {
@@ -190,7 +181,7 @@ export default function PolishGem({ onWin, onSolved }) {
     ctx.globalCompositeOperation = 'destination-out'
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
-    ctx.lineWidth = 40
+    ctx.lineWidth = 24
 
     if (lastPosRef.current) {
       ctx.beginPath()
@@ -199,36 +190,52 @@ export default function PolishGem({ onWin, onSolved }) {
       ctx.stroke()
     } else {
       ctx.beginPath()
-      ctx.arc(x, y, 22, 0, Math.PI * 2)
+      ctx.arc(x, y, 12, 0, Math.PI * 2)
       ctx.fill()
     }
 
     ctx.globalCompositeOperation = 'source-over'
     lastPosRef.current = { x, y }
-    setFlarePos({ x, y })
     addSparkles(x, y)
-    updateProgress(ctx)
+
+    const now = Date.now()
+    if (now - throttleRef.current > 150) {
+      throttleRef.current = now
+      updateProgress(ctx)
+    }
   }
 
   const getCanvasPoint = (event) => {
     const canvas = canvasRef.current
     const rect = canvas.getBoundingClientRect()
+    const rawX = ((event.clientX - rect.left) / rect.width) * canvas.width
+    const rawY = ((event.clientY - rect.top) / rect.height) * canvas.height
 
     return {
-      x: ((event.clientX - rect.left) / rect.width) * canvas.width,
-      y: ((event.clientY - rect.top) / rect.height) * canvas.height,
+      x: Math.max(0, Math.min(canvas.width, rawX)),
+      y: Math.max(0, Math.min(canvas.height, rawY)),
     }
+  }
+
+  const updateFlare = (point) => {
+    const canvas = canvasRef.current
+    if (!canvas || !flareRef.current) return
+    flareRef.current.style.left = `${(point.x / canvas.width) * 100}%`
+    flareRef.current.style.top = `${(point.y / canvas.height) * 100}%`
   }
 
   const handlePointerDown = (event) => {
     if (phase !== 'polishing') return
 
     event.preventDefault()
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    if (opaqueRef.current === 0) initDustCanvas()
     drawingRef.current = true
     lastPosRef.current = null
     setIsScrubbing(true)
 
     const point = getCanvasPoint(event)
+    updateFlare(point)
     eraseAt(point.x, point.y)
   }
 
@@ -236,22 +243,31 @@ export default function PolishGem({ onWin, onSolved }) {
     if (!drawingRef.current || phase !== 'polishing') return
 
     const point = getCanvasPoint(event)
+    updateFlare(point)
     eraseAt(point.x, point.y)
   }
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (event) => {
     if (phase !== 'polishing') return
 
+    if (event.currentTarget?.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
     drawingRef.current = false
     lastPosRef.current = null
     setIsScrubbing(false)
+    
+    const canvas = canvasRef.current
+    if (canvas) {
+      updateProgress(canvas.getContext('2d'))
+    }
   }
 
   const visibleProgress = phase === 'breaking' ? (hits / TOTAL_HITS) * 100 : progress
   const glowIntensity = phase === 'breaking' ? hits / TOTAL_HITS : progress / 100
 
   return (
-    <div className={`minigame-polish ${showFinale ? 'is-final-scene' : ''}`}>
+    <div className={`minigame-polish ${finaleStep >= 1 ? 'is-final-scene' : ''}`}>
       {ambientDust.map((dust) => (
         <i
           key={dust.id}
@@ -273,7 +289,7 @@ export default function PolishGem({ onWin, onSolved }) {
         {phase === 'won' && 'Viên ngọc đã sáng: đạo đức phải được rèn trong từng hành động.'}
       </p>
 
-      <div className={`ethics-stage ${phase === 'won' ? 'is-won' : ''}`}>
+      <div className={`ethics-stage is-${phase} ${phase === 'won' ? 'is-won' : ''} ${finaleStep >= 1 ? 'is-collapsing' : ''}`}>
         <div className="ethics-stage-aura" />
         <div className="ethics-orbit-ring" />
 
@@ -323,7 +339,7 @@ export default function PolishGem({ onWin, onSolved }) {
         )}
 
         {(phase === 'polishing' || phase === 'won') && (
-          <div className="ethics-gem-wrap" style={{ '--glow-intensity': glowIntensity }}>
+          <div ref={wrapRef} className="ethics-gem-wrap" style={{ '--glow-intensity': glowIntensity }}>
             <svg viewBox="0 0 240 240" className="ethics-gem" aria-hidden="true">
               <defs>
                 <radialGradient id="ethicsGemCore" cx="38%" cy="30%">
@@ -354,27 +370,36 @@ export default function PolishGem({ onWin, onSolved }) {
             </div>
 
             {phase === 'polishing' && (
-              <canvas
-                ref={canvasRef}
-                width={280}
-                height={280}
-                className="ethics-dust-canvas"
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerLeave={handlePointerUp}
-                style={{ touchAction: 'none' }}
-              />
-            )}
-
-            {phase === 'polishing' && isScrubbing && (
-              <div
-                className="ethics-scrub-flare"
-                style={{
-                  left: `calc(50% - 140px + ${flarePos.x}px)`,
-                  top: `calc(50% - 140px + ${flarePos.y}px)`,
-                }}
-              />
+              <div className="ethics-dust-mask">
+                <canvas
+                  ref={canvasRef}
+                  width={240}
+                  height={240}
+                  className="ethics-dust-canvas"
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerLeave={handlePointerUp}
+                  style={{ touchAction: 'none' }}
+                />
+                <div
+                  ref={flareRef}
+                  className={`ethics-scrub-flare ${isScrubbing ? 'is-active' : ''}`}
+                />
+                {sparkles.map((sparkle) => (
+                  <i
+                    key={sparkle.id}
+                    className="ethics-polish-sparkle"
+                    style={{
+                      left: sparkle.x,
+                      top: sparkle.y,
+                      '--dx': sparkle.dx,
+                      '--dy': sparkle.dy,
+                      '--spark-size': sparkle.size,
+                    }}
+                  />
+                ))}
+              </div>
             )}
           </div>
         )}
@@ -393,46 +418,14 @@ export default function PolishGem({ onWin, onSolved }) {
           />
         ))}
 
-        {sparkles.map((sparkle) => (
-          <i
-            key={sparkle.id}
-            className="ethics-polish-sparkle"
-            style={{
-              left: `calc(50% + ${sparkle.x}px)`,
-              top: `calc(50% + ${sparkle.y}px)`,
-              '--dx': sparkle.dx,
-              '--dy': sparkle.dy,
-              '--spark-size': sparkle.size,
-            }}
-          />
-        ))}
       </div>
 
-      {showFinale && (
+      {finaleStep >= 2 && (
         <div className="ethics-finale" aria-live="polite">
-          <div className="ethics-finale-aura" />
-          <div className="ethics-finale-rings" />
-          <div className="ethics-finale-pillars">
-            {virtues.map((virtue) => (
-              <span key={virtue}>{virtue}</span>
-            ))}
-          </div>
-          {finaleSparks.map((spark) => (
-            <i
-              key={spark.id}
-              className="ethics-finale-spark"
-              style={{
-                '--spark-angle': `${spark.angle}deg`,
-                '--spark-distance': `${spark.distance}px`,
-                '--spark-size': `${spark.size}px`,
-                '--duration': `${spark.duration}s`,
-                '--delay': `${spark.delay}s`,
-                animationDelay: `${spark.delay}s`,
-                animationDuration: `${spark.duration}s`,
-              }}
-            />
-          ))}
-          <div className="ethics-message-card">
+          <img src={cayTreImg} alt="Khóm tre ngọc bích" className="epic-bamboo-image" />
+          <div className="epic-overlay" />
+          
+          <div className={`ethics-message-card ${finaleStep >= 3 ? 'is-visible' : ''}`}>
             <small>Hành tinh đã mở khóa</small>
             <h3>ĐẠO ĐỨC CÁCH MẠNG</h3>
             <strong>Cần - Kiệm - Liêm - Chính không phải khẩu hiệu, mà là ánh sáng phải được mài mỗi ngày.</strong>

@@ -33,7 +33,7 @@ const targetEdges = [
   '5-9', '5-10'
 ]
 
-const SNAP_RADIUS = 82
+const SNAP_RADIUS = 110
 
 // Colors for each edge — rainbow palette
 const EDGE_COLORS = [
@@ -83,13 +83,18 @@ function curvedPath(start, end) {
 
 export default function ConnectFragments({ onWin, onSolved }) {
   const [edges, setEdges]             = useState([])
-  const [drag, setDrag]               = useState(null)
   const [won, setWon]                 = useState(false)
   const [showFinale, setShowFinale]   = useState(false)
   const [edgeParticles, setEdgeParticles] = useState([])
+  
   const svgRef = useRef(null)
   const wonRef = useRef(false)
   const particleSeqRef = useRef(0)
+  
+  const dragStateRef = useRef({ active: false, start: null, snappedNodeId: null })
+  const activeGroupRef = useRef(null)
+  const activeLineRef = useRef(null)
+  const activeLineGlowRef = useRef(null)
 
   // Ambient particles with rainbow colors
   const ambientParticles = useMemo(() =>
@@ -129,43 +134,73 @@ export default function ConnectFragments({ onWin, onSolved }) {
   }, [onSolved, onWin])
 
   useEffect(() => {
-    if (!drag || won) return undefined
+    if (won) return undefined
+    
+    let rafId = null
 
     const move = (event) => {
-      const rect = svgRef.current.getBoundingClientRect()
+      if (!dragStateRef.current.active) return
+      
+      const drag = dragStateRef.current
+      const rect = drag.svgRect
       const x = ((event.clientX - rect.left) / rect.width) * 420
       const y = ((event.clientY - rect.top) / rect.height) * 420
 
-      // Find if there is a close valid target node within SNAP_RADIUS
-      const availableTargets = unityNodes
-        .filter(node => {
-          if (node.id === drag.start.id) return false
-          const id = edgeId(drag.start.id, node.id)
-          return targetEdges.includes(id) && !edges.includes(id)
-        })
-        .map(node => ({ ...node, distance: Math.hypot(node.x - x, node.y - y) }))
-        .sort((a, b) => a.distance - b.distance)
+      if (rafId) cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(() => {
+        let closestTarget = null
+      let minDistance = SNAP_RADIUS
 
-      const closest = availableTargets[0]
-      if (closest && closest.distance < SNAP_RADIUS) {
-        setDrag(current => ({
-          ...current,
-          x: closest.x,
-          y: closest.y,
-          snappedNodeId: closest.id
-        }))
-      } else {
-        setDrag(current => ({
-          ...current,
-          x: x,
-          y: y,
-          snappedNodeId: null
-        }))
+      unityNodes.forEach(node => {
+        if (node.id === drag.start.id) return
+        const edgeIdStr = edgeId(drag.start.id, node.id)
+        if (targetEdges.includes(edgeIdStr) && !edges.includes(edgeIdStr)) {
+          const distance = Math.hypot(node.x - x, node.y - y)
+          if (distance < minDistance) {
+            minDistance = distance
+            closestTarget = node
+          }
+        }
+      })
+
+      let finalX = x
+      let finalY = y
+      let snappedId = null
+
+      if (closestTarget) {
+        finalX = closestTarget.x
+        finalY = closestTarget.y
+        snappedId = closestTarget.id
       }
+
+      // Update DOM directly
+      if (drag.snappedNodeId !== snappedId) {
+        if (drag.snappedNodeId !== null) {
+          const oldNode = document.getElementById(`unity-node-${drag.snappedNodeId}`)
+          if (oldNode) oldNode.classList.remove('is-snapped')
+        }
+        if (snappedId !== null) {
+          const newNode = document.getElementById(`unity-node-${snappedId}`)
+          if (newNode) newNode.classList.add('is-snapped')
+        }
+        drag.snappedNodeId = snappedId
+      }
+
+      const pathStr = curvedPath(drag.start, { x: finalX, y: finalY })
+      if (activeLineRef.current) activeLineRef.current.setAttribute('d', pathStr)
+      if (activeLineGlowRef.current) activeLineGlowRef.current.setAttribute('d', pathStr)
+      })
     }
 
     const up = () => {
-      if (drag.snappedNodeId !== null && drag.snappedNodeId !== undefined) {
+      if (rafId) cancelAnimationFrame(rafId)
+      const drag = dragStateRef.current
+      if (!drag.active) return
+      
+      drag.active = false
+      if (activeGroupRef.current) activeGroupRef.current.style.display = 'none'
+
+      if (drag.snappedNodeId !== null) {
         const end = unityNodes.find(n => n.id === drag.snappedNodeId)
         if (end) {
           const id = edgeId(drag.start.id, end.id)
@@ -179,8 +214,10 @@ export default function ConnectFragments({ onWin, onSolved }) {
             }
           }
         }
+        const oldNode = document.getElementById(`unity-node-${drag.snappedNodeId}`)
+        if (oldNode) oldNode.classList.remove('is-snapped')
+        drag.snappedNodeId = null
       }
-      setDrag(null)
     }
 
     window.addEventListener('pointermove', move)
@@ -189,7 +226,7 @@ export default function ConnectFragments({ onWin, onSolved }) {
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', up)
     }
-  }, [complete, drag, edges, won])
+  }, [complete, edges, won])
 
   return (
     <div className={`minigame-connect ${showFinale ? 'is-final-scene' : ''}`}>
@@ -215,10 +252,11 @@ export default function ConnectFragments({ onWin, onSolved }) {
           : `Kéo nối các điểm sáng dựng mạng đại đoàn kết. (${edges.length}/${targetEdges.length})`}
       </p>
 
-      <div className={`unity-stage ${won ? 'is-won' : ''}`}>
-        <div className="unity-stage-aura" />
-        <div className="unity-stage-ring" />
-        <div className="unity-stage-ring unity-stage-ring--2" />
+      <div className={`unity-stage-shell ${won ? 'is-won' : ''}`}>
+        <div className="unity-stage">
+          <div className="unity-stage-aura" />
+          <div className="unity-stage-ring" />
+          <div className="unity-stage-ring unity-stage-ring--2" />
 
         {edgeParticles.map(particle => (
           <i
@@ -339,20 +377,20 @@ export default function ConnectFragments({ onWin, onSolved }) {
             })}
 
             {/* Active drag line */}
-            {drag && (
-              <g>
-                <path
-                  d={curvedPath(drag.start, { x: drag.x, y: drag.y }, 0.08)}
-                  className="unity-active-line-glow"
-                  filter="url(#unityStrongGlow)"
-                />
-                <path
-                  d={curvedPath(drag.start, { x: drag.x, y: drag.y }, 0.08)}
-                  className="unity-active-line"
-                  filter="url(#unityGlow)"
-                />
-              </g>
-            )}
+            <g ref={activeGroupRef} style={{ display: 'none' }}>
+              <path
+                ref={activeLineGlowRef}
+                d=""
+                className="unity-active-line-glow"
+                filter="url(#unityStrongGlow)"
+              />
+              <path
+                ref={activeLineRef}
+                d=""
+                className="unity-active-line"
+                filter="url(#unityGlow)"
+              />
+            </g>
 
             {/* Nodes */}
             {unityNodes.map(node => {
@@ -360,14 +398,27 @@ export default function ConnectFragments({ onWin, onSolved }) {
               const completedCount = nodeEdges.filter(edge => edges.includes(edge)).length
               const isLit = completedCount > 0 || node.core
               const completionRatio = nodeEdges.length > 0 ? completedCount / nodeEdges.length : 0
-              const isSnapped = drag && drag.snappedNodeId === node.id
 
               return (
                 <g
                   key={node.id}
-                  className={`unity-node-group ${node.core ? 'is-core' : ''} ${isLit ? 'is-lit' : ''} ${completionRatio >= 1 ? 'is-full' : ''} ${isSnapped ? 'is-snapped' : ''}`}
+                  id={`unity-node-${node.id}`}
+                  className={`unity-node-group ${node.core ? 'is-core' : ''} ${isLit ? 'is-lit' : ''} ${completionRatio >= 1 ? 'is-full' : ''}`}
                   transform={`translate(${node.x}, ${node.y})`}
-                  onPointerDown={() => { if (!wonRef.current) setDrag({ start: node, x: node.x, y: node.y, snappedNodeId: null }) }}
+                  onPointerDown={(e) => {
+                    if (wonRef.current) return
+                    const rect = svgRef.current.getBoundingClientRect()
+                    dragStateRef.current = { 
+                      active: true, 
+                      start: node, 
+                      snappedNodeId: null,
+                      svgRect: rect
+                    }
+                    if (activeGroupRef.current) activeGroupRef.current.style.display = 'block'
+                    const pathStr = curvedPath(node, { x: node.x, y: node.y })
+                    if (activeLineRef.current) activeLineRef.current.setAttribute('d', pathStr)
+                    if (activeLineGlowRef.current) activeLineGlowRef.current.setAttribute('d', pathStr)
+                  }}
                 >
                   <circle r={node.core ? 36 : 26} className="unity-node-hitbox" />
                   <circle r={node.core ? 20 : 13} className="unity-node-halo" />
@@ -391,6 +442,7 @@ export default function ConnectFragments({ onWin, onSolved }) {
         <div className="unity-progress-notes">
           <span>{edges.length}/{targetEdges.length} liên kết</span>
           <strong>{Math.round(progress)}%</strong>
+        </div>
         </div>
       </div>
 

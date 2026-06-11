@@ -122,6 +122,11 @@
   animation: ethicsStageSweep 6.8s ease-in-out infinite;
 }
 
+.ethics-stage.is-polishing::after {
+  opacity: 0;
+  animation: none;
+}
+
 .ethics-stage-aura {
   position: absolute;
   inset: 8%;
@@ -259,14 +264,16 @@
   position: relative;
   z-index: 14;
   display: grid;
-  width: min(72%, 19rem);
+  width: min(85%, 22rem);
   aspect-ratio: 1;
   place-items: center;
+  align-self: center;
+  justify-self: center;
 }
 
 .ethics-gem {
-  width: 86%;
-  height: 86%;
+  width: 95%;
+  height: 95%;
   overflow: visible;
   filter:
     drop-shadow(0 0 calc(var(--glow-intensity) * 4rem) rgba(52, 211, 153, var(--glow-intensity)))
@@ -321,6 +328,7 @@
 .ethics-virtue-orbit {
   position: absolute;
   inset: -12%;
+  z-index: 12;
   border: 1px solid rgba(167, 243, 208, 0.18);
   border-radius: 50%;
   pointer-events: none;
@@ -348,28 +356,43 @@
     rotate(calc(var(--virtue-index) * -90deg));
 }
 
+.ethics-dust-mask {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 95%;
+  height: 95%;
+  z-index: 8;
+  overflow: hidden;
+  clip-path: polygon(50% 7.5%, 85.4% 29.2%, 85.4% 64.2%, 50% 93.3%, 14.6% 64.2%, 14.6% 29.2%);
+  -webkit-clip-path: polygon(50% 7.5%, 85.4% 29.2%, 85.4% 64.2%, 50% 93.3%, 14.6% 64.2%, 14.6% 29.2%);
+}
+
 .ethics-dust-canvas {
   position: absolute;
+  inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  z-index: 8;
   cursor: pointer;
-  box-shadow:
-    inset 0 0 3rem rgba(0, 0, 0, 0.8),
-    0 0 2rem rgba(0, 0, 0, 0.34);
 }
 
 .ethics-scrub-flare {
   position: absolute;
   z-index: 18;
-  width: 7rem;
+  width: 4.8rem;
   aspect-ratio: 1;
   border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, #ffffff 0 8%, rgba(167, 243, 208, 0.82) 24%, transparent 68%);
+  background: radial-gradient(circle, #ffffff 0 8%, rgba(167, 243, 208, 0.62) 22%, transparent 58%);
   mix-blend-mode: screen;
   transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.ethics-scrub-flare.is-active {
+  opacity: 1;
   animation: ethicsFlarePulse 140ms ease-in-out infinite alternate;
 }
 
@@ -398,170 +421,118 @@
     0 0 1rem rgba(167, 243, 208, 0.9),
     0 0 2rem rgba(255, 255, 255, 0.45);
   pointer-events: none;
+  transform: translate(-50%, -50%);
   animation: ethicsPolishSpark 680ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes ethicsFlarePulse {
+  from {
+    transform: translate(-50%, -50%) scale(0.82);
+  }
+
+  to {
+    transform: translate(-50%, -50%) scale(1.18);
+  }
+}
+
+@keyframes ethicsPolishSpark {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0);
+  }
+}
+
+
+.ethics-stage {
+  transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.ethics-stage.is-collapsing {
+  transform: scale(0.5) translateY(100px) rotateX(20deg);
+  opacity: 0;
+  filter: blur(10px) brightness(2);
+  pointer-events: none;
 }
 
 .ethics-finale {
   position: fixed;
   inset: 0;
   z-index: 180;
-  display: block;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 50% 47%, rgba(255, 255, 255, 0.18), transparent 14%),
-    radial-gradient(circle at 22% 42%, rgba(52, 211, 153, 0.18), transparent 28%),
-    radial-gradient(circle at 82% 46%, rgba(254, 240, 138, 0.13), transparent 28%),
-    linear-gradient(180deg, #020617 0%, #06312f 48%, #151016 100%);
-  animation: ethicsFinaleArrive 9.6s ease both;
 }
 
-.ethics-finale-aura {
+.epic-bamboo-image {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at 50% 46%, #ffffff 0 0.45rem, rgba(167, 243, 208, 0.92) 0.9rem, transparent 10rem),
-    radial-gradient(circle at 50% 58%, rgba(167, 243, 208, 0.34), transparent 34%),
-    linear-gradient(180deg, rgba(5, 46, 43, 0.12), rgba(245, 158, 11, 0.16));
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
   opacity: 0;
-  transform: scale(1.08);
-  animation: ethicsAuraOpen 9.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform: scale(1.05) translateY(20px);
+  animation: bambooReveal 3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-.ethics-finale-rings,
-.ethics-finale-rings::before,
-.ethics-finale-rings::after {
+@keyframes bambooReveal {
+  0% { opacity: 0; transform: scale(1.05) translateY(20px); filter: brightness(1); }
+  30% { opacity: 1; transform: scale(1.02) translateY(5px); filter: brightness(1.5) drop-shadow(0 0 40px rgba(16, 185, 129, 0.6)); }
+  100% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1); }
+}
+
+.epic-overlay {
   position: absolute;
-  left: 50%;
-  top: 52%;
-  border: 1px solid rgba(167, 243, 208, 0.44);
-  border-radius: 50%;
-  content: '';
-  transform: translate(-50%, -50%) rotateX(66deg) scale(0.45);
-}
-
-.ethics-finale-rings {
-  width: min(86vw, 44rem);
-  aspect-ratio: 1;
-  animation: ethicsFinaleRing 9.2s ease-out both;
-}
-
-.ethics-finale-rings::before {
-  width: 72%;
-  aspect-ratio: 1;
-  animation: ethicsFinaleRing 9.2s 180ms ease-out both reverse;
-}
-
-.ethics-finale-rings::after {
-  width: 124%;
-  aspect-ratio: 1;
-  border-color: rgba(255, 255, 255, 0.24);
-  animation: ethicsFinaleRing 9.2s 320ms ease-out both;
-}
-
-.ethics-finale-pillars {
-  position: absolute;
-  left: 50%;
-  bottom: -3%;
-  z-index: 4;
-  display: flex;
-  gap: clamp(0.8rem, 4vw, 3rem);
-  transform: translateX(-50%);
-}
-
-.ethics-finale-pillars span {
-  display: grid;
-  width: clamp(3.2rem, 9vw, 6rem);
-  height: clamp(8rem, 23vw, 14rem);
-  place-items: start center;
-  padding-top: 1.1rem;
-  border-radius: 999px 999px 0 0;
-  color: #064e3b;
-  background:
-    radial-gradient(ellipse at 50% 14%, #ffffff 0 10%, #d1fae5 11% 24%, transparent 25%),
-    linear-gradient(180deg, rgba(209, 250, 229, 0.86), rgba(16, 185, 129, 0.28) 64%, transparent);
-  filter: drop-shadow(0 0 1.4rem rgba(167, 243, 208, 0.28));
-  font-size: clamp(0.9rem, 2vw, 1.2rem);
-  font-weight: 950;
-  opacity: 0;
-  transform: translateY(9rem) scaleY(0.3);
-  transform-origin: 50% 100%;
-  animation: ethicsPillarRise 8.4s ease-out both;
-}
-
-.ethics-finale-pillars span:nth-child(2) {
-  animation-delay: 150ms;
-}
-
-.ethics-finale-pillars span:nth-child(3) {
-  animation-delay: 300ms;
-}
-
-.ethics-finale-pillars span:nth-child(4) {
-  animation-delay: 450ms;
-}
-
-.ethics-finale-spark {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 16;
-  width: var(--spark-size);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow:
-    0 0 0.8rem rgba(167, 243, 208, 0.74),
-    0 0 1.5rem rgba(254, 240, 138, 0.32);
-  opacity: 0;
-  transform: translate(-50%, -50%);
-  animation: ethicsFinaleSpark var(--duration) cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+  inset: 0;
+  background: linear-gradient(to top, rgba(2, 6, 23, 0.95) 0%, rgba(2, 6, 23, 0.4) 40%, transparent 100%);
 }
 
 .ethics-message-card {
-  position: absolute;
-  left: 50%;
-  top: 50%;
+  position: relative;
   z-index: 32;
   display: grid;
-  width: min(86vw, 38rem);
-  gap: 0.55rem;
+  width: min(86vw, 44rem);
+  gap: 0.8rem;
   justify-items: center;
-  padding: clamp(1rem, 2.6vw, 1.45rem);
+  padding: clamp(1.2rem, 3vw, 2rem);
   border: 1px solid rgba(167, 243, 208, 0.52);
-  border-radius: 8px;
+  border-radius: 12px;
   color: #ffffff;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.045)),
-    rgba(6, 78, 59, 0.52);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.02)),
+    rgba(6, 78, 59, 0.4);
   box-shadow:
-    0 1rem 3.2rem rgba(0, 0, 0, 0.36),
-    0 0 2.4rem rgba(52, 211, 153, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    0 1rem 3.2rem rgba(0, 0, 0, 0.5),
+    0 0 3rem rgba(16, 185, 129, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
   text-align: center;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
   opacity: 0;
-  transform: translate(-50%, calc(-50% + 2rem)) scale(0.92);
-  animation: ethicsMessageReveal 9.4s 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
-  overflow: hidden;
+  transform: translateY(30px);
+  transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  margin-top: 20vh;
 }
 
-.ethics-message-card::before {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(110deg, transparent 0 30%, rgba(255, 255, 255, 0.22) 46%, transparent 62% 100%);
-  content: '';
-  opacity: 0;
-  transform: translateX(-100%);
-  animation: ethicsCardShine 5.8s 1.35s ease-in-out both;
+.ethics-message-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .ethics-message-card small {
   color: #a7f3d0;
-  font-size: 0.72rem;
-  font-weight: 950;
-  letter-spacing: 0.18em;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
@@ -569,322 +540,28 @@
   margin: 0;
   color: #ffffff;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(1.85rem, 5.7vw, 4.4rem);
-  font-weight: 950;
-  line-height: 0.96;
-  letter-spacing: 0.06em;
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
   text-shadow:
-    0 0 0.9rem rgba(167, 243, 208, 0.72),
-    0 0 2.2rem rgba(254, 240, 138, 0.28);
+    0 0 1rem rgba(167, 243, 208, 0.5),
+    0 0 2rem rgba(254, 240, 138, 0.3);
 }
 
 .ethics-message-card strong {
-  max-width: 31rem;
   color: #fef9c3;
-  font-size: clamp(0.94rem, 2vw, 1.18rem);
-  font-weight: 900;
-  line-height: 1.35;
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  font-weight: 800;
+  line-height: 1.4;
+  max-width: 38rem;
 }
 
 .ethics-message-card p {
-  max-width: 32rem;
   margin: 0;
-  color: rgba(236, 253, 245, 0.92);
-  font-size: clamp(0.86rem, 1.6vw, 1.02rem);
-  font-weight: 720;
-  line-height: 1.5;
-}
-
-.minigame-polish > .minigame-progress {
-  position: relative;
-  z-index: 20;
-  width: min(100%, 28rem);
-  height: 0.7rem;
-  border: 1px solid rgba(167, 243, 208, 0.18);
-  border-radius: 999px;
-  background: rgba(6, 78, 59, 0.48);
-  box-shadow:
-    inset 0 0 1rem rgba(0, 0, 0, 0.36),
-    0 0 1.4rem rgba(52, 211, 153, 0.12);
-  overflow: hidden;
-  transition: opacity 240ms ease;
-}
-
-.minigame-polish > .minigame-progress .minigame-progress-fill {
-  height: 100%;
-  border-radius: inherit;
-  background:
-    linear-gradient(90deg, #064e3b 0%, #10b981 38%, #a7f3d0 76%, #ffffff 100%);
-  box-shadow:
-    0 0 1rem rgba(52, 211, 153, 0.42),
-    0 0 1.8rem rgba(167, 243, 208, 0.36);
-  transition: width 0.24s ease;
-}
-
-@keyframes ethicsDustFloat {
-  0%,
-  100% {
-    opacity: 0;
-    transform: translate3d(0, 0, 0) scale(0.45);
-  }
-
-  18%,
-  72% {
-    opacity: 0.72;
-  }
-
-  50% {
-    transform: translate3d(var(--drift), -2.4rem, 0) scale(1);
-  }
-}
-
-@keyframes ethicsStarDrift {
-  to {
-    background-position:
-      3.1rem 4.2rem,
-      7.1rem 6.4rem,
-      17rem 1.3rem;
-  }
-}
-
-@keyframes ethicsStageSweep {
-  0%,
-  52% {
-    transform: translateX(-72%);
-  }
-
-  78%,
-  100% {
-    transform: translateX(72%);
-  }
-}
-
-@keyframes ethicsAuraSpin {
-  to {
-    rotate: 360deg;
-  }
-}
-
-@keyframes ethicsRingPulse {
-  0%,
-  100% {
-    opacity: 0.58;
-    transform: scale(0.96);
-  }
-
-  50% {
-    opacity: 0.94;
-    transform: scale(1.03);
-  }
-}
-
-@keyframes ethicsRockShake {
-  12%,
-  88% {
-    transform: translateX(0.35rem);
-  }
-
-  28%,
-  72% {
-    transform: translateX(-0.5rem) translateY(0.18rem);
-  }
-
-  46%,
-  56% {
-    transform: translateX(0.42rem) translateY(-0.16rem);
-  }
-}
-
-@keyframes ethicsGemFloat {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-  }
-
-  50% {
-    transform: translateY(-0.9rem) scale(1.04);
-  }
-}
-
-@keyframes ethicsVirtueOrbit {
-  to {
-    rotate: 360deg;
-  }
-}
-
-@keyframes ethicsFlarePulse {
-  from {
-    opacity: 0.65;
-    transform: translate(-50%, -50%) scale(0.88);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.25);
-  }
-}
-
-@keyframes ethicsShardFly {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1) rotate(0);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0) rotate(var(--rot));
-  }
-}
-
-@keyframes ethicsPolishSpark {
-  0% {
-    opacity: 1;
-    transform: translate(0, 0) scale(1.5);
-  }
-
-  100% {
-    opacity: 0;
-    transform: translate(var(--dx), var(--dy)) scale(0);
-  }
-}
-
-@keyframes ethicsFinaleArrive {
-  0% {
-    opacity: 0;
-  }
-
-  8%,
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes ethicsAuraOpen {
-  0% {
-    opacity: 0;
-    filter: saturate(0.9) brightness(0.78);
-    transform: scale(1.08);
-  }
-
-  22% {
-    opacity: 1;
-    filter: saturate(1.1) brightness(1.08);
-  }
-
-  100% {
-    opacity: 1;
-    filter: saturate(1.22) brightness(1.08);
-    transform: scale(1);
-  }
-}
-
-@keyframes ethicsFinaleRing {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) rotateX(66deg) scale(0.38);
-  }
-
-  22% {
-    opacity: 0.86;
-  }
-
-  100% {
-    opacity: 0.2;
-    transform: translate(-50%, -50%) rotateX(66deg) scale(1.18);
-  }
-}
-
-@keyframes ethicsPillarRise {
-  0% {
-    opacity: 0;
-    transform: translateY(9rem) scaleY(0.3);
-  }
-
-  24% {
-    opacity: 0.88;
-  }
-
-  100% {
-    opacity: 0.72;
-    transform: translateY(0) scaleY(1);
-  }
-}
-
-@keyframes ethicsFinaleSpark {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) rotate(var(--spark-angle)) translateY(0) scale(1);
-  }
-
-  12% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) rotate(var(--spark-angle)) translateY(var(--spark-distance)) scale(0);
-  }
-}
-
-@keyframes ethicsMessageReveal {
-  0%,
-  16% {
-    opacity: 0;
-    transform: translate(-50%, calc(-50% + 2rem)) scale(0.92);
-  }
-
-  34%,
-  100% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-@keyframes ethicsCardShine {
-  0% {
-    opacity: 0;
-    transform: translateX(-100%);
-  }
-
-  22% {
-    opacity: 0.86;
-  }
-
-  74%,
-  100% {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-}
-
-@media (max-width: 720px) {
-  .minigame-polish {
-    width: min(100%, 31rem);
-    min-height: 34rem;
-    gap: 0.85rem;
-    padding: 0.65rem;
-  }
-
-  .ethics-stage {
-    width: min(100%, 30rem);
-    height: min(65svh, 32rem);
-    min-height: 29rem;
-  }
-
-  .ethics-gem-wrap {
-    width: min(74%, 17rem);
-  }
-
-  .ethics-virtue-orbit span {
-    font-size: 0.64rem;
-    transform:
-      translate(-50%, -50%)
-      rotate(calc(var(--virtue-index) * 90deg))
-      translateX(8.1rem)
-      rotate(calc(var(--virtue-index) * -90deg));
-  }
-
-  .ethics-finale-pillars {
-    display: none;
-  }
+  color: rgba(236, 253, 245, 0.9);
+  font-size: clamp(0.95rem, 1.8vw, 1.15rem);
+  font-weight: 500;
+  line-height: 1.6;
+  max-width: 40rem;
 }
