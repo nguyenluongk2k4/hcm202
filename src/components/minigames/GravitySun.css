@@ -1,6 +1,6 @@
 .minigame-sun {
   position: relative;
-  width: min(100%, 980px);
+  width: min(100%, 1160px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,7 +9,7 @@
 }
 
 .minigame-sun.is-final-scene .minigame-instruction,
-.minigame-sun.is-final-scene .sun-stage,
+.minigame-sun.is-final-scene .sun-stage-shell,
 .minigame-sun.is-final-scene .sun-progress {
   opacity: 0;
   transform: scale(0.96);
@@ -25,24 +25,48 @@
   text-shadow: 0 0 16px rgba(250, 204, 21, 0.58), 0 2px 16px rgba(0, 0, 0, 0.45);
 }
 
+/* ── Double-Bezel Shell ── */
+.sun-stage-shell {
+  position: relative;
+  width: min(100%, 1120px);
+  padding: 0.5rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.6);
+  transition: all 700ms cubic-bezier(0.32,0.72,0,1);
+}
+
+.sun-stage-shell.is-won {
+  border-color: rgba(250, 204, 21, 0.4);
+  box-shadow:
+    0 2rem 5rem rgba(0,0,0,0.6),
+    0 0 4rem rgba(250,204,21,0.25),
+    0 0 8rem rgba(251,146,60,0.12);
+}
+
+.sun-stage-shell.is-pulsing {
+  animation: stagePulse 0.4s cubic-bezier(0.32, 0.72, 0, 1) infinite alternate;
+}
+
+/* ── Stage Inner Core ── */
 .sun-stage {
   position: relative;
-  width: min(100%, 940px);
+  width: 100%;
   height: min(68vh, 590px);
   min-height: 540px;
   overflow: hidden;
   cursor: none;
   touch-action: none;
-  border: 1px solid rgba(250, 204, 21, 0.3);
-  border-radius: 8px;
+  border-radius: calc(12px - 0.5rem);
   background:
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.14), transparent 17%),
-    radial-gradient(circle at 18% 24%, rgba(125, 211, 252, 0.16), transparent 27%),
-    radial-gradient(circle at 82% 25%, rgba(251, 146, 60, 0.17), transparent 29%),
-    radial-gradient(circle at 50% 88%, rgba(250, 204, 21, 0.13), transparent 34%),
-    linear-gradient(180deg, #100612 0%, #15152e 50%, #241008 100%);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42), inset 0 0 80px rgba(250, 204, 21, 0.055);
-  transition: opacity 0.45s ease, transform 0.45s ease, box-shadow 0.4s ease;
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.04), transparent 17%),
+    radial-gradient(circle at 18% 24%, rgba(125, 211, 252, 0.06), transparent 27%),
+    radial-gradient(circle at 82% 25%, rgba(251, 146, 60, 0.07), transparent 29%),
+    radial-gradient(circle at 50% 88%, rgba(250, 204, 21, 0.05), transparent 34%),
+    linear-gradient(180deg, #050505 0%, #0a0a0a 100%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  transition: all 700ms cubic-bezier(0.32,0.72,0,1);
 }
 
 .sun-stage::before {
@@ -67,10 +91,7 @@
 }
 
 .sun-stage.is-won {
-  box-shadow:
-    0 28px 90px rgba(0, 0, 0, 0.44),
-    0 0 96px rgba(250, 204, 21, 0.28),
-    inset 0 0 120px rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.18);
 }
 
 .sun-bg-star {
@@ -109,22 +130,30 @@
   overflow: visible;
 }
 
-.sun-orbit-ring {
+.sun-orbit-ring-base {
   fill: none;
-  stroke-width: 0.55;
-  stroke-dasharray: 1.2 5;
-  opacity: 0.45;
-  filter: url(#sunBeamGlow);
-  transform-origin: 50% 50%;
-  animation: sunOrbitSpin 16s linear infinite;
+  stroke: rgba(255, 255, 255, 0.04);
+  stroke-width: 0.3;
   vector-effect: non-scaling-stroke;
 }
 
+.sun-orbit-ring {
+  fill: none;
+  stroke-width: 0.4;
+  stroke-dasharray: 0.5 8;
+  opacity: 0.5;
+  filter: url(#sunBeamGlow);
+  transform-origin: 50% 50%;
+  animation: sunOrbitSpin 32s linear infinite;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+}
+
 .sun-orbit-ring.has-light {
-  stroke-width: 0.72;
-  opacity: 0.88;
-  stroke-dasharray: 100;
-  animation: sunOrbitSpin 12s linear infinite, sunOrbitGlow 2.4s ease-in-out infinite;
+  stroke-width: 0.6;
+  opacity: 0.9;
+  stroke-dasharray: 8 32;
+  animation: sunOrbitSpin 20s linear infinite, sunOrbitGlow 3s ease-in-out infinite alternate;
 }
 
 .sun-target-slot {
@@ -213,11 +242,11 @@
   inset: 18%;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 34% 28%, #ffffff 0 14%, #fff7b2 25%, #facc15 52%, #ea580c 78%, #7c2d12 100%);
+    radial-gradient(circle at 34% 28%, #facc15 0 10%, #ea580c 45%, #9a3412 70%, #431407 100%);
   box-shadow:
-    0 0 42px rgba(250, 204, 21, 0.78),
-    0 0 90px rgba(251, 146, 60, 0.4),
-    inset 0 0 26px rgba(255, 255, 255, 0.42);
+    0 0 42px rgba(250, 204, 21, 0.6),
+    0 0 90px rgba(251, 146, 60, 0.3),
+    inset 0 0 16px rgba(255, 255, 255, 0.15);
   animation: sunCorePulse 2.7s ease-in-out infinite;
 }
 
@@ -230,8 +259,9 @@
   line-height: 1.05;
   text-align: center;
   text-shadow:
-    0 0 0.9rem rgba(255, 249, 219, 0.9),
-    0 0 2rem rgba(250, 204, 21, 0.54);
+    0 2px 4px rgba(0, 0, 0, 0.9),
+    0 0 12px rgba(0, 0, 0, 0.7),
+    0 0 24px rgba(0, 0, 0, 0.5);
 }
 
 .sun-ring-labels {
@@ -275,7 +305,7 @@
   transform: translate(-50%, -50%);
   user-select: none;
   touch-action: none;
-  transition: transform 0.16s ease, filter 0.16s ease;
+  transition: transform 0.7s cubic-bezier(0.32,0.72,0,1), filter 0.7s cubic-bezier(0.32,0.72,0,1);
 }
 
 .sun-fragment:active,
@@ -297,7 +327,6 @@
 .sun-fragment.is-locked {
   pointer-events: none;
   animation: sunSatelliteFloat 2.6s ease-in-out infinite var(--orbit-delay, 0s);
-  filter: brightness(1.14);
 }
 
 .sun-fragment.is-flying {
@@ -312,11 +341,14 @@
   aspect-ratio: 1;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 34% 28%, #ffffff 0 18%, var(--fragment-color) 48%, rgba(28, 16, 24, 0.9) 78%);
+    radial-gradient(circle at 34% 28%, #ffffff 0 5%, color-mix(in srgb, var(--fragment-color) 70%, #fff) 25%, var(--fragment-color) 60%, rgba(28, 16, 24, 0.9) 85%);
   box-shadow:
-    0 0 0.8rem color-mix(in srgb, var(--fragment-color) 72%, transparent),
-    0 0 1.8rem color-mix(in srgb, var(--fragment-color) 45%, transparent),
-    0 0 3rem rgba(255, 249, 219, 0.12);
+    0 0 0.6rem color-mix(in srgb, var(--fragment-color) 52%, transparent),
+    0 0 1.2rem color-mix(in srgb, var(--fragment-color) 25%, transparent),
+    inset 0 0 0.8rem rgba(0, 0, 0, 0.5);
+  opacity: 0.6;
+  filter: grayscale(0.5);
+  transition: all 700ms cubic-bezier(0.32,0.72,0,1);
 }
 
 .sun-fragment-orb::before,
@@ -345,11 +377,13 @@
 }
 
 .sun-fragment.is-locked .sun-fragment-orb {
-  transform: scale(1.22);
+  transform: scale(1.15);
+  opacity: 1;
+  filter: grayscale(0);
   box-shadow:
-    0 0 0.9rem rgba(255, 255, 255, 0.82),
-    0 0 1.8rem color-mix(in srgb, var(--fragment-color) 74%, transparent),
-    0 0 3.4rem color-mix(in srgb, var(--fragment-color) 42%, transparent);
+    0 0 0.9rem rgba(255, 255, 255, 0.6),
+    0 0 1.8rem color-mix(in srgb, var(--fragment-color) 64%, transparent),
+    0 0 3.4rem color-mix(in srgb, var(--fragment-color) 32%, transparent);
 }
 
 .sun-fragment.is-locked .sun-fragment-orb::after {
@@ -406,6 +440,15 @@
 
 .sun-fragment--bottom b { top: 1.55rem; }
 .sun-fragment--bottom small { top: 2.55rem; }
+
+.sun-fragment--top b,
+.sun-fragment--top small {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.sun-fragment--top b { bottom: 1.55rem; }
+.sun-fragment--top small { bottom: 2.55rem; }
 
 .sun-flight-token {
   position: absolute;
@@ -545,85 +588,34 @@
   position: fixed;
   inset: 0;
   z-index: 120;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.32), transparent 22%),
-    radial-gradient(circle at 18% 34%, rgba(125, 211, 252, 0.22), transparent 28%),
-    radial-gradient(circle at 82% 30%, rgba(251, 146, 60, 0.28), transparent 28%),
-    linear-gradient(180deg, #130614 0%, #2a1738 50%, #552006 100%);
-  animation: sunFinaleIn 0.55s ease both;
-}
-
-.sun-finale::before,
-.sun-finale::after {
-  content: '';
-  position: absolute;
-  inset: -30%;
   pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.sun-finale::before {
-  background:
-    repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.12) 0deg 1deg, transparent 1deg 12deg),
-    radial-gradient(circle at 50% 50%, rgba(250, 204, 21, 0.2), transparent 44%);
-  opacity: 0.44;
-  animation: sunFinaleTurn 16s linear infinite;
-}
-
-.sun-finale::after {
-  background: radial-gradient(circle at 50% 50%, transparent 0 34%, rgba(0, 0, 0, 0.42) 78%);
-}
-
-.sun-finale-star {
-  position: absolute;
-  left: 50%;
-  top: 47%;
-  z-index: 3;
-  width: clamp(260px, 42vw, 560px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  transform: translate(-50%, -50%) scale(0.45);
-  background:
-    radial-gradient(circle at 34% 28%, #ffffff 0 10%, #fff7b2 22%, #facc15 52%, rgba(251, 146, 60, 0.55) 72%, transparent 82%);
-  box-shadow:
-    0 0 80px rgba(250, 204, 21, 0.68),
-    0 0 180px rgba(251, 146, 60, 0.32);
+.sun-finale-image {
+  position: relative;
+  z-index: 4;
+  width: min(96vw, 1100px);
+  max-height: 85vh;
+  object-fit: contain;
+  filter: brightness(1);
   opacity: 0;
-  animation: sunFinaleStar 1.18s 0.24s cubic-bezier(0.2, 1.24, 0.32, 1) forwards;
+  animation: sunImageReveal 1.2s 0.8s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  transition: filter 2s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-.sun-finale-orbits {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
+.sun-finale.is-phase-2 .sun-finale-image {
+  filter: brightness(0.5);
 }
 
-.sun-finale-orbits span {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  min-width: 124px;
-  padding: 0.5rem 0.72rem;
-  border: 1px solid color-mix(in srgb, var(--ring-color) 64%, transparent);
-  border-radius: 999px;
-  color: #ffffff;
-  background: rgba(28, 16, 24, 0.58);
-  box-shadow: 0 0 28px color-mix(in srgb, var(--ring-color) 42%, transparent);
-  font-size: 0.76rem;
-  font-weight: 950;
-  letter-spacing: 0.1em;
-  text-align: center;
-  text-transform: uppercase;
-  transform: translate(-50%, -50%) rotate(calc(var(--index) * 120deg)) translateY(-245px) rotate(calc(var(--index) * -120deg));
-  opacity: 0;
-  animation: sunOrbitBadge 0.7s calc(0.95s + var(--index) * 0.16s) ease forwards;
-}
+
 
 .sun-finale-words {
   position: absolute;
   left: 50%;
-  top: 16%;
+  top: 85%;
   z-index: 6;
   width: min(88vw, 850px);
   display: flex;
@@ -647,7 +639,7 @@
   text-transform: uppercase;
   opacity: 0;
   transform: translateY(-22px);
-  animation: sunWordDrop 0.62s calc(0.7s + var(--delay)) cubic-bezier(0.2, 1.32, 0.32, 1) forwards;
+  animation: sunWordDrop 0.62s calc(0.2s + var(--delay)) cubic-bezier(0.2, 1.32, 0.32, 1) forwards;
 }
 
 .sun-message-card {
@@ -671,7 +663,7 @@
   backdrop-filter: blur(14px);
   transform: translate(-50%, -50%) scale(0.9);
   opacity: 0;
-  animation: sunMessageReveal 0.92s 1.45s cubic-bezier(0.2, 1.14, 0.32, 1) forwards;
+  animation: sunMessageReveal 0.92s 0.8s cubic-bezier(0.2, 1.14, 0.32, 1) forwards;
 }
 
 .sun-message-card span {
@@ -738,8 +730,9 @@
   }
 }
 
-@keyframes sunSlowSpin {
-  to { transform: rotate(360deg); }
+@keyframes stagePulse {
+  0% { box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.6), 0 0 2rem rgba(255, 255, 255, 0.2); filter: brightness(1); }
+  100% { box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.6), 0 0 8rem rgba(255, 255, 255, 0.8); filter: brightness(1.5); }
 }
 
 @keyframes sunStarFloat {
@@ -799,6 +792,11 @@
     transform: translate(-50%, -50%) scale(0.72) rotate(0deg);
     opacity: 0;
   }
+}
+
+@keyframes sunImageReveal {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes sunSatelliteFloat {

@@ -1,18 +1,30 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, useEffect } from 'react'
 import './GravitySun.css'
+import finalImg from '../../assets/final.png'
 
 const CENTER = { x: 50, y: 50 }
 
 const fragments = [
-  { id: 'tu-tuong', text: 'Tư tưởng', note: 'soi đường', start: { x: 16, y: 22 }, orbit: 18, angle: -130, color: '#7dd3fc', align: 'left' },
-  { id: 'doc-lap', text: 'Độc lập', note: 'giá trị tối cao', start: { x: 84, y: 20 }, orbit: 18, angle: 44, color: '#93c5fd', align: 'right' },
-  { id: 'dao-duc', text: 'Đạo đức', note: 'gốc của người', start: { x: 12, y: 72 }, orbit: 28, angle: -168, color: '#facc15', align: 'left' },
-  { id: 'nhan-dan', text: 'Nhân dân', note: 'trung tâm', start: { x: 88, y: 72 }, orbit: 28, angle: 10, color: '#fde68a', align: 'right' },
-  { id: 'phong-cach', text: 'Phong cách', note: 'nói đi đôi làm', start: { x: 28, y: 90 }, orbit: 38, angle: 126, color: '#fb923c', align: 'bottom' },
-  { id: 'hanh-dong', text: 'Hành động', note: 'vận dụng hôm nay', start: { x: 72, y: 90 }, orbit: 38, angle: -44, color: '#fdba74', align: 'bottom' },
+  // Orbit 14
+  { id: 'tu-tuong', text: 'Tư tưởng', note: 'soi đường', start: { x: 6, y: 20 }, orbit: 14, angle: -135, color: '#7dd3fc', align: 'right' },
+  { id: 'doc-lap', text: 'Độc lập', note: 'giá trị tối cao', start: { x: 94, y: 20 }, orbit: 14, angle: -45, color: '#93c5fd', align: 'left' },
+  { id: 'dao-duc', text: 'Đạo đức', note: 'gốc của người', start: { x: 6, y: 80 }, orbit: 14, angle: 135, color: '#facc15', align: 'right' },
+  { id: 'nhan-dan', text: 'Nhân dân', note: 'trung tâm', start: { x: 94, y: 80 }, orbit: 14, angle: 45, color: '#fde68a', align: 'left' },
+  
+  // Orbit 24
+  { id: 'kien-dinh', text: 'Kiên định', note: 'bản lĩnh', start: { x: 6, y: 50 }, orbit: 24, angle: -160, color: '#f87171', align: 'right' },
+  { id: 'doi-moi', text: 'Đổi mới', note: 'sáng tạo', start: { x: 94, y: 50 }, orbit: 24, angle: -20, color: '#2dd4bf', align: 'left' },
+  { id: 'phong-cach', text: 'Phong cách', note: 'nói đi đôi làm', start: { x: 50, y: 6 }, orbit: 24, angle: 160, color: '#fb923c', align: 'bottom' },
+  { id: 'hanh-dong', text: 'Hành động', note: 'vận dụng hôm nay', start: { x: 50, y: 94 }, orbit: 24, angle: 20, color: '#fdba74', align: 'top' },
+  
+  // Orbit 34
+  { id: 'dai-doan-ket', text: 'Đại đoàn kết', note: 'sức mạnh vĩ đại', start: { x: 25, y: 6 }, orbit: 34, angle: 180, color: '#a78bfa', align: 'bottom' },
+  { id: 'van-hoa', text: 'Văn hóa', note: 'hồn cốt dân tộc', start: { x: 75, y: 6 }, orbit: 34, angle: 0, color: '#34d399', align: 'bottom' },
+  { id: 'giao-duc', text: 'Giáo dục', note: 'trồng người', start: { x: 25, y: 94 }, orbit: 34, angle: 90, color: '#f472b6', align: 'top' },
+  { id: 'ngoai-giao', text: 'Ngoại giao', note: 'hòa bình', start: { x: 75, y: 94 }, orbit: 34, angle: -90, color: '#60a5fa', align: 'top' },
 ]
 
-const finaleWords = ['Tư tưởng', 'Đạo đức', 'Phong cách', 'Độc lập', 'Nhân dân', 'Hành động']
+const finaleWords = ['Tư tưởng', 'Đạo đức', 'Phong cách', 'Độc lập', 'Nhân dân', 'Đoàn kết', 'Văn hóa']
 
 function seededRatio(index, salt = 0) {
   const value = Math.sin(index * 37.29 + salt * 21.13) * 10000
@@ -47,7 +59,7 @@ export default function GravitySun({ onWin, onSolved }) {
   const [flights, setFlights] = useState([])
   const [trail, setTrail] = useState([])
   const [won, setWon] = useState(false)
-  const [showFinale, setShowFinale] = useState(false)
+  const [finalePhase, setFinalePhase] = useState(0)
 
   const stars = useMemo(
     () =>
@@ -97,8 +109,9 @@ export default function GravitySun({ onWin, onSolved }) {
         if (next.length === fragments.length) {
           onSolved?.()
           setWon(true)
-          setTimeout(() => setShowFinale(true), 900)
-          setTimeout(() => onWin(), 9400)
+          setTimeout(() => setFinalePhase(1), 2500)
+          setTimeout(() => setFinalePhase(2), 7500)
+          setTimeout(() => onWin(), 16000)
         }
         return next
       })
@@ -121,13 +134,14 @@ export default function GravitySun({ onWin, onSolved }) {
   const progress = won ? 100 : (collected.length / fragments.length) * 100
 
   return (
-    <div className={`minigame-sun ${showFinale ? 'is-final-scene' : ''}`}>
+    <div className={`minigame-sun ${finalePhase > 0 ? 'is-final-scene' : ''}`}>
       <p className="minigame-instruction">
         {won
           ? 'Các giá trị đã hội tụ thành hệ mặt trời Hồ Chí Minh.'
           : 'Rê chuột hoặc chạm kéo vùng trọng lực qua các mảnh giá trị để hút chúng vào quỹ đạo.'}
       </p>
 
+      <div className={`sun-stage-shell ${won ? 'is-won is-pulsing' : ''}`}>
       <div
         ref={stageRef}
         className={`sun-stage ${won ? 'is-won' : ''}`}
@@ -166,15 +180,22 @@ export default function GravitySun({ onWin, onSolved }) {
             </filter>
           </defs>
 
-          {[18, 28, 38].map((radius) => (
-            <circle
-              key={radius}
-              className={`sun-orbit-ring ${collected.length > 0 ? 'has-light' : ''}`}
-              cx={CENTER.x}
-              cy={CENTER.y}
-              r={radius}
-              stroke="url(#sunUnifiedOrbit)"
-            />
+          {[14, 24, 34].map((radius) => (
+            <g key={radius}>
+              <circle
+                className="sun-orbit-ring-base"
+                cx={CENTER.x}
+                cy={CENTER.y}
+                r={radius}
+              />
+              <circle
+                className={`sun-orbit-ring ${collected.length > 0 ? 'has-light' : ''}`}
+                cx={CENTER.x}
+                cy={CENTER.y}
+                r={radius}
+                stroke="url(#sunUnifiedOrbit)"
+              />
+            </g>
           ))}
 
           {trail.map((point, index) => {
@@ -255,34 +276,33 @@ export default function GravitySun({ onWin, onSolved }) {
           <small>/ {fragments.length} giá trị</small>
         </div>
       </div>
+      </div>
 
       <div className="sun-progress" aria-hidden="true">
         <span style={{ width: `${progress}%` }} />
       </div>
 
-      {showFinale && (
-        <div className="sun-finale" aria-hidden="true">
-          <div className="sun-finale-star" />
-          <div className="sun-finale-orbits">
-            {['Tư tưởng', 'Đạo đức', 'Phong cách'].map((label, index) => (
-              <span key={label} style={{ '--ring-color': ['#7dd3fc', '#facc15', '#fb923c'][index], '--index': index }}>
-                {label}
-              </span>
-            ))}
-          </div>
-          <div className="sun-finale-words">
-            {finaleWords.map((word, index) => (
-              <i key={word} style={{ '--delay': `${index * 0.12}s` }}>
-                {word}
-              </i>
-            ))}
-          </div>
-          <div className="sun-message-card">
-            <span>Hành tinh trung tâm đã mở khóa</span>
-            <h3>HỒ CHÍ MINH</h3>
-            <strong>Tư tưởng, đạo đức và phong cách không đứng riêng lẻ; chúng tạo thành một hệ mặt trời định hướng hành động.</strong>
-            <p>Khi các giá trị vào đúng quỹ đạo, ánh sáng trung tâm không chỉ để ngắm nhìn, mà để soi đường cho lựa chọn hôm nay.</p>
-          </div>
+      {finalePhase > 0 && (
+        <div className={`sun-finale ${finalePhase === 2 ? 'is-phase-2' : ''}`} aria-hidden="true">
+          <img src={finalImg} alt="Hồ Chí Minh" className="sun-finale-image" />
+          
+          {finalePhase === 2 && (
+            <>
+              <div className="sun-finale-words">
+                {finaleWords.map((word, index) => (
+                  <i key={word} style={{ '--delay': `${index * 0.12}s` }}>
+                    {word}
+                  </i>
+                ))}
+              </div>
+              <div className="sun-message-card">
+                <span>Hành tinh trung tâm đã mở khóa</span>
+                <h3>HỒ CHÍ MINH</h3>
+                <strong>Tư tưởng, đạo đức và phong cách không đứng riêng lẻ; chúng tạo thành một hệ mặt trời định hướng hành động.</strong>
+                <p>Khi các giá trị vào đúng quỹ đạo, ánh sáng trung tâm không chỉ để ngắm nhìn, mà để soi đường cho lựa chọn hôm nay.</p>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

@@ -1,16 +1,20 @@
-import { useMemo, useRef, useState } from 'react'
+import { memo, useMemo, useRef, useState } from 'react'
+import banDoVn from '../../assets/ban_do_VN.png'
 import './BreakChains.css'
 
 const DIALS_CONFIG = [
-  { letters: ['T', 'Đ', 'N', 'H', 'D', 'Q'], target: 1, clue: 'Dân tộc' },
-  { letters: ['A', 'Ô', 'Ộ', 'Ơ', 'U', 'Ê'], target: 2, clue: 'Chủ quyền' },
-  { letters: ['G', 'C', 'K', 'Q', 'M', 'T'], target: 1, clue: 'Cội nguồn' },
-  { letters: ['L', 'T', 'B', 'N', 'H', 'V'], target: 0, clue: 'Tự chủ' },
-  { letters: ['Â', 'A', 'Ậ', 'Ư', 'Ê', 'Ô'], target: 2, clue: 'Không lệ thuộc' },
-  { letters: ['P', 'C', 'D', 'T', 'K', 'L'], target: 0, clue: 'Mở lối' },
+  { letters: ['G', 'M', 'Đ', 'H', 'N', 'T'], target: 2, clue: 'Quyền' },
+  { letters: ['A', 'Ô', 'Ộ', 'Ơ', 'U', 'Ê'], target: 2, clue: 'Sống' },
+  { letters: ['M', 'C', 'K', 'Q', 'B', 'T'], target: 1, clue: 'Chính' },
+  { letters: ['B', 'T', 'L', 'N', 'H', 'V'], target: 2, clue: 'Đáng' },
+  { letters: ['E', 'A', 'Ậ', 'Ư', 'Ê', 'Ô'], target: 2, clue: 'Tự' },
+  { letters: ['K', 'C', 'D', 'P', 'R', 'S'], target: 3, clue: 'Do' },
+  { letters: ['S', 'B', 'N', 'O', 'T', 'M'], target: 4, clue: 'Bình' },
+  { letters: ['I', 'A', 'E', 'Ự', 'O', 'M'], target: 3, clue: 'Đẳng' },
+  { letters: ['V', 'C', 'D', 'H', 'T', 'L'], target: 2, clue: 'Bác' },
+  { letters: ['U', 'O', 'Q', 'M', 'S', 'V'], target: 1, clue: 'Ái' },
 ]
 
-const finaleWords  = ['Độc lập', 'Tự do', 'Hạnh phúc', 'Nhân dân']
 const colorTokens  = ['#ffffff', '#fef08a', '#38bdf8', '#fb7185', '#fbbf24', '#a5f3fc']
 
 function seededRatio(index, salt = 1) {
@@ -22,6 +26,57 @@ function isSolved(values) {
   return values.every((v, i) => v === DIALS_CONFIG[i].target)
 }
 
+const Dial = memo(({ index, value, lastDial, flashDial, onDialPointerDown }) => {
+  const config = DIALS_CONFIG[index]
+  const isCorrect = value === config.target
+
+  return (
+    <div
+      className={[
+        'dial',
+        isCorrect ? 'is-correct' : '',
+        lastDial === index ? 'is-spinning' : '',
+        flashDial === index ? 'is-flash' : '',
+      ].join(' ')}
+    >
+      <button
+        className="dial-btn up"
+        type="button"
+        onPointerDown={() => onDialPointerDown(index, -1)}
+        aria-label={`Lùi trục ${index + 1}`}
+      >
+        ▲
+      </button>
+      <div className="dial-window">
+        {isCorrect && <div className="dial-correct-glow" />}
+        <div
+          className="dial-strip"
+          style={{ transform: `rotateX(${value * 60}deg)` }}
+        >
+          {config.letters.map((char, charIdx) => (
+            <div
+              key={char}
+              className={`dial-char ${value === charIdx ? 'is-active' : ''}`}
+              style={{ transform: `rotateX(${-charIdx * 60}deg) translateZ(86px)` }}
+            >
+              {char}
+            </div>
+          ))}
+        </div>
+      </div>
+      <button
+        className="dial-btn down"
+        type="button"
+        onPointerDown={() => onDialPointerDown(index, 1)}
+        aria-label={`Tiến trục ${index + 1}`}
+      >
+        ▼
+      </button>
+      <span className="dial-clue">{config.clue}</span>
+    </div>
+  )
+})
+
 export default function BreakChains({ onWin, onSolved }) {
   const [dials, setDials]         = useState(() => Array(DIALS_CONFIG.length).fill(0))
   const [won, setWon]             = useState(false)
@@ -31,7 +86,7 @@ export default function BreakChains({ onWin, onSolved }) {
   const wonRef = useRef(false)
 
   const sparks = useMemo(() =>
-    Array.from({ length: 56 }).map((_, i) => ({
+    Array.from({ length: 24 }).map((_, i) => ({
       id:       i,
       angle:    seededRatio(i, 1) * 360,
       dist:     110 + seededRatio(i, 2) * 420,
@@ -42,7 +97,7 @@ export default function BreakChains({ onWin, onSolved }) {
     })), [])
 
   const shards = useMemo(() =>
-    Array.from({ length: 28 }).map((_, i) => ({
+    Array.from({ length: 12 }).map((_, i) => ({
       id:       i,
       left:     seededRatio(i, 7) * 100,
       top:      10 + seededRatio(i, 8) * 68,
@@ -53,25 +108,6 @@ export default function BreakChains({ onWin, onSolved }) {
       scale:    0.5 + seededRatio(i, 13) * 1.1,
     })), [])
 
-  const rays = useMemo(() =>
-    Array.from({ length: 16 }).map((_, i) => ({
-      id:     i,
-      rotate: i * 22.5,
-      delay:  seededRatio(i, 14) * 1.4,
-      length: 44 + seededRatio(i, 15) * 42,
-    })), [])
-
-  const orbs = useMemo(() =>
-    Array.from({ length: 10 }).map((_, i) => ({
-      id:       i,
-      angle:    seededRatio(i, 40) * 360,
-      radius:   120 + seededRatio(i, 41) * 200,
-      size:     8 + seededRatio(i, 42) * 18,
-      delay:    seededRatio(i, 43) * 0.9,
-      duration: 3.2 + seededRatio(i, 44) * 2.0,
-      color:    colorTokens[Math.floor(seededRatio(i, 45) * colorTokens.length)],
-    })), [])
-
   const correctCount = dials.filter((v, i) => v === DIALS_CONFIG[i].target).length
   const progress     = won ? 100 : (correctCount / DIALS_CONFIG.length) * 100
   const phrase       = dials.map((v, i) => DIALS_CONFIG[i].letters[v]).join('')
@@ -80,15 +116,15 @@ export default function BreakChains({ onWin, onSolved }) {
     wonRef.current = true
     onSolved?.()
     setWon(true)
-    window.setTimeout(() => setShowFinale(true), 480)
-    window.setTimeout(onWin, 10500)
+    window.setTimeout(() => setShowFinale(true), 2500)
+    window.setTimeout(onWin, 25000)
   }
 
   const handleShift = (dialIndex, direction) => {
     if (wonRef.current) return
 
     setFlashDial(dialIndex)
-    window.setTimeout(() => setFlashDial(null), 180)
+    window.setTimeout(() => setFlashDial(null), 80)
 
     setDials((current) => {
       const next   = [...current]
@@ -96,7 +132,7 @@ export default function BreakChains({ onWin, onSolved }) {
       next[dialIndex] = (next[dialIndex] + direction + length) % length
 
       setLastDial(dialIndex)
-      window.setTimeout(() => setLastDial(null), 380)
+      window.setTimeout(() => setLastDial(null), 150)
 
       if (isSolved(next)) complete()
       return next
@@ -110,7 +146,7 @@ export default function BreakChains({ onWin, onSolved }) {
     const interval = setInterval(() => {
       if (wonRef.current) { clearInterval(interval); return }
       handleShift(dialIndex, direction)
-    }, 200)
+    }, 150)
 
     const stop = () => {
       clearInterval(interval)
@@ -121,11 +157,11 @@ export default function BreakChains({ onWin, onSolved }) {
 
   return (
     <div className={`minigame-break ${won ? 'is-won' : ''} ${showFinale ? 'is-final-scene' : ''}`}>
-      <p className="minigame-instruction">
+      <h2 className="minigame-instruction">
         {won
           ? 'Khóa đã vỡ — độc lập không dừng ở cánh cửa mở, mà dẫn tới tự do và hạnh phúc.'
-          : `Xoay ${DIALS_CONFIG.length} trục mật mã để mở khóa ĐỘC LẬP. (${correctCount}/${DIALS_CONFIG.length} đúng)`}
-      </p>
+          : `Xoay ${DIALS_CONFIG.length} trục mật mã để tìm từ khóa ĐỘC LẬP TỰ DO. (${dials.filter((v, i) => v === DIALS_CONFIG[i].target).length}/${DIALS_CONFIG.length} đúng)`}
+      </h2>
 
       <div className={`break-container ${won ? 'is-won' : ''} ${showFinale ? 'show-finale' : ''}`}>
         <div className="freedom-sky" />
@@ -166,57 +202,16 @@ export default function BreakChains({ onWin, onSolved }) {
             </div>
 
             <div className="dials-container">
-              {dials.map((value, index) => {
-                const config    = DIALS_CONFIG[index]
-                const isCorrect = value === config.target
-
-                return (
-                  <div
-                    key={config.clue}
-                    className={[
-                      'dial',
-                      isCorrect            ? 'is-correct'  : '',
-                      lastDial  === index  ? 'is-spinning' : '',
-                      flashDial === index  ? 'is-flash'    : '',
-                    ].join(' ')}
-                  >
-                    <button
-                      className="dial-btn up"
-                      type="button"
-                      onPointerDown={() => handleDialPointerDown(index, -1)}
-                      aria-label={`Lùi trục ${index + 1}`}
-                    >
-                      ▲
-                    </button>
-                    <div className="dial-window">
-                      {isCorrect && <div className="dial-correct-glow" />}
-                      <div
-                        className="dial-strip"
-                        style={{ transform: `rotateX(${value * 60}deg)` }}
-                      >
-                        {config.letters.map((char, charIdx) => (
-                          <div
-                            key={char}
-                            className={`dial-char ${value === charIdx ? 'is-active' : ''}`}
-                            style={{ transform: `rotateX(${-charIdx * 60}deg) translateZ(36px)` }}
-                          >
-                            {char}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <button
-                      className="dial-btn down"
-                      type="button"
-                      onPointerDown={() => handleDialPointerDown(index, 1)}
-                      aria-label={`Tiến trục ${index + 1}`}
-                    >
-                      ▼
-                    </button>
-                    <span className="dial-clue">{config.clue}</span>
-                  </div>
-                )
-              })}
+              {dials.map((value, index) => (
+                <Dial
+                  key={index}
+                  index={index}
+                  value={value}
+                  lastDial={lastDial}
+                  flashDial={flashDial}
+                  onDialPointerDown={handleDialPointerDown}
+                />
+              ))}
             </div>
 
             <div className="padlock-keyhole" />
@@ -226,7 +221,7 @@ export default function BreakChains({ onWin, onSolved }) {
         <div className="freedom-checkpoints" aria-hidden="true">
           {DIALS_CONFIG.map((config, index) => (
             <span
-              key={config.clue}
+              key={index}
               className={dials[index] === config.target ? 'is-lit' : ''}
             />
           ))}
@@ -236,52 +231,7 @@ export default function BreakChains({ onWin, onSolved }) {
           <div className="epic-win-overlay" aria-live="polite">
             <div className="epic-horizon" />
 
-            <div className="epic-shockwave" />
-            <div className="epic-shockwave epic-shockwave--2" />
-            <div className="epic-shockwave epic-shockwave--3" />
-
-            <div className="epic-sun-flare" />
-
-            <div className="epic-rays">
-              {rays.map((ray) => (
-                <i
-                  key={ray.id}
-                  style={{
-                    '--ray-rotate': `${ray.rotate}deg`,
-                    '--ray-delay':  `${ray.delay}s`,
-                    '--ray-length': `${ray.length}vmax`,
-                  }}
-                />
-              ))}
-            </div>
-
-            <div className="epic-road">
-              <span /><span /><span />
-            </div>
-
-            <div className="epic-orbs">
-              {orbs.map((orb) => (
-                <i
-                  key={orb.id}
-                  style={{
-                    '--orb-angle':    `${orb.angle}deg`,
-                    '--orb-radius':   `${orb.radius}px`,
-                    '--orb-size':     `${orb.size}px`,
-                    '--orb-color':    orb.color,
-                    animationDelay:    `${orb.delay}s`,
-                    animationDuration: `${orb.duration}s`,
-                  }}
-                />
-              ))}
-            </div>
-
-            <div className="epic-word-orbit">
-              {finaleWords.map((word, index) => (
-                <span key={word} style={{ '--word-index': index }}>
-                  {word}
-                </span>
-              ))}
-            </div>
+            <img src={banDoVn} className="epic-vietnam-map" alt="Bản đồ Việt Nam" />
 
             {shards.map((shard) => (
               <i

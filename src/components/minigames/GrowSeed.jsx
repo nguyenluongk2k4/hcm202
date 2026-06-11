@@ -457,6 +457,7 @@ export default function GrowSeed({ onWin, onSolved }) {
         </div>
       </div>
 
+      <div className={`culture-garden-shell ${won ? 'is-won' : ''}`}>
       <div
         ref={gardenRef}
         className={`culture-garden ${isPressing ? 'is-growing' : ''} ${activeResource ? `is-${activeResource}` : ''} ${activeStage ? 'has-stage' : ''} ${won ? 'is-won' : ''} ${shockwave ? 'is-shockwave' : ''}`}
@@ -713,20 +714,6 @@ export default function GrowSeed({ onWin, onSolved }) {
 
           <ellipse cx="260" cy="392" rx="190" ry="36" fill="url(#cultureWaterGlow)" opacity={0.2 + progress / 120} />
 
-          {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => (
-            <g
-              key={index}
-              className="culture-floating-page"
-              style={{
-                '--page-delay': `${index * 0.2}s`,
-                opacity: progress > 20 + index * 8 ? 1 : 0,
-              }}
-              transform={`translate(${122 + index * 44} ${272 - index * 22}) rotate(${-18 + index * 6})`}
-            >
-              <rect x="-17" y="-12" width="34" height="24" rx="3" fill="#f8fafc" opacity="0.84" />
-              <path d="M-10 -4 H10 M-10 3 H6" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" opacity="0.66" />
-            </g>
-          ))}
 
           <g>
             <LotusPaths drawPhase={drawPhase} won={won} bloomPhase={bloomPhase} />
@@ -810,6 +797,7 @@ export default function GrowSeed({ onWin, onSolved }) {
             </div>
           </div>
         )}
+      </div>
       </div>
 
       <div className="culture-progress-shell">
