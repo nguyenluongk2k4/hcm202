@@ -23,24 +23,23 @@ export default function MinigameOverlay({ quote, planet, onComplete, onCancel })
   }
 
   const handleWin = ({ skipSuccess = false } = {}) => {
-    if (completedRef.current) return
-    completedRef.current = true
+    // Không tự động chuyển sang màn hình "Hoàn thành" nữa
+    // Chỉ đánh dấu là đã giải quyết xong để hiện nút "Xem bookmark"
     handleSolved()
-
-    if (skipSuccess) {
-      onComplete()
-      return
-    }
-
-    setCompleted(true)
-    setTimeout(() => {
-      onComplete()
-    }, 1000) // Delay to show win state before closing
   }
 
   const handleExit = () => {
     if (solvedRef.current) {
-      handleWin({ skipSuccess: true })
+      if (completedRef.current) return
+      completedRef.current = true
+      
+      // Mới hiện màn hình "Hoàn thành! Đã mở khóa bookmark."
+      setCompleted(true)
+      
+      // Đợi 1.2 giây rồi mới đóng overlay
+      setTimeout(() => {
+        onComplete()
+      }, 1200)
       return
     }
 

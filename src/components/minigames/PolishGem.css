@@ -481,14 +481,15 @@
   max-height: 90vh;
   object-fit: contain;
   opacity: 0;
+  mix-blend-mode: screen;
   transform: scale(1.05) translateY(20px);
   animation: bambooReveal 3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 @keyframes bambooReveal {
   0% { opacity: 0; transform: scale(1.05) translateY(20px); filter: brightness(1); }
-  30% { opacity: 1; transform: scale(1.02) translateY(5px); filter: brightness(1.5) drop-shadow(0 0 40px rgba(16, 185, 129, 0.6)); }
-  100% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1); }
+  30% { opacity: 1; transform: scale(1.02) translateY(5px); filter: brightness(1.8) drop-shadow(0 0 50px rgba(16, 185, 129, 0.8)); }
+  100% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1.4) drop-shadow(0 0 30px rgba(16, 185, 129, 0.5)); }
 }
 
 .epic-overlay {
