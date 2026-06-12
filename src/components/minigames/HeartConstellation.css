@@ -6,6 +6,11 @@
   align-items: center;
   gap: 1.1rem;
   isolation: isolate;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 2.5rem;
+  padding: 1.5rem;
+  backdrop-filter: blur(24px);
 }
 
 .minigame-heart.is-final-scene .minigame-instruction,
@@ -39,19 +44,13 @@
   overflow: hidden;
   cursor: none;
   touch-action: none;
-  border: 1px solid rgba(253, 230, 138, 0.25);
-  border-radius: 8px;
-  background:
-    radial-gradient(circle at 50% 52%, rgba(255, 255, 255, 0.08), transparent 16%),
-    radial-gradient(circle at 31% 25%, rgba(253, 230, 138, 0.12), transparent 25%),
-    radial-gradient(circle at 69% 25%, rgba(255, 247, 237, 0.1), transparent 25%),
-    radial-gradient(circle at 50% 8%, rgba(253, 230, 138, 0.05), transparent 26%),
-    radial-gradient(ellipse at 50% 92%, rgba(253, 230, 138, 0.1), transparent 34%),
-    linear-gradient(180deg, #020617 0%, #0f172a 52%, #1e1b4b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 2rem;
+  background: #050505;
   box-shadow:
-    0 24px 80px rgba(0, 0, 0, 0.6),
-    inset 0 0 80px rgba(253, 230, 138, 0.06);
-  transition: opacity 0.45s ease, transform 0.45s ease, box-shadow 0.35s ease;
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    0 24px 80px rgba(0, 0, 0, 0.8);
+  transition: opacity 0.7s cubic-bezier(0.32, 0.72, 0, 1), transform 0.7s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.7s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .humanity-stage::before {
@@ -373,10 +372,10 @@
 }
 
 .humanity-vietnam-surface {
-  fill: rgba(253, 230, 138, 0.25);
-  filter: drop-shadow(0 0 15px rgba(253, 230, 138, 0.6));
+  fill: rgba(253, 230, 138, 0.08);
+  filter: drop-shadow(0 0 30px rgba(253, 230, 138, 0.4));
   opacity: 0;
-  transition: opacity 4s ease;
+  transition: opacity 3s cubic-bezier(0.32, 0.72, 0, 1);
   pointer-events: none;
 }
 
@@ -476,10 +475,10 @@
   place-items: center;
   color: #fff7ed;
   pointer-events: none;
-  opacity: 0.25;
-  transform: translate(-50%, -50%) scale(0.35);
+  opacity: 0.4;
+  transform: translate(-50%, -50%) scale(0.6);
   filter: grayscale(1);
-  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 1.25, 0.34, 1), filter 0.6s ease;
+  transition: all 0.7s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .humanity-star-node.is-lit {
@@ -491,56 +490,23 @@
 .humanity-star-core {
   position: relative;
   display: block;
-  width: 0.85rem;
-  aspect-ratio: 1;
-  border-radius: 2px;
-  transform: rotate(45deg);
-  background:
-    radial-gradient(circle at 32% 26%, #ffffff 0 20%, #fde68a 45%, #b45309 100%);
-  box-shadow:
-    0 0 0.75rem rgba(255, 255, 255, 0.8),
-    0 0 1.45rem rgba(253, 230, 138, 0.6);
-}
-
-.humanity-star-core::before,
-.humanity-star-core::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-}
-
-.humanity-star-core::before {
-  width: 2.2rem;
+  width: 4px;
   aspect-ratio: 1;
   border-radius: 50%;
-  background:
-    radial-gradient(circle, rgba(253, 230, 138, 0.3), transparent 60%);
-  filter: blur(0.1rem);
-}
-
-.humanity-star-core::after {
-  width: 1.4rem;
-  aspect-ratio: 1;
-  border-radius: 2px;
-  border: 1px solid rgba(253, 230, 138, 0.3);
-  opacity: 0.5;
+  background: #ffffff;
+  box-shadow:
+    0 0 8px 1px rgba(255, 255, 255, 1),
+    0 0 16px 3px rgba(253, 230, 138, 0.6);
+  transition: all 0.7s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .humanity-star-node.is-lit .humanity-star-core {
-  transform: scale(1.22) rotate(45deg);
-  background:
-    radial-gradient(circle at 32% 26%, #ffffff 0 30%, #fde68a 60%, #b45309 100%);
+  width: 6px;
+  background: #fef9c3;
   box-shadow:
-    0 0 1rem rgba(255, 255, 255, 1),
-    0 0 2rem rgba(253, 230, 138, 0.9),
-    0 0 3.5rem rgba(253, 230, 138, 0.4);
-}
-
-.humanity-star-node.is-lit .humanity-star-core::after {
-  animation: humanityNodeRing 1.35s ease-out infinite;
+    0 0 12px 2px rgba(255, 255, 255, 1),
+    0 0 24px 6px rgba(253, 230, 138, 0.9),
+    0 0 40px 12px rgba(253, 230, 138, 0.4);
 }
 
 .humanity-star-node b {
@@ -840,19 +806,19 @@
   animation: humanitySpaceFadeIn 1.5s 4s ease forwards;
 }
 
-.humanity-finale-flower-img {
+.humanity-finale-center-img {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 45%;
   z-index: 10;
   transform: translate(-50%, -50%) scale(0.6);
-  width: clamp(300px, 90vmin, 900px);
-  height: clamp(300px, 90vmin, 900px);
+  width: clamp(350px, 100vmin, 1000px);
+  height: clamp(350px, 100vmin, 1000px);
   object-fit: contain;
   mix-blend-mode: screen;
   pointer-events: none;
-  -webkit-mask-image: radial-gradient(ellipse at center, black 45%, transparent 75%);
-  mask-image: radial-gradient(ellipse at center, black 45%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 68%);
+  mask-image: radial-gradient(ellipse at center, black 35%, transparent 68%);
   animation: humanityFlowerBurst 15s 4.5s cubic-bezier(0.1, 0.8, 0.2, 1) both;
 }
 
@@ -1193,3 +1159,52 @@
   }
 }
 
+.humanity-heart-quote {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  width: min(80%, 360px);
+  text-align: center;
+  animation: heartQuoteReveal 2.5s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  animation-delay: 1.2s;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.humanity-heart-quote blockquote {
+  font-family: "PP Editorial New", Georgia, serif;
+  font-size: 1.4rem;
+  font-style: italic;
+  font-weight: 300;
+  line-height: 1.5;
+  color: #fffbeb;
+  text-shadow: 
+    0 0 10px rgba(253, 230, 138, 0.6),
+    0 4px 20px rgba(0, 0, 0, 0.8);
+  margin-bottom: 1rem;
+}
+
+.humanity-heart-quote cite {
+  font-family: "Geist", "Inter", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #fde68a;
+  opacity: 0.9;
+}
+
+@keyframes heartQuoteReveal {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -40%) scale(0.95);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: blur(0);
+  }
+}

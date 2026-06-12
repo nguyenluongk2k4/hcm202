@@ -322,7 +322,41 @@ export const planets = [
       },
     ],
   },
-
+  {
+    id: 'nhan-van',
+    name: 'Tư tưởng nhân văn',
+    type: 'Hành tinh nhân ái',
+    concept: 'Con người là trung tâm',
+    signal: 'Nhân văn',
+    distance: 18.0,
+    size: 0.6,
+    orbitSpeed: 0.025,
+    rotationSpeed: 0.64,
+    axialTilt: 0.22,
+    phase: 2.1,
+    color: 'rose',
+    audio: nhanVanAudio,
+    summary:
+      'Tư tưởng nhân văn Hồ Chí Minh lấy con người làm trung tâm, hướng tới hạnh phúc của nhân dân và tin vào khả năng tiến bộ của mỗi người.',
+    details: [
+      'Mọi việc phải xuất phát từ lợi ích của nhân dân.',
+      'Mục tiêu của cách mạng là mang lại cuộc sống ấm no, tự do và hạnh phúc cho mọi người.',
+      'Tư tưởng nhân văn đề cao yêu thương, khoan dung, đoàn kết, sẻ chia và trách nhiệm cộng đồng.',
+    ],
+    quotes: [
+      {
+        id: 'humanity-01',
+        title: 'Tư tưởng nhân văn Hồ Chí Minh',
+        audio: nhanVanAudio,
+        text: 'Việc gì có lợi cho dân thì hết sức làm, việc gì có hại cho dân thì hết sức tránh.',
+        content: [
+          'Tư tưởng nhân văn Hồ Chí Minh lấy con người làm trung tâm và hướng tới hạnh phúc của nhân dân. Người luôn khẳng định mọi việc phải xuất phát từ lợi ích của dân.',
+          'Theo Hồ Chí Minh, mục tiêu cao nhất của cách mạng không chỉ là giành độc lập dân tộc mà còn mang lại cuộc sống ấm no, tự do và hạnh phúc cho mọi người. Tư tưởng nhân văn của Người còn thể hiện ở lòng yêu thương, khoan dung và tôn trọng con người, luôn tin vào khả năng tiến bộ của mỗi cá nhân.',
+          'Đồng thời, Người đề cao tinh thần đoàn kết, sẻ chia và trách nhiệm với cộng đồng. Những giá trị nhân ái đó đã làm nên nét đẹp sâu sắc trong tư tưởng và nhân cách Hồ Chí Minh.',
+        ],
+      },
+    ],
+  },
   {
     id: 'quoc-te',
     name: 'Quốc tế và thời đại',
@@ -334,7 +368,7 @@ export const planets = [
     orbitSpeed: 0.025,
     rotationSpeed: 0.7,
     axialTilt: 0.26,
-    phase: 3.14,
+    phase: 4.2,
     color: 'cyan',
     audio: quocTeAudio,
     summary:
