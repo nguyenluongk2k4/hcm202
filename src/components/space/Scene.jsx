@@ -1,6 +1,6 @@
 import { OrbitControls, Stars } from '@react-three/drei'
 import { useRef } from 'react'
-import { planets } from '../../data/cosmos'
+import { planets } from '../../data/curriculum'
 import CameraFocus from './CameraFocus'
 import CentralPlanet from './CentralPlanet'
 import ConstellationLattice from './ConstellationLattice'

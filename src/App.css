@@ -4958,3 +4958,51 @@ p {
   }
 
 }
+
+/* === MLN131 rework: XP, boss, exam actions === */
+.xp-badge {
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(247, 184, 77, 0.5);
+  background: rgba(141, 85, 41, 0.25);
+  color: #f7b84d;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.landing-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.planet-boss {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.boss-challenge-btn {
+  border-color: rgba(255, 113, 93, 0.55);
+  background: linear-gradient(135deg, rgba(122, 26, 54, 0.55), rgba(42, 25, 116, 0.4));
+  color: #ffd0c4;
+}
+
+.boss-challenge-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.boss-challenge-btn.is-passed {
+  border-color: rgba(74, 222, 128, 0.55);
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+}
+
+.planet-boss small {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}

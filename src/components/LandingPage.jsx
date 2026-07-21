@@ -1,39 +1,39 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-const travelIntroText = 'Giữa vũ trụ bao la, có những chân lý sáng ngời như những vì sao... Hãy bắt đầu hành trình tìm kiếm ánh sáng của bạn.'
+const travelIntroText = 'Giữa vũ trụ tri thức bao la, chủ nghĩa xã hội khoa học là chòm sao dẫn đường... Hãy bắt đầu hành trình chinh phục 7 chương lý luận.'
 const TYPE_INTERVAL = 42
 const INTRO_REVEAL_DELAY = 860
 const INTRO_EXIT_DELAY = 1500
 
 const previewQuotes = [
-  'Không có gì quý hơn độc lập, tự do.',
-  'Đoàn kết, đoàn kết, đại đoàn kết.',
-  'Vì lợi ích trăm năm thì phải trồng người.',
+  'Các nhà triết học chỉ giải thích thế giới, song vấn đề là cải biến thế giới. — C. Mác',
+  'Học, học nữa, học mãi. — V.I. Lênin',
+  'Học thuyết của chúng ta không phải là giáo điều, mà là kim chỉ nam cho hành động. — Ph. Ăngghen',
 ]
 
 const journeySteps = [
   {
-    label: 'Chạm',
-    title: 'Chọn một hành tinh ký ức',
-    text: 'Mỗi hành tinh là một chủ đề lớn: độc lập, đoàn kết, đạo đức, văn hóa, thanh niên và vận dụng.',
+    label: 'Học',
+    title: 'Chọn một hành tinh chương học',
+    text: 'Mỗi hành tinh là một chương giáo trình: từ nhập môn CNXH khoa học đến dân chủ, liên minh giai cấp, dân tộc và gia đình.',
   },
   {
-    label: 'Mở',
-    title: 'Tìm bookmark đang phát sáng',
-    text: 'Bookmark là các câu nói kinh điển được đặt như những mảnh ký ức bay quanh chủ đề.',
+    label: 'Chơi',
+    title: 'Vượt minigame, mở luận điểm then chốt',
+    text: 'Mỗi chương có một thử thách tương tác gắn với nội dung: phân loại trường phái, phá xiềng giải phóng, cân bằng nhà nước...',
   },
   {
-    label: 'Lưu',
-    title: 'Ghi vào sổ tay ký ức',
-    text: 'Mỗi câu nói đi kèm ý nghĩa và câu hỏi liên hệ để người học biến kiến thức thành suy nghĩ cá nhân.',
+    label: 'Đấu',
+    title: 'Hạ boss bằng câu hỏi ôn tập',
+    text: 'Boss cuối chương là bộ trắc nghiệm từ phần câu hỏi ôn tập giáo trình — thắng boss để hoàn thành chương và nhận XP.',
   },
 ]
 
-const starTopics = ['Độc lập', 'Nhân dân', 'Đạo đức', 'Văn hóa', 'Tuổi trẻ', 'Vận dụng']
+const starTopics = ['Nhập môn', 'Sứ mệnh GCN', 'Quá độ', 'Dân chủ', 'Liên minh', 'Dân tộc', 'Gia đình']
 
 
 
-export default function LandingPage({ onExplore }) {
+export default function LandingPage({ onExplore, onExam }) {
   const [burstKey, setBurstKey] = useState(0)
   const [traveling, setTraveling] = useState(false)
   const [typedText, setTypedText] = useState('')
@@ -143,7 +143,7 @@ export default function LandingPage({ onExplore }) {
         aria-live="polite"
       >
         <div className="travel-typewriter-frame">
-          <span className="travel-typewriter-label">Mở cổng ký ức</span>
+          <span className="travel-typewriter-label">Mở cổng lý luận</span>
           <p>
             {typedText}
             <span className="travel-typewriter-caret" aria-hidden="true" />
@@ -156,12 +156,12 @@ export default function LandingPage({ onExplore }) {
 
       <div className="landing-explore-only">
         <div className="landing-type-lockup">
-          <span className="landing-overline">Bản đồ ký ức tương tác</span>
+          <span className="landing-overline">Game học tập MLN131 — Chủ nghĩa xã hội khoa học</span>
           <h1 className="landing-slogan" id="landing-title">
-            Vũ Trụ Kí Ức
-            <span>du hành qua tư tưởng Hồ Chí Minh.</span>
+            Vũ Trụ Lý Luận
+            <span>du hành qua chủ nghĩa Mác – Lênin.</span>
           </h1>
-          <div className="quote-preview-strip" aria-label="Bookmark nổi bật">
+          <div className="quote-preview-strip" aria-label="Luận điểm nổi bật">
             {previewQuotes.map((quote) => (
               <article key={quote}>
                 <span />
@@ -169,17 +169,22 @@ export default function LandingPage({ onExplore }) {
               </article>
             ))}
           </div>
-          <button className="primary-action landing-hero-action" type="button" onClick={handleExplore} disabled={traveling}>
-            <span className="landing-action-icon" aria-hidden="true" />
-            {traveling ? 'Đang mở cổng ký ức' : 'Bắt đầu du hành'}
-          </button>
+          <div className="landing-hero-actions">
+            <button className="primary-action landing-hero-action" type="button" onClick={handleExplore} disabled={traveling}>
+              <span className="landing-action-icon" aria-hidden="true" />
+              {traveling ? 'Đang mở cổng lý luận' : 'Bắt đầu du hành'}
+            </button>
+            <button className="secondary-action" type="button" onClick={onExam}>
+              Vào phòng ôn thi
+            </button>
+          </div>
         </div>
       </div>
 
       <section className="landing-scroll-section landing-scroll-section--journey" aria-label="Luồng trải nghiệm">
         <div className="landing-section-heading">
           <span>Trải nghiệm</span>
-          <h2>Không chỉ đọc, mà mở khóa từng mảnh ký ức.</h2>
+          <h2>Không chỉ đọc giáo trình, mà chinh phục từng chương.</h2>
         </div>
         <div className="journey-grid">
           {journeySteps.map((step) => (
@@ -192,9 +197,9 @@ export default function LandingPage({ onExplore }) {
         </div>
       </section>
 
-      <section className="landing-scroll-section landing-scroll-section--map" aria-label="Chòm sao chủ đề">
+      <section className="landing-scroll-section landing-scroll-section--map" aria-label="Chòm sao chương học">
         <div className="topic-orbital-map">
-          <div className="topic-map-core">Hồ Chí Minh</div>
+          <div className="topic-map-core">Mác – Lênin</div>
           {starTopics.map((topic, index) => (
             <span key={topic} style={{ '--topic-index': index }}>
               {topic}
@@ -202,11 +207,11 @@ export default function LandingPage({ onExplore }) {
           ))}
         </div>
         <div className="landing-section-heading">
-          <span>Chòm sao chủ đề</span>
-          <h2>Mỗi giá trị là một điểm sáng, nối lại thành bản đồ tư tưởng.</h2>
+          <span>Chòm sao chương học</span>
+          <h2>Bảy chương giáo trình là bảy điểm sáng, nối lại thành bản đồ CNXH khoa học.</h2>
           <p>
-            Phần này tạo cảm giác “bảo tàng vũ trụ” trước khi người học bước vào không gian 3D. Nó cũng giúp người xem
-            hiểu app có nhiều điểm tương tác, không chỉ một màn hình hero.
+            Mỗi chương là một hành tinh: đọc nội dung tóm tắt, chơi minigame mở khóa luận điểm then chốt,
+            rồi hạ boss trắc nghiệm cuối chương. Hoàn thành cả bảy để thấu tỏ toàn bộ môn học.
           </p>
         </div>
       </section>
@@ -217,10 +222,15 @@ export default function LandingPage({ onExplore }) {
           <span />
           <span />
           <div>
-            <p>Sổ tay ký ức đang chờ được lấp đầy.</p>
-            <button className="primary-action" type="button" onClick={handleExplore} disabled={traveling}>
-              Vào bản đồ sao
-            </button>
+            <p>Hồ sơ lý luận của bạn đang chờ được lấp đầy.</p>
+            <div className="landing-hero-actions">
+              <button className="primary-action" type="button" onClick={handleExplore} disabled={traveling}>
+                Vào bản đồ sao
+              </button>
+              <button className="secondary-action" type="button" onClick={onExam}>
+                Làm đề thi thử
+              </button>
+            </div>
           </div>
         </div>
       </section>

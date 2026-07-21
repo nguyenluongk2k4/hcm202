@@ -1,6 +1,6 @@
-import { planetPalette } from '../../data/cosmos'
+import { planetPalette } from '../../data/curriculum'
 
-export default function InfoPanel({ planet, unlockedQuotes, onOpenQuote, onClose }) {
+export default function InfoPanel({ planet, unlockedQuotes, bossPassed, onOpenQuote, onChallengeBoss, onClose }) {
   const quoteCount = planet.quotes?.length ?? 0
   const unlockedCount = planet.quotes?.filter((quote) => unlockedQuotes.includes(quote.id)).length ?? 0
   
@@ -49,7 +49,7 @@ export default function InfoPanel({ planet, unlockedQuotes, onOpenQuote, onClose
             {quoteCount > 0 && (
               <div className="planet-bookmarks">
                 <div>
-                  <span>Bookmark đã mở</span>
+                  <span>Bài học đã mở</span>
                   <strong>
                     {unlockedCount}/{quoteCount}
                   </strong>
@@ -62,10 +62,33 @@ export default function InfoPanel({ planet, unlockedQuotes, onOpenQuote, onClose
                       type="button"
                       onClick={() => onOpenQuote(quote)}
                     >
-                      {unlockedQuotes.includes(quote.id) ? 'Đã lưu' : 'Mở khóa'} bookmark
+                      {unlockedQuotes.includes(quote.id) ? 'Đã mở' : 'Mở khóa'} bài học
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {onChallengeBoss && (
+              <div className="planet-boss">
+                <button
+                  className={`primary-action boss-challenge-btn ${bossPassed ? 'is-passed' : ''}`}
+                  type="button"
+                  disabled={unlockedCount === 0 && !bossPassed}
+                  title={
+                    bossPassed
+                      ? 'Boss chương này đã bị đánh bại'
+                      : unlockedCount === 0
+                        ? 'Mở khóa bài học trước khi thử thách boss'
+                        : 'Trắc nghiệm ôn tập cuối chương'
+                  }
+                  onClick={onChallengeBoss}
+                >
+                  {bossPassed ? '✓ Đã hạ Boss' : '⚔ Thử thách Boss'}
+                </button>
+                {unlockedCount === 0 && !bossPassed && (
+                  <small>Mở khóa bài học (minigame) để khiêu chiến boss chương này.</small>
+                )}
               </div>
             )}
           </div>

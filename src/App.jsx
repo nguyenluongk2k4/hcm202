@@ -1,16 +1,20 @@
 import { startTransition, useEffect, useState } from 'react'
 import LandingPage from './components/LandingPage'
 import SpaceExperience from './components/SpaceExperience'
+import ExamMode from './components/quiz/ExamMode'
 import './App.css'
 
 const EXPLORE_HASH = '#kham-pha'
+const EXAM_HASH = '#on-thi'
 
 function getPageFromLocation() {
   if (typeof window === 'undefined') {
     return 'landing'
   }
 
-  return window.location.hash === EXPLORE_HASH ? 'explore' : 'landing'
+  if (window.location.hash === EXPLORE_HASH) return 'explore'
+  if (window.location.hash === EXAM_HASH) return 'exam'
+  return 'landing'
 }
 
 function App() {
@@ -42,6 +46,16 @@ function App() {
     })
   }
 
+  const openExamPage = () => {
+    if (window.location.hash !== EXAM_HASH) {
+      window.location.hash = EXAM_HASH
+    }
+
+    startTransition(() => {
+      setCurrentPage('exam')
+    })
+  }
+
   const openLandingPage = () => {
     const nextUrl = `${window.location.pathname}${window.location.search}`
 
@@ -54,11 +68,9 @@ function App() {
 
   return (
     <main className={`cosmos ${currentPage === 'explore' ? 'cosmos--explore' : 'cosmos--landing'}`}>
-      {currentPage === 'explore' ? (
-        <SpaceExperience onBack={openLandingPage} />
-      ) : (
-        <LandingPage onExplore={openExplorePage} />
-      )}
+      {currentPage === 'explore' && <SpaceExperience onBack={openLandingPage} onExam={openExamPage} />}
+      {currentPage === 'exam' && <ExamMode onBack={openLandingPage} onExplore={openExplorePage} />}
+      {currentPage === 'landing' && <LandingPage onExplore={openExplorePage} onExam={openExamPage} />}
     </main>
   )
 }

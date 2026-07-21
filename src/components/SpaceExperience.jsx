@@ -1,25 +1,31 @@
 import { Canvas } from '@react-three/fiber'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { planets } from '../data/cosmos'
+import { planets } from '../data/curriculum'
+import { questionsByChapter } from '../data/quizBank'
+import useProgress from '../hooks/useProgress'
 import InfoPanel from './space/InfoPanel'
 import QuotePanel from './space/QuotePanel'
 import Scene from './space/Scene'
 import TruthMuseum from './space/TruthMuseum'
 import MinigameOverlay from './minigames/MinigameOverlay'
+import BossQuiz from './quiz/BossQuiz'
 
-export default function SpaceExperience({ onBack }) {
+export default function SpaceExperience({ onBack, onExam }) {
+  const { progress, unlockLesson, markBossPassed } = useProgress()
   const [selectedPlanet, setSelectedPlanet] = useState(planets[0])
   const [selectedQuote, setSelectedQuote] = useState(null)
   const [openedPlanet, setOpenedPlanet] = useState(null)
-  const [unlockedQuotes, setUnlockedQuotes] = useState([])
   const [quoteRevealKey, setQuoteRevealKey] = useState(0)
   const [isWarping, setIsWarping] = useState(true)
   const [pendingMinigame, setPendingMinigame] = useState(null)
+  const [pendingBoss, setPendingBoss] = useState(null)
   const [minigamesEnabled, setMinigamesEnabled] = useState(true)
   const [museumOpen, setMuseumOpen] = useState(false)
   const minigameSessionRef = useRef(0)
   const activeMinigameIdRef = useRef(null)
   const previousUnlockedCountRef = useRef(0)
+
+  const unlockedQuotes = progress.unlockedLessons
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -51,17 +57,16 @@ export default function SpaceExperience({ onBack }) {
   const openQuote = (quote, planet) => {
     if (!unlockedQuotes.includes(quote.id)) {
       if (minigamesEnabled) {
-        const minigameId = `${quote.id}-${minigameSessionRef.current += 1}`
+        const minigameId = `${quote.id}-${(minigameSessionRef.current += 1)}`
         activeMinigameIdRef.current = minigameId
         setSelectedQuote(null)
         setPendingMinigame({ id: minigameId, quote, planet })
         return
-      } else {
-        // Automatically unlock if minigames are disabled
-        setUnlockedQuotes((current) => [...current, quote.id])
       }
+      // Tắt thử thách → mở khóa luôn
+      unlockLesson(quote.id)
     }
-    
+
     setSelectedQuote(quote)
     setQuoteRevealKey((key) => key + 1)
   }
@@ -69,7 +74,7 @@ export default function SpaceExperience({ onBack }) {
   const handleMinigameComplete = (completedMinigame) => {
     if (!completedMinigame || activeMinigameIdRef.current !== completedMinigame.id) return
     const { quote } = completedMinigame
-    setUnlockedQuotes((current) => (current.includes(quote.id) ? current : [...current, quote.id]))
+    unlockLesson(quote.id)
     setSelectedQuote(quote)
     setQuoteRevealKey((key) => key + 1)
     activeMinigameIdRef.current = null
@@ -80,6 +85,18 @@ export default function SpaceExperience({ onBack }) {
     if (!minigame || activeMinigameIdRef.current !== minigame.id) return
     activeMinigameIdRef.current = null
     setPendingMinigame(null)
+  }
+
+  const challengeBoss = (planet) => {
+    setOpenedPlanet(null)
+    setSelectedQuote(null)
+    setPendingBoss(planet)
+  }
+
+  const handleBossPass = () => {
+    if (!pendingBoss) return
+    markBossPassed(pendingBoss.id)
+    setPendingBoss(null)
   }
 
   const openCollectedQuote = (quote) => {
@@ -95,16 +112,22 @@ export default function SpaceExperience({ onBack }) {
           Trang đầu
         </button>
         <div className="experience-copy">
-          <p className="eyebrow">Vũ Trụ Kí Ức</p>
-          <h1>Bản đồ tư tưởng Hồ Chí Minh</h1>
+          <p className="eyebrow">Vũ Trụ Lý Luận</p>
+          <h1>Bản đồ Chủ nghĩa xã hội khoa học</h1>
         </div>
         <div className="experience-controls" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span className="xp-badge" title="Điểm kinh nghiệm tích lũy">
+            ⭐ {progress.xp} XP
+          </span>
+          <button className="secondary-action" type="button" onClick={onExam}>
+            Phòng ôn thi
+          </button>
           <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Thử thách:</span>
-          <button 
-            className={`secondary-action ${minigamesEnabled ? 'active' : ''}`} 
-            type="button" 
+          <button
+            className={`secondary-action ${minigamesEnabled ? 'active' : ''}`}
+            type="button"
             onClick={() => setMinigamesEnabled(!minigamesEnabled)}
-            style={{ 
+            style={{
               background: minigamesEnabled ? 'rgba(74, 222, 128, 0.2)' : 'rgba(248, 113, 113, 0.2)',
               borderColor: minigamesEnabled ? '#4ade80' : '#f87171',
               color: minigamesEnabled ? '#4ade80' : '#f87171'
@@ -138,10 +161,10 @@ export default function SpaceExperience({ onBack }) {
           className={`collection-toggle ${isCompleted ? 'is-complete' : ''}`}
           type="button"
           onClick={() => setMuseumOpen(true)}
-          aria-label="Mở Túi đồ và Bộ sưu tập"
+          aria-label="Mở Hồ sơ lý luận"
         >
-          <span>Túi đồ</span>
-          <strong>Bộ sưu tập</strong>
+          <span>Hồ sơ</span>
+          <strong>Lý luận</strong>
           <em>{unlockedQuotes.length}/{allQuotes.length}</em>
         </button>
 
@@ -156,10 +179,10 @@ export default function SpaceExperience({ onBack }) {
             <span>Click</span> zoom hành tinh
           </div>
           <div>
-            <span>Double Click</span> xem thông tin
+            <span>Double Click</span> xem thông tin + boss
           </div>
           <div>
-            <span>Bookmark</span> mở câu nói
+            <span>Bookmark</span> mở bài học
           </div>
         </div>
 
@@ -167,7 +190,9 @@ export default function SpaceExperience({ onBack }) {
           <InfoPanel
             planet={openedPlanet}
             unlockedQuotes={unlockedQuotes}
+            bossPassed={progress.bossPassed.includes(openedPlanet.id)}
             onOpenQuote={(quote) => openQuote(quote, openedPlanet)}
+            onChallengeBoss={() => challengeBoss(openedPlanet)}
             onClose={() => setOpenedPlanet(null)}
           />
         )}
@@ -177,16 +202,27 @@ export default function SpaceExperience({ onBack }) {
           visible={museumOpen}
           bookmarks={allBookmarks}
           unlockedQuotes={unlockedQuotes}
+          bossPassed={progress.bossPassed}
+          examBest={progress.examBest}
           onClose={() => setMuseumOpen(false)}
           onOpenQuote={openCollectedQuote}
         />
-        
+
         {pendingMinigame && (
           <MinigameOverlay
             quote={pendingMinigame.quote}
             planet={pendingMinigame.planet}
             onComplete={() => handleMinigameComplete(pendingMinigame)}
             onCancel={() => handleMinigameCancel(pendingMinigame)}
+          />
+        )}
+
+        {pendingBoss && (
+          <BossQuiz
+            planet={pendingBoss}
+            questions={questionsByChapter[pendingBoss.chapter] ?? []}
+            onPass={handleBossPass}
+            onCancel={() => setPendingBoss(null)}
           />
         )}
       </div>

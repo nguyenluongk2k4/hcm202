@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Tai lieu giao trinh & anh render tam
+*.pdf
+scratch/pdf_pages/

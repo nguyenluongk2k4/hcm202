@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { planetPalette } from '../../data/cosmos'
+import { planetPalette } from '../../data/curriculum'
 
 function seededRatio(index, salt = 0) {
   const value = Math.sin(index * 44.71 + salt * 21.13) * 10000
@@ -10,6 +10,8 @@ export default function TruthMuseum({
   visible,
   bookmarks,
   unlockedQuotes,
+  bossPassed = [],
+  examBest = 0,
   onClose,
   onOpenQuote,
 }) {
@@ -68,23 +70,26 @@ export default function TruthMuseum({
         ))}
       </div>
 
-      <section className="truth-museum-shell" aria-label="Bảo Tàng Chân Lý">
+      <section className="truth-museum-shell" aria-label="Hồ Sơ Lý Luận">
         <div className="truth-museum-header">
           <div>
-            <p className="eyebrow">Túi đồ / Bộ sưu tập</p>
-            <h2>Bảo Tàng Chân Lý</h2>
+            <p className="eyebrow">Hồ sơ học tập / Bộ sưu tập</p>
+            <h2>Hồ Sơ Lý Luận</h2>
           </div>
           <div className="truth-museum-actions">
-            <span>{unlockedCount}/{bookmarks.length} bookmark</span>
-            <button type="button" onClick={onClose} aria-label="Đóng bộ sưu tập">
+            <span>{unlockedCount}/{bookmarks.length} bài học</span>
+            <span>{bossPassed.length}/{bookmarks.length} boss</span>
+            <span>Ôn thi: {examBest}/20</span>
+            <button type="button" onClick={onClose} aria-label="Đóng hồ sơ">
               Đóng
             </button>
           </div>
         </div>
 
-        <div className="truth-museum-orbit" aria-label="Các bookmark đã sưu tầm">
+        <div className="truth-museum-orbit" aria-label="Các bài học đã sưu tầm">
           {bookmarks.map((item, index) => {
             const unlocked = unlockedSet.has(item.quote.id)
+            const bossDone = bossPassed.includes(item.planet.id)
             const palette = planetPalette[item.planet.color] || ['#ffffff', '#7edcff', '#25337a']
 
             return (
@@ -102,8 +107,11 @@ export default function TruthMuseum({
                 onClick={() => onOpenQuote(item.quote)}
               >
                 <span className="truth-bookmark-glow" aria-hidden="true" />
-                <small>{item.planet.signal}</small>
-                <strong>{unlocked ? item.quote.text : 'Bookmark chưa mở'}</strong>
+                <small>
+                  {item.planet.signal}
+                  {bossDone ? ' · ⚔✓' : ''}
+                </small>
+                <strong>{unlocked ? item.quote.text : 'Bài học chưa mở'}</strong>
                 <em>{item.planet.name}</em>
               </button>
             )
@@ -115,14 +123,14 @@ export default function TruthMuseum({
             <>
               <span>Thông điệp bí mật</span>
               <p>
-                Khi mười bookmark cùng phát sáng, chân lý không còn là điều để cất giữ:
-                nó trở thành lời nhắc để học sâu, sống đẹp và hành động vì con người.
+                Khi mọi luận điểm cùng phát sáng, lý luận không còn là điều để ghi nhớ:
+                nó trở thành kim chỉ nam cho nhận thức và hành động.
               </p>
             </>
           ) : (
             <>
               <span>Thông điệp cuối</span>
-              <p>Sưu tầm đủ 10 bookmark để đánh thức Big Bang trong Bảo Tàng Chân Lý.</p>
+              <p>Mở khóa đủ {bookmarks.length} bài học để đánh thức Big Bang trong Hồ Sơ Lý Luận.</p>
             </>
           )}
         </div>

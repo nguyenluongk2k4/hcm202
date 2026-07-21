@@ -40,10 +40,10 @@ export default function QuotePanel({ quote, onClose }) {
     <aside className="quote-panel" aria-live="polite" aria-label={quote.title}>
       <div className="panel-top">
         <div>
-          <p className="eyebrow">Chuyên đề ký ức</p>
+          <p className="eyebrow">Luận điểm then chốt</p>
           <h2>{quote.title}</h2>
         </div>
-        <button type="button" onClick={closePanel} aria-label="Đóng bookmark">
+        <button type="button" onClick={closePanel} aria-label="Đóng bài học">
           ×
         </button>
       </div>
@@ -52,23 +52,27 @@ export default function QuotePanel({ quote, onClose }) {
         <blockquote>{quote.text}</blockquote>
 
         <section className="quote-content">
-          <span>Nội dung chuyên đề</span>
+          <span>Nội dung chương</span>
           {quote.content?.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
         </section>
       </div>
 
-      <div className="quote-actions">
-        <button type="button" onClick={speakQuote} disabled={!quote.audio}>
-          Nghe toàn bộ chuyên đề
-        </button>
-        <button type="button" onClick={stopSpeaking} disabled={!quote.audio}>
-          Dừng đọc
-        </button>
-      </div>
+      {quote.audio && (
+        <>
+          <div className="quote-actions">
+            <button type="button" onClick={speakQuote}>
+              Nghe toàn bộ chuyên đề
+            </button>
+            <button type="button" onClick={stopSpeaking}>
+              Dừng đọc
+            </button>
+          </div>
 
-      <audio ref={audioRef} src={quote.audio} preload="metadata" />
+          <audio ref={audioRef} src={quote.audio} preload="metadata" />
+        </>
+      )}
     </aside>
   )
 }
