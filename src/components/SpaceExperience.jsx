@@ -116,8 +116,8 @@ export default function SpaceExperience({ onBack, onExam }) {
           <h1>Bản đồ Chủ nghĩa xã hội khoa học</h1>
         </div>
         <div className="experience-controls" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span className="xp-badge" title="Điểm kinh nghiệm tích lũy">
-            ⭐ {progress.xp} XP
+          <span className="xp-badge" title="Điểm kinh nghiệm tích lũy — lên cấp mỗi 300 XP">
+            ⭐ Cấp {Math.floor(progress.xp / 300) + 1} · {progress.xp} XP
           </span>
           <button className="secondary-action" type="button" onClick={onExam}>
             Phòng ôn thi
