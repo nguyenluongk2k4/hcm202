@@ -6,25 +6,25 @@ const CENTER = { x: 50, y: 50 }
 
 const fragments = [
   // Orbit 14
-  { id: 'tu-tuong', text: 'Tư tưởng', note: 'soi đường', start: { x: 6, y: 20 }, orbit: 14, angle: -135, color: '#7dd3fc', align: 'right' },
-  { id: 'doc-lap', text: 'Độc lập', note: 'giá trị tối cao', start: { x: 94, y: 20 }, orbit: 14, angle: -45, color: '#93c5fd', align: 'left' },
-  { id: 'dao-duc', text: 'Đạo đức', note: 'gốc của người', start: { x: 6, y: 80 }, orbit: 14, angle: 135, color: '#facc15', align: 'right' },
-  { id: 'nhan-dan', text: 'Nhân dân', note: 'trung tâm', start: { x: 94, y: 80 }, orbit: 14, angle: 45, color: '#fde68a', align: 'left' },
-  
+  { id: 'triet-hoc', text: 'Triết học', note: 'Mác - Lênin', start: { x: 6, y: 20 }, orbit: 14, angle: -135, color: '#7dd3fc', align: 'right' },
+  { id: 'kinh-te', text: 'Kinh tế chính trị', note: 'Mác - Lênin', start: { x: 94, y: 20 }, orbit: 14, angle: -45, color: '#93c5fd', align: 'left' },
+  { id: 'cnxh', text: 'CNXH khoa học', note: 'bộ phận hợp thành', start: { x: 6, y: 80 }, orbit: 14, angle: 135, color: '#facc15', align: 'right' },
+  { id: 'ly-luan', text: 'Lý luận', note: 'soi đường', start: { x: 94, y: 80 }, orbit: 14, angle: 45, color: '#fde68a', align: 'left' },
+
   // Orbit 24
-  { id: 'kien-dinh', text: 'Kiên định', note: 'bản lĩnh', start: { x: 6, y: 50 }, orbit: 24, angle: -160, color: '#f87171', align: 'right' },
-  { id: 'doi-moi', text: 'Đổi mới', note: 'sáng tạo', start: { x: 94, y: 50 }, orbit: 24, angle: -20, color: '#2dd4bf', align: 'left' },
-  { id: 'phong-cach', text: 'Phong cách', note: 'nói đi đôi làm', start: { x: 50, y: 6 }, orbit: 24, angle: 160, color: '#fb923c', align: 'bottom' },
-  { id: 'hanh-dong', text: 'Hành động', note: 'vận dụng hôm nay', start: { x: 50, y: 94 }, orbit: 24, angle: 20, color: '#fdba74', align: 'top' },
-  
+  { id: 'duy-vat', text: 'Duy vật', note: 'biện chứng', start: { x: 6, y: 50 }, orbit: 24, angle: -160, color: '#f87171', align: 'right' },
+  { id: 'thang-du', text: 'Giá trị thặng dư', note: 'hòn đá tảng', start: { x: 94, y: 50 }, orbit: 24, angle: -20, color: '#2dd4bf', align: 'left' },
+  { id: 'thuc-tien', text: 'Thực tiễn', note: 'tiêu chuẩn chân lý', start: { x: 50, y: 6 }, orbit: 24, angle: 160, color: '#fb923c', align: 'bottom' },
+  { id: 'hanh-dong', text: 'Hành động', note: 'cách mạng', start: { x: 50, y: 94 }, orbit: 24, angle: 20, color: '#fdba74', align: 'top' },
+
   // Orbit 34
-  { id: 'dai-doan-ket', text: 'Đại đoàn kết', note: 'sức mạnh vĩ đại', start: { x: 25, y: 6 }, orbit: 34, angle: 180, color: '#a78bfa', align: 'bottom' },
-  { id: 'van-hoa', text: 'Văn hóa', note: 'hồn cốt dân tộc', start: { x: 75, y: 6 }, orbit: 34, angle: 0, color: '#34d399', align: 'bottom' },
-  { id: 'giao-duc', text: 'Giáo dục', note: 'trồng người', start: { x: 25, y: 94 }, orbit: 34, angle: 90, color: '#f472b6', align: 'top' },
-  { id: 'ngoai-giao', text: 'Ngoại giao', note: 'hòa bình', start: { x: 75, y: 94 }, orbit: 34, angle: -90, color: '#60a5fa', align: 'top' },
+  { id: 'cong-nhan', text: 'Công nhân', note: 'sứ mệnh lịch sử', start: { x: 25, y: 6 }, orbit: 34, angle: 180, color: '#a78bfa', align: 'bottom' },
+  { id: 'giai-phong', text: 'Giải phóng', note: 'con người', start: { x: 75, y: 6 }, orbit: 34, angle: 0, color: '#34d399', align: 'bottom' },
+  { id: 'cong-san', text: 'Cộng sản', note: 'lý tưởng', start: { x: 25, y: 94 }, orbit: 34, angle: 90, color: '#f472b6', align: 'top' },
+  { id: 'khoa-hoc', text: 'Khoa học', note: 'cách mạng', start: { x: 75, y: 94 }, orbit: 34, angle: -90, color: '#60a5fa', align: 'top' },
 ]
 
-const finaleWords = ['Tư tưởng', 'Đạo đức', 'Phong cách', 'Độc lập', 'Nhân dân', 'Đoàn kết', 'Văn hóa']
+const finaleWords = ['Triết học', 'Kinh tế chính trị', 'CNXH khoa học', 'Lý luận', 'Thực tiễn', 'Giải phóng', 'Cộng sản']
 
 function seededRatio(index, salt = 0) {
   const value = Math.sin(index * 37.29 + salt * 21.13) * 10000
@@ -137,8 +137,8 @@ export default function GravitySun({ onWin, onSolved }) {
     <div className={`minigame-sun ${finalePhase > 0 ? 'is-final-scene' : ''}`}>
       <p className="minigame-instruction">
         {won
-          ? 'Các giá trị đã hội tụ thành hệ mặt trời Hồ Chí Minh.'
-          : 'Rê chuột hoặc chạm kéo vùng trọng lực qua các mảnh giá trị để hút chúng vào quỹ đạo.'}
+          ? 'Các bộ phận đã hội tụ thành hệ mặt trời chủ nghĩa Mác - Lênin.'
+          : 'Rê chuột hoặc chạm kéo vùng trọng lực qua các mảnh lý luận để hút chúng vào quỹ đạo.'}
       </p>
 
       <div className={`sun-stage-shell ${won ? 'is-won is-pulsing' : ''}`}>
@@ -223,7 +223,7 @@ export default function GravitySun({ onWin, onSolved }) {
         <div className="sun-core">
           <span className="sun-core-aura" />
           <span className="sun-core-ball" />
-          <strong>Hồ<br />Chí Minh</strong>
+          <strong>Mác<br />Lênin</strong>
         </div>
 
         {fragments.map((fragment, index) => {
@@ -273,7 +273,7 @@ export default function GravitySun({ onWin, onSolved }) {
 
         <div className="sun-status">
           <span>{collected.length}</span>
-          <small>/ {fragments.length} giá trị</small>
+          <small>/ {fragments.length} học thuyết</small>
         </div>
       </div>
       </div>
@@ -284,7 +284,7 @@ export default function GravitySun({ onWin, onSolved }) {
 
       {finalePhase > 0 && (
         <div className={`sun-finale ${finalePhase === 2 ? 'is-phase-2' : ''}`} aria-hidden="true">
-          <img src={finalImg} alt="Hồ Chí Minh" className="sun-finale-image" />
+          <img src={finalImg} alt="Chủ nghĩa Mác - Lênin" className="sun-finale-image" />
           
           {finalePhase === 2 && (
             <>
@@ -296,10 +296,10 @@ export default function GravitySun({ onWin, onSolved }) {
                 ))}
               </div>
               <div className="sun-message-card">
-                <span>Hành tinh trung tâm đã mở khóa</span>
-                <h3>HỒ CHÍ MINH</h3>
-                <strong>Tư tưởng, đạo đức và phong cách không đứng riêng lẻ; chúng tạo thành một hệ mặt trời định hướng hành động.</strong>
-                <p>Khi các giá trị vào đúng quỹ đạo, ánh sáng trung tâm không chỉ để ngắm nhìn, mà để soi đường cho lựa chọn hôm nay.</p>
+                <span>Mặt trời lý luận đã mở khóa</span>
+                <h3>MÁC - LÊNIN</h3>
+                <strong>Triết học, kinh tế chính trị và chủ nghĩa xã hội khoa học gắn bó hữu cơ, tạo thành một hệ mặt trời lý luận thống nhất.</strong>
+                <p>Khi các bộ phận vào đúng quỹ đạo, ánh sáng lý luận không chỉ để ngắm nhìn, mà để soi đường cho hành động cách mạng.</p>
               </div>
             </>
           )}

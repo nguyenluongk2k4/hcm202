@@ -1,23 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './ConnectFragments.css'
 
-// Đồ thị dạng Ngôi Sao 5 cánh (tượng trưng cho sự đoàn kết hội tụ)
+// Đồ thị dạng Ngôi Sao 5 cánh (tượng trưng cho khối liên minh giai cấp, tầng lớp hội tụ)
 const unityNodes = [
   { id: 0, label: 'Nhân dân',    x: 210, y: 210, core: true },
-  
+
   // Vòng ngoài (5 đỉnh ngôi sao)
-  { id: 1, label: 'Mục tiêu',    x: 210, y: 40 },
-  { id: 2, label: 'Tôn trọng',   x: 371, y: 157 },
-  { id: 3, label: 'Trách nhiệm', x: 310, y: 347 },
-  { id: 4, label: 'Bao dung',    x: 110, y: 347 },
-  { id: 5, label: 'Hợp tác',     x: 49,  y: 157 },
-  
+  { id: 1, label: 'Công nhân',   x: 210, y: 40 },
+  { id: 2, label: 'Nông dân',    x: 371, y: 157 },
+  { id: 3, label: 'Trí thức',    x: 310, y: 347 },
+  { id: 4, label: 'Doanh nhân',  x: 110, y: 347 },
+  { id: 5, label: 'Thanh niên',  x: 49,  y: 157 },
+
   // Vòng trong (ngũ giác lõi)
-  { id: 6, label: 'Tin tưởng',   x: 251, y: 153 },
-  { id: 7, label: 'Lắng nghe',   x: 277, y: 232 },
-  { id: 8, label: 'Chia sẻ',     x: 210, y: 280 },
-  { id: 9, label: 'Kỷ luật',     x: 143, y: 232 },
-  { id: 10, label: 'Sáng tạo',   x: 169, y: 153 },
+  { id: 6, label: 'Liên kết',    x: 251, y: 153 },
+  { id: 7, label: 'Hợp tác',     x: 277, y: 232 },
+  { id: 8, label: 'Hỗ trợ',      x: 210, y: 280 },
+  { id: 9, label: 'Lợi ích',     x: 143, y: 232 },
+  { id: 10, label: 'Nòng cốt',   x: 169, y: 153 },
 ]
 
 const targetEdges = [
@@ -44,7 +44,7 @@ const EDGE_COLORS = [
   '#9775fa', '#f783ac', '#ff6b6b', '#ffa94d',
 ]
 
-const finaleWords = ['Chung sức', 'Đồng lòng', 'Nhân dân', 'Đại đoàn kết']
+const finaleWords = ['Công nhân', 'Nông dân', 'Trí thức', 'Đại đoàn kết']
 
 const lotusPetals = [
   { id: 'outer-left', angle: -62, scale: 1.08, size: 'L', grad: 'unityPetalOuter', drawOrder: 0 },
@@ -248,8 +248,8 @@ export default function ConnectFragments({ onWin, onSolved }) {
 
       <p className="minigame-instruction">
         {won
-          ? 'Mạng lưới đoàn kết đã sáng lên — sức mạnh lớn nhất bắt đầu từ lòng dân.'
-          : `Kéo nối các điểm sáng dựng mạng đại đoàn kết. (${edges.length}/${targetEdges.length})`}
+          ? 'Khối liên minh công nhân - nông dân - trí thức đã sáng lên — nền tảng của đại đoàn kết toàn dân tộc.'
+          : `Kéo nối các điểm sáng dựng khối liên minh giai cấp, tầng lớp. (${edges.length}/${targetEdges.length})`}
       </p>
 
       <div className={`unity-stage-shell ${won ? 'is-won' : ''}`}>
@@ -456,16 +456,16 @@ export default function ConnectFragments({ onWin, onSolved }) {
           <div className="unity-message-card">
             <div className="unity-message-badge">
               <span className="unity-badge-dot" />
-              <em>Đại đoàn kết · Hành tinh đã mở khóa</em>
+              <em>Liên minh giai cấp · Hành tinh đã mở khóa</em>
             </div>
-            <h3>ĐẠI<br />ĐOÀN KẾT</h3>
+            <h3>LIÊN MINH<br />ĐOÀN KẾT</h3>
             <blockquote>
-              "Đoàn kết, đoàn kết, đại đoàn kết.<br />
-              Thành công, thành công, <strong>đại thành công</strong>."
+              "Nguyên tắc cao nhất của chuyên chính là duy trì khối liên minh
+              giữa giai cấp vô sản và <strong>nông dân</strong>."
             </blockquote>
             <p>
-              Một điểm sáng thì đẹp. Muôn điểm sáng chung hướng
-              thì thành sức mạnh dân tộc không gì lay chuyển được.
+              Liên minh giai cấp công nhân với giai cấp nông dân và đội ngũ
+              trí thức là nền tảng của khối đại đoàn kết toàn dân tộc.
             </p>
           </div>
         </div>

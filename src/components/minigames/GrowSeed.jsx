@@ -7,9 +7,9 @@ import LotusPaths from './LotusPaths'
 const cultureStages = [
   {
     key: 'seed',
-    label: 'Gieo hạt',
-    value: 'Niềm tin',
-    prompt: 'Đánh thức hạt giống niềm tin ở trung tâm khu vườn.',
+    label: 'Gieo tiền đề',
+    value: 'Tiền đề',
+    prompt: 'Đánh thức hai tiền đề vật chất: lực lượng sản xuất phát triển và giai cấp công nhân trưởng thành.',
     threshold: 8,
     x: 50,
     y: 85,
@@ -17,9 +17,9 @@ const cultureStages = [
   },
   {
     key: 'language',
-    label: 'Giữ tiếng nói',
-    value: 'Tiếng nói',
-    prompt: 'Kết nối tiếng nói chung để ký ức không bị đứt đoạn.',
+    label: 'Thức tỉnh giai cấp',
+    value: 'Công nhân',
+    prompt: 'Giai cấp công nhân được giác ngộ lý luận Mác - Lênin, có Đảng Cộng sản tiên phong soi đường.',
     threshold: 18,
     x: 12,
     y: 72,
@@ -27,9 +27,9 @@ const cultureStages = [
   },
   {
     key: 'knowledge',
-    label: 'Tưới tri thức',
-    value: 'Tri thức',
-    prompt: 'Dẫn dòng tri thức xuống rễ cây để văn hóa có nền tảng.',
+    label: 'Bùng lên cách mạng',
+    value: 'Cách mạng',
+    prompt: 'Cách mạng vô sản nổ ra: giai cấp công nhân cùng nhân dân lao động vùng lên đấu tranh.',
     threshold: 29,
     x: 88,
     y: 72,
@@ -37,9 +37,9 @@ const cultureStages = [
   },
   {
     key: 'ethics',
-    label: 'Thắp đạo đức',
-    value: 'Đạo đức',
-    prompt: 'Thắp ngọn đèn đạo đức để tri thức không đi lệch hướng.',
+    label: 'Giành chính quyền',
+    value: 'Chính quyền',
+    prompt: 'Thiết lập nhà nước kiểu mới — nền chuyên chính cách mạng của giai cấp vô sản.',
     threshold: 40,
     x: 6,
     y: 52,
@@ -47,9 +47,9 @@ const cultureStages = [
   },
   {
     key: 'discipline',
-    label: 'Rèn kỷ luật',
-    value: 'Kỷ luật',
-    prompt: 'Khóa nhịp kỷ luật để hành động không chỉ là cảm hứng nhất thời.',
+    label: 'Mở thời kỳ quá độ',
+    value: 'Quá độ',
+    prompt: 'Bước vào thời kỳ quá độ lâu dài, gian khổ: cải tạo cách mạng sâu sắc trên mọi lĩnh vực.',
     threshold: 51,
     x: 94,
     y: 52,
@@ -57,9 +57,9 @@ const cultureStages = [
   },
   {
     key: 'ideal',
-    label: 'Gọi lý tưởng',
-    value: 'Lý tưởng',
-    prompt: 'Đưa lý tưởng lên cao để mọi lựa chọn có phương hướng.',
+    label: 'Kinh tế nhiều thành phần',
+    value: 'Nhiều thành phần',
+    prompt: 'Thời kỳ quá độ tất yếu tồn tại nền kinh tế nhiều thành phần; phân phối theo lao động là chủ đạo.',
     threshold: 62,
     x: 12,
     y: 34,
@@ -67,9 +67,9 @@ const cultureStages = [
   },
   {
     key: 'human',
-    label: 'Trồng người',
-    value: 'Con người',
-    prompt: 'Đánh thức mầm người toàn diện: biết học, biết sống, biết cống hiến.',
+    label: 'Xây tư tưởng mới',
+    value: 'Tư tưởng mới',
+    prompt: 'Tư tưởng vô sản và tư sản còn đan xen; từng bước xây dựng nền văn hóa mới xã hội chủ nghĩa.',
     threshold: 73,
     x: 88,
     y: 34,
@@ -77,9 +77,9 @@ const cultureStages = [
   },
   {
     key: 'beauty',
-    label: 'Vun cái đẹp',
-    value: 'Cái đẹp',
-    prompt: 'Vun cái đẹp trong cách nghĩ, cách nói và cách đối xử.',
+    label: 'Bỏ qua chế độ TBCN',
+    value: 'Bỏ qua TBCN',
+    prompt: 'Việt Nam quá độ lên chủ nghĩa xã hội bỏ qua chế độ tư bản chủ nghĩa, vẫn kế thừa thành tựu khoa học - công nghệ.',
     threshold: 83,
     x: 6,
     y: 17,
@@ -87,9 +87,9 @@ const cultureStages = [
   },
   {
     key: 'heritage',
-    label: 'Truyền di sản',
-    value: 'Di sản',
-    prompt: 'Trao di sản cho thế hệ kế tiếp bằng một đường sáng bền bỉ.',
+    label: 'Tám đặc trưng',
+    value: 'Mô hình CNXH',
+    prompt: 'Cương lĩnh 1991 (bổ sung 2011) xây dựng mô hình chủ nghĩa xã hội Việt Nam với tám đặc trưng cơ bản.',
     threshold: 92,
     x: 94,
     y: 17,
@@ -97,9 +97,9 @@ const cultureStages = [
   },
   {
     key: 'future',
-    label: 'Mở tương lai',
-    value: 'Tương lai',
-    prompt: 'Khép mạch sáng cuối cùng để khu vườn văn hóa mở ra tương lai.',
+    label: 'Dân giàu, nước mạnh',
+    value: 'Mục tiêu',
+    prompt: 'Khép mạch sáng cuối cùng: dân giàu, nước mạnh, dân chủ, công bằng, văn minh — do nhân dân lao động làm chủ.',
     threshold: 98,
     x: 50,
     y: 9,
@@ -125,8 +125,8 @@ const cultureLinks = [
 
 
 
-const finaleWords = ['Niềm tin', 'Tri thức', 'Đạo đức', 'Lý tưởng', 'Cái đẹp', 'Di sản']
-const quoteLetters = 'TRỒNG NGƯỜI - GIEO CẢ TƯƠNG LAI'.split('')
+const finaleWords = ['Tiền đề', 'Cách mạng', 'Chính quyền', 'Quá độ', 'Nhiều thành phần', 'Tám đặc trưng']
+const quoteLetters = 'XÂY DỰNG CHỦ NGHĨA XÃ HỘI'.split('')
 const growthToolDefaults = {
   rain: { x: 18, y: 18 },
   sun: { x: 82, y: 48 },
@@ -438,13 +438,13 @@ export default function GrowSeed({ onWin, onSolved }) {
       <div className="culture-topline">
         <p className="minigame-instruction">
           {won
-            ? 'Khu vườn đã nở: văn hóa trở thành ánh sáng sống trong từng con người.'
+            ? 'Khu vườn đã nở: từ thời kỳ quá độ, chủ nghĩa xã hội nở thành chế độ do nhân dân lao động làm chủ.'
             : activeStage
               ? activeStage.prompt
-              : 'Kéo mây mưa xuống vùng rễ hoặc kéo mặt trời lên tán cây để vun trồng. Khi biểu tượng bừng sáng, chạm vào nó để nối mạch văn hóa.'}
+              : 'Kéo mây mưa xuống vùng rễ hoặc kéo mặt trời lên tán cây để vun trồng. Khi biểu tượng bừng sáng, chạm vào nó để mở mốc quá độ.'}
         </p>
 
-        <div className="culture-stage-counter" aria-label="Tiến trình vun trồng">
+        <div className="culture-stage-counter" aria-label="Tiến trình quá độ">
           {cultureStages.map((stage, index) => (
             <span
               key={stage.key}
@@ -473,7 +473,7 @@ export default function GrowSeed({ onWin, onSolved }) {
         <div className="culture-sky" />
         <div className="culture-aurora culture-aurora--left" />
         <div className="culture-aurora culture-aurora--right" />
-        <div className="culture-moon"><span>Văn hóa</span></div>
+        <div className="culture-moon"><span>CNXH</span></div>
         <div className="culture-orbit-ring" />
         <div className="culture-orbit-ring culture-orbit-ring--inner" />
         <div className="culture-water" />
@@ -774,7 +774,7 @@ export default function GrowSeed({ onWin, onSolved }) {
             <div className="culture-message-card">
               <div className="culture-message-badge">
                 <span className="culture-message-badge-dot" />
-                <small>Văn hóa - Hành tinh đã mở khóa</small>
+                <small>Quá độ - Hành tinh đã mở khóa</small>
               </div>
               <h3>
                 {quoteLetters.map((letter, index) => (
@@ -787,12 +787,13 @@ export default function GrowSeed({ onWin, onSolved }) {
                 ))}
               </h3>
               <blockquote className="culture-message-quote">
-                "Vì lợi ích mười năm thì phải trồng cây,<br />
-                vì lợi ích trăm năm thì phải <em>trồng người</em>."
+                "Giữa chủ nghĩa tư bản và chủ nghĩa cộng sản,<br />
+                có một <em>thời kỳ quá độ nhất định</em>."
               </blockquote>
               <p>
-                Văn hóa không đứng yên trong sách vở. Nó đi qua tiếng nói, tri thức,
-                đạo đức và lý tưởng, rồi nở thành cách mỗi người sống đẹp hơn hôm nay.
+                Thời kỳ quá độ là thời kỳ cải tạo cách mạng sâu sắc, lâu dài.
+                Mỗi mốc đã vượt qua đưa Việt Nam tiến gần mục tiêu:
+                dân giàu, nước mạnh, dân chủ, công bằng, văn minh.
               </p>
             </div>
           </div>
@@ -804,7 +805,7 @@ export default function GrowSeed({ onWin, onSolved }) {
         <div className="culture-progress-label">
           <span>
             {won
-              ? 'Vườn người bừng sáng'
+              ? 'Mô hình CNXH bừng sáng'
               : activeStage
                 ? 'Chạm biểu tượng đang gọi sáng'
                 : 'Năng lượng vun trồng'}

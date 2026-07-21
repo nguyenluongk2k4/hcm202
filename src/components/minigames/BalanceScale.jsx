@@ -3,11 +3,11 @@ import quocHuyPng from '../../assets/quoc_huy.png'
 import './BalanceScale.css'
 
 const mandates = [
-  { key: 'of-people',  title: 'Của dân',    left: 'Quyền lực',  right: 'Nhân dân'   },
-  { key: 'by-people',  title: 'Do dân',     left: 'Đồng thuận', right: 'Hành động'  },
-  { key: 'for-people', title: 'Vì dân',     left: 'Kỷ cương',   right: 'Phục vụ'    },
-  { key: 'rule-law',   title: 'Pháp quyền', left: 'Công bằng',  right: 'Luật pháp'  },
-  { key: 'democracy',  title: 'Dân chủ',    left: 'Tự do',      right: 'Trách nhiệm'},
+  { key: 'of-people',  title: 'Dân chủ XHCN',     left: 'Mục tiêu',  right: 'Động lực' },
+  { key: 'by-people',  title: 'Dân làm chủ',      left: 'Quyền lực', right: 'Nhân dân' },
+  { key: 'for-people', title: 'Nhà nước của dân', left: 'Của dân',   right: 'Vì dân'   },
+  { key: 'rule-law',   title: 'Pháp quyền XHCN',  left: 'Pháp luật', right: 'Kỷ cương' },
+  { key: 'democracy',  title: 'Đảng lãnh đạo',    left: 'Đảng',      right: 'Lãnh đạo' },
 ]
 
 function seededRatio(index, salt = 1) {
@@ -147,7 +147,7 @@ export default function BalanceScale({ onWin, onSolved }) {
     <div className={`minigame-balance ${showFinale ? 'is-final-scene' : ''}`}>
       <p className="minigame-instruction">
         {won
-          ? 'Năm nguyên tắc đã cân bằng — quyền lực sáng khi quay về phục vụ nhân dân.'
+          ? 'Năm nguyên tắc đã cân bằng — dân chủ xã hội chủ nghĩa là bản chất của chế độ ta, vừa là mục tiêu, vừa là động lực.'
           : `Đóng dấu "${activeMandate.title}" khi kim cân vào vùng xanh giữa. (${seals.length}/${mandates.length})`}
       </p>
 
@@ -363,15 +363,15 @@ export default function BalanceScale({ onWin, onSolved }) {
               <span className="gov-badge-dot" />
               <em>Nhà nước · Hành tinh đã mở khóa</em>
             </div>
-            <h3>NHÀ NƯỚC<br />CỦA DÂN</h3>
+            <h3>DÂN LÀ CHỦ<br />DÂN LÀM CHỦ</h3>
             <blockquote>
-              "Bao nhiêu lợi ích đều vì dân.<br />
-              Bao nhiêu quyền hạn đều của <strong>dân</strong>."
+              "Dân chủ xã hội chủ nghĩa là bản chất của chế độ ta,<br />
+              vừa là <strong>mục tiêu</strong>, vừa là <strong>động lực</strong>."
             </blockquote>
             <p>
-              Quyền lực không đứng trên nhân dân. Chính phủ là
-              công bộc của dân — lắng nghe, dựa vào và hành động
-              vì hạnh phúc của nhân dân.
+              Nhà nước pháp quyền xã hội chủ nghĩa của nhân dân, do nhân dân,
+              vì nhân dân do Đảng Cộng sản Việt Nam lãnh đạo — quyền lực
+              thống nhất, có phân công, phối hợp và kiểm soát.
             </p>
           </div>
         </div>

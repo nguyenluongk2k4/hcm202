@@ -3,16 +3,15 @@ import banDoVn from '../../assets/ban_do_VN.png'
 import './BreakChains.css'
 
 const DIALS_CONFIG = [
-  { letters: ['G', 'M', 'Đ', 'H', 'N', 'T'], target: 2, clue: 'Quyền' },
-  { letters: ['A', 'Ô', 'Ộ', 'Ơ', 'U', 'Ê'], target: 2, clue: 'Sống' },
-  { letters: ['M', 'C', 'K', 'Q', 'B', 'T'], target: 1, clue: 'Chính' },
-  { letters: ['B', 'T', 'L', 'N', 'H', 'V'], target: 2, clue: 'Đáng' },
-  { letters: ['E', 'A', 'Ậ', 'Ư', 'Ê', 'Ô'], target: 2, clue: 'Tự' },
-  { letters: ['K', 'C', 'D', 'P', 'R', 'S'], target: 3, clue: 'Do' },
-  { letters: ['S', 'B', 'N', 'O', 'T', 'M'], target: 4, clue: 'Bình' },
-  { letters: ['I', 'A', 'E', 'Ự', 'O', 'M'], target: 3, clue: 'Đẳng' },
-  { letters: ['V', 'C', 'D', 'H', 'T', 'L'], target: 2, clue: 'Bác' },
-  { letters: ['U', 'O', 'Q', 'M', 'S', 'V'], target: 1, clue: 'Ái' },
+  { letters: ['M', 'G', 'Đ', 'H', 'N', 'T'], target: 1, clue: 'Giải' },
+  { letters: ['A', 'Ô', 'I', 'Ơ', 'U', 'Ê'], target: 2, clue: 'Phóng' },
+  { letters: ['Á', 'À', 'Ạ', 'Ả', 'Ã', 'Ă'], target: 3, clue: 'Khỏi' },
+  { letters: ['E', 'I', 'Y', 'Ê', 'Ơ', 'O'], target: 1, clue: 'Xiềng' },
+  { letters: ['B', 'T', 'L', 'P', 'H', 'V'], target: 3, clue: 'Xích' },
+  { letters: ['K', 'C', 'H', 'D', 'R', 'S'], target: 2, clue: 'Tư bản' },
+  { letters: ['Ò', 'Ọ', 'Õ', 'Ó', 'Ỏ', 'O'], target: 3, clue: 'Áp bức' },
+  { letters: ['M', 'B', 'N', 'O', 'T', 'S'], target: 2, clue: 'Bóc lột' },
+  { letters: ['V', 'C', 'D', 'G', 'T', 'L'], target: 3, clue: 'Người' },
 ]
 
 const colorTokens  = ['#ffffff', '#fef08a', '#38bdf8', '#fb7185', '#fbbf24', '#a5f3fc']
@@ -159,8 +158,8 @@ export default function BreakChains({ onWin, onSolved }) {
     <div className={`minigame-break ${won ? 'is-won' : ''} ${showFinale ? 'is-final-scene' : ''}`}>
       <h2 className="minigame-instruction">
         {won
-          ? 'Khóa đã vỡ — độc lập không dừng ở cánh cửa mở, mà dẫn tới tự do và hạnh phúc.'
-          : `Xoay ${DIALS_CONFIG.length} trục mật mã để tìm từ khóa ĐỘC LẬP TỰ DO. (${dials.filter((v, i) => v === DIALS_CONFIG[i].target).length}/${DIALS_CONFIG.length} đúng)`}
+          ? 'Khóa đã vỡ — giai cấp công nhân phá tan xiềng xích áp bức, bóc lột, giải phóng chính mình và nhân dân lao động.'
+          : `Xoay ${DIALS_CONFIG.length} trục mật mã để tìm từ khóa GIẢI PHÓNG. (${dials.filter((v, i) => v === DIALS_CONFIG[i].target).length}/${DIALS_CONFIG.length} đúng)`}
       </h2>
 
       <div className={`break-container ${won ? 'is-won' : ''} ${showFinale ? 'show-finale' : ''}`}>
@@ -268,17 +267,18 @@ export default function BreakChains({ onWin, onSolved }) {
             <div className="epic-banner">
               <div className="epic-banner-badge">
                 <span className="epic-banner-dot" />
-                <small>Độc lập · Hành tinh đã mở khóa</small>
+                <small>Sứ mệnh · Hành tinh đã mở khóa</small>
               </div>
-              <strong>ĐỘC LẬP</strong>
-              <span className="epic-banner-sub">TỰ DO — HẠNH PHÚC</span>
+              <strong>GIẢI PHÓNG</strong>
+              <span className="epic-banner-sub">GIAI CẤP CÔNG NHÂN — NHÂN DÂN LAO ĐỘNG</span>
               <blockquote>
-                "Nước Việt Nam có quyền hưởng tự do và độc lập,<br />
-                và sự thật đã trở thành <em>một nước tự do độc lập</em>."
+                "Thực hiện sự nghiệp giải phóng thế giới ấy,<br />
+                đó là <em>sứ mệnh lịch sử của giai cấp vô sản hiện đại</em>."
               </blockquote>
               <p>
-                Độc lập không phải tấm bản đồ — đó là con đường mỗi thế hệ phải
-                tự bước, tự giữ, và trao lại cho người tiếp theo.
+                Sứ mệnh lịch sử của giai cấp công nhân là thông qua Đảng Cộng sản,
+                lãnh đạo nhân dân lao động đấu tranh xóa bỏ chế độ người bóc lột
+                người, xây dựng xã hội cộng sản chủ nghĩa văn minh.
               </p>
             </div>
           </div>

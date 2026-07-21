@@ -3,49 +3,49 @@ import tuTuongNhanVanImg from '../../assets/tu_tuong_nhan_van.png'
 import './HeartConstellation.css'
 
 const heartNodes = [
-  { "id": "p0", "label": "Nhân ái", "x": 50, "y": 84, "align": "bottom" },
+  { "id": "p0", "label": "Tái sản xuất", "x": 50, "y": 84, "align": "bottom" },
   { "id": "p1", "label": "", "x": 50, "y": 83, "align": "bottom" },
-  { "id": "p2", "label": "Sẻ chia", "x": 51, "y": 80, "align": "bottom" },
+  { "id": "p2", "label": "Nuôi dạy", "x": 51, "y": 80, "align": "bottom" },
   { "id": "p3", "label": "", "x": 54, "y": 76, "align": "bottom" },
-  { "id": "p4", "label": "Lắng nghe", "x": 59, "y": 71, "align": "right" },
+  { "id": "p4", "label": "Giáo dục", "x": 59, "y": 71, "align": "right" },
   { "id": "p5", "label": "", "x": 65, "y": 65, "align": "right" },
-  { "id": "p6", "label": "Khoan dung", "x": 72, "y": 60, "align": "right" },
+  { "id": "p6", "label": "Kinh tế", "x": 72, "y": 60, "align": "right" },
   { "id": "p7", "label": "", "x": 78, "y": 53, "align": "right" },
-  { "id": "p8", "label": "Bao dung", "x": 82, "y": 47, "align": "right" },
+  { "id": "p8", "label": "Tâm sinh lý", "x": 82, "y": 47, "align": "right" },
   { "id": "p9", "label": "", "x": 84, "y": 40, "align": "right" },
-  { "id": "p10", "label": "Đoàn kết", "x": 82, "y": 33, "align": "right" },
+  { "id": "p10", "label": "Tế bào xã hội", "x": 82, "y": 33, "align": "right" },
   { "id": "p11", "label": "", "x": 78, "y": 27, "align": "right" },
-  { "id": "p12", "label": "Gắn bó", "x": 72, "y": 24, "align": "right" },
+  { "id": "p12", "label": "Tổ ấm", "x": 72, "y": 24, "align": "right" },
   { "id": "p13", "label": "", "x": 65, "y": 23, "align": "right" },
-  { "id": "p14", "label": "Chăm lo", "x": 59, "y": 25, "align": "right" },
+  { "id": "p14", "label": "Cầu nối", "x": 59, "y": 25, "align": "right" },
   { "id": "p15", "label": "", "x": 54, "y": 29, "align": "top" },
-  { "id": "p16", "label": "Cứu giúp", "x": 51, "y": 33, "align": "top" },
+  { "id": "p16", "label": "Hôn nhân", "x": 51, "y": 33, "align": "top" },
   { "id": "p17", "label": "", "x": 50, "y": 36, "align": "top" },
-  { "id": "p18", "label": "Hòa bình", "x": 50, "y": 38, "align": "top" },
+  { "id": "p18", "label": "Huyết thống", "x": 50, "y": 38, "align": "top" },
   { "id": "p19", "label": "", "x": 50, "y": 36, "align": "top" },
-  { "id": "p20", "label": "Bình đẳng", "x": 49, "y": 33, "align": "top" },
+  { "id": "p20", "label": "Yêu thương", "x": 49, "y": 33, "align": "top" },
   { "id": "p21", "label": "", "x": 46, "y": 29, "align": "top" },
-  { "id": "p22", "label": "Dân chủ", "x": 41, "y": 25, "align": "left" },
+  { "id": "p22", "label": "Hiếu thảo", "x": 41, "y": 25, "align": "left" },
   { "id": "p23", "label": "", "x": 35, "y": 23, "align": "left" },
-  { "id": "p24", "label": "Nhân quyền", "x": 28, "y": 24, "align": "left" },
+  { "id": "p24", "label": "Trách nhiệm", "x": 28, "y": 24, "align": "left" },
   { "id": "p25", "label": "", "x": 22, "y": 27, "align": "left" },
   { "id": "p26", "label": "Hạnh phúc", "x": 18, "y": 33, "align": "left" },
   { "id": "p27", "label": "", "x": 16, "y": 40, "align": "left" },
-  { "id": "p28", "label": "Phát triển", "x": 18, "y": 47, "align": "left" },
+  { "id": "p28", "label": "Bình đẳng", "x": 18, "y": 47, "align": "left" },
   { "id": "p29", "label": "", "x": 22, "y": 53, "align": "left" },
-  { "id": "p30", "label": "Hy sinh", "x": 28, "y": 60, "align": "left" },
+  { "id": "p30", "label": "Tiến bộ", "x": 28, "y": 60, "align": "left" },
   { "id": "p31", "label": "", "x": 35, "y": 65, "align": "left" },
-  { "id": "p32", "label": "Khiêm tốn", "x": 41, "y": 71, "align": "left" },
+  { "id": "p32", "label": "Gắn bó", "x": 41, "y": 71, "align": "left" },
   { "id": "p33", "label": "", "x": 46, "y": 76, "align": "bottom" },
-  { "id": "p34", "label": "Chính trực", "x": 49, "y": 80, "align": "bottom" },
+  { "id": "p34", "label": "Tình cảm", "x": 49, "y": 80, "align": "bottom" },
   { "id": "p35", "label": "", "x": 50, "y": 83, "align": "bottom" }
 ]
 
-const finaleWords = ['Người tốt', 'Việc tốt', 'Nhân ái', 'Tôn trọng', 'Chăm lo', 'Nâng đỡ']
+const finaleWords = ['Yêu thương', 'Hiếu thảo', 'Bình đẳng', 'Tổ ấm', 'Hạnh phúc', 'Tiến bộ']
 const humanityPhases = [
-  { label: 'Nhìn thấy', text: 'không vô cảm', start: 0, end: 11 },
-  { label: 'Cảm thông', text: 'biết đặt mình vào người khác', start: 12, end: 23 },
-  { label: 'Hành động', text: 'biến yêu thương thành việc tốt', start: 24, end: 35 },
+  { label: 'Tổ ấm', text: 'mang lại hạnh phúc cho mỗi thành viên', start: 0, end: 11 },
+  { label: 'Tế bào', text: 'hạt nhân của xã hội', start: 12, end: 23 },
+  { label: 'Cầu nối', text: 'giữa cá nhân với xã hội', start: 24, end: 35 },
 ]
 
 const mainlandIds = heartNodes.map(n => n.id)
@@ -132,8 +132,8 @@ export default function HeartConstellation({ onWin, onSolved }) {
     <div className={`minigame-heart ${showFinale ? 'is-final-scene' : ''}`}>
       <p className="minigame-instruction">
         {won
-          ? 'Ngọn lửa nhân ái đã nối những việc tốt thành một trái tim chung.'
-          : 'Rê chuột hoặc chạm kéo ngọn lửa qua các điểm sáng để vẽ chòm sao nhân văn.'}
+          ? 'Ngọn lửa tình thân đã nối các giá trị thành một tổ ấm hạnh phúc.'
+          : 'Rê chuột hoặc chạm kéo ngọn lửa qua các điểm sáng để vẽ chòm sao gia đình.'}
       </p>
 
       <div
@@ -257,7 +257,7 @@ export default function HeartConstellation({ onWin, onSolved }) {
         {showFinale && (
           <div className="humanity-heart-quote">
             <blockquote>
-              "Ở đời và làm người là phải thương nước, thương dân, thương nhân loại đau khổ bị áp bức."
+              "...nhiều gia đình cộng lại mới thành xã hội, xã hội tốt thì gia đình càng tốt, gia đình tốt thì xã hội mới tốt. Hạt nhân của xã hội là gia đình."
             </blockquote>
             <cite>— Hồ Chí Minh —</cite>
           </div>
@@ -274,16 +274,16 @@ export default function HeartConstellation({ onWin, onSolved }) {
           
           <img 
             src={tuTuongNhanVanImg} 
-            alt="Tư tưởng nhân văn" 
+            alt="Gia đình hạnh phúc" 
             className="humanity-finale-center-img" 
           />
           
           <div className="humanity-message-card">
             <span>Hành tinh đã mở khóa</span>
-            <h3>TƯ TƯỞNG NHÂN VĂN</h3>
-            <strong>"Mỗi người tốt, mỗi việc tốt là một bông hoa đẹp"</strong>
+            <h3>GIA ĐÌNH TỔ ẤM</h3>
+            <strong>"Hạt nhân của xã hội là gia đình"</strong>
             <p>
-              Yêu thương con người không dừng ở cảm xúc: nó trở thành hành động. Mỗi việc tốt bạn làm sẽ tạo thêm một điểm sáng, đan kết lại thành một trái tim vũ trụ trường tồn.
+              Gia đình là tế bào của xã hội, là tổ ấm và là cầu nối giữa cá nhân với xã hội. Xây dựng gia đình noi gương mẫu: hạnh phúc, bình đẳng, tiến bộ.
             </p>
           </div>
         </div>

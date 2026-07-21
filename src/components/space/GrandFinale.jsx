@@ -2,7 +2,6 @@ import { Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef, useState, useEffect } from 'react'
 import * as THREE from 'three'
-import hoChiMinhImage from '../../assets/HoChiMinhImage.jpg'
 
 export default function GrandFinale({ quotes, planetSize }) {
   const lineRef = useRef()
@@ -95,16 +94,35 @@ export default function GrandFinale({ quotes, planetSize }) {
               filter: 'blur(0.5rem)',
               zIndex: -1,
             }} />
-            <img 
-              src={hoChiMinhImage} 
-              alt="Bác Hồ" 
+            <div
               style={{
                 width: 'min(18rem, 62vw)',
+                padding: '1.6rem 1rem',
                 borderRadius: '1rem',
                 border: '2px solid rgba(255, 223, 138, 0.6)',
-                boxShadow: '0 0 52px rgba(255, 223, 138, 0.72), 0 0 110px rgba(255, 255, 255, 0.22)'
+                boxShadow: '0 0 52px rgba(255, 223, 138, 0.72), 0 0 110px rgba(255, 255, 255, 0.22)',
+                background: 'linear-gradient(160deg, rgba(122, 26, 54, 0.85), rgba(5, 10, 22, 0.9))',
+                textAlign: 'center',
               }}
-            />
+            >
+              <div style={{ fontSize: '2.6rem', lineHeight: 1 }}>☭</div>
+              <div style={{
+                marginTop: '0.6rem',
+                fontSize: 'clamp(1rem, 2.4vw, 1.35rem)',
+                fontWeight: 900,
+                letterSpacing: '0.08em',
+                color: '#fff4b8',
+              }}>
+                CHỦ NGHĨA XÃ HỘI KHOA HỌC
+              </div>
+              <div style={{
+                marginTop: '0.35rem',
+                fontSize: 'clamp(0.72rem, 1.5vw, 0.85rem)',
+                color: 'rgba(255, 250, 232, 0.85)',
+              }}>
+                Hoàn thành toàn bộ hành trình 7 chương
+              </div>
+            </div>
             <div style={{
               display: 'grid',
               gap: '0.52rem',

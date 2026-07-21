@@ -1,14 +1,11 @@
 import { useRef, useState } from 'react'
-import PolishGem from './PolishGem'
-import TypeToAct from './TypeToAct'
+import SortIsm from './SortIsm'
 import GrowSeed from './GrowSeed'
 import BreakChains from './BreakChains'
 import ConnectFragments from './ConnectFragments'
 import BalanceScale from './BalanceScale'
-import AlignRings from './AlignRings'
 import HeartConstellation from './HeartConstellation'
 import GlobalNetwork from './GlobalNetwork'
-import VortexEnlightenment from './VortexEnlightenment'
 import GravitySun from './GravitySun'
 
 export default function MinigameOverlay({ quote, planet, onComplete, onCancel }) {
@@ -24,7 +21,7 @@ export default function MinigameOverlay({ quote, planet, onComplete, onCancel })
 
   const handleWin = ({ skipSuccess = false } = {}) => {
     // Không tự động chuyển sang màn hình "Hoàn thành" nữa
-    // Chỉ đánh dấu là đã giải quyết xong để hiện nút "Xem bookmark"
+    // Chỉ đánh dấu là đã giải quyết xong để hiện nút "Xem bài học"
     handleSolved()
   }
 
@@ -32,8 +29,8 @@ export default function MinigameOverlay({ quote, planet, onComplete, onCancel })
     if (solvedRef.current) {
       if (completedRef.current) return
       completedRef.current = true
-      
-      // Mới hiện màn hình "Hoàn thành! Đã mở khóa bookmark."
+
+      // Mới hiện màn hình "Hoàn thành! Đã mở khóa bài học."
       setCompleted(true)
       
       // Đợi 1.2 giây rồi mới đóng overlay
@@ -54,14 +51,14 @@ export default function MinigameOverlay({ quote, planet, onComplete, onCancel })
           <h2>{planet.name}</h2>
         </div>
         <div style={{ pointerEvents: 'auto', display: 'flex', gap: '10px' }}>
-          <button 
-            className={`secondary-action ${solved ? 'is-solved-exit' : ''}`} 
-            type="button" 
-            onClick={handleExit} 
-            title={solved ? 'Mở bookmark vừa hoàn thành' : 'Thoát trò chơi này'}
+          <button
+            className={`secondary-action ${solved ? 'is-solved-exit' : ''}`}
+            type="button"
+            onClick={handleExit}
+            title={solved ? 'Mở bài học vừa hoàn thành' : 'Thoát trò chơi này'}
             style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
           >
-            {solved ? 'Xem bookmark' : 'Thoát trò chơi'}
+            {solved ? 'Xem bài học' : 'Thoát trò chơi'}
           </button>
         </div>
       </div>
@@ -69,20 +66,18 @@ export default function MinigameOverlay({ quote, planet, onComplete, onCancel })
       <div className="minigame-content">
         {!completed ? (
           <>
-            {planet.id === 'dao-duc' && <PolishGem onWin={handleWin} onSolved={handleSolved} />}
-            {planet.id === 'phong-cach' && <TypeToAct onWin={() => handleWin({ skipSuccess: true })} onSolved={handleSolved} />}
-            {planet.id === 'van-hoa' && <GrowSeed onWin={handleWin} onSolved={handleSolved} />}
-            {planet.id === 'doc-lap' && <BreakChains onWin={handleWin} onSolved={handleSolved} />}
-            {planet.id === 'dai-doan-ket' && <ConnectFragments onWin={handleWin} onSolved={handleSolved} />}
-            {planet.id === 'nha-nuoc' && <BalanceScale onWin={handleWin} onSolved={handleSolved} />}
-            {planet.id === 'nguon-goc' && <VortexEnlightenment onWin={handleWin} onSolved={handleSolved} />}
-            {planet.id === 'nhan-van' && <HeartConstellation onWin={handleWin} onSolved={handleSolved} />}
-            {planet.id === 'quoc-te' && <GlobalNetwork onWin={handleWin} onSolved={handleSolved} />}
-            {planet.id === 'ho-chi-minh' && <GravitySun onWin={handleWin} onSolved={handleSolved} />}
+            {planet.id === 'tong-quan' && <GravitySun onWin={handleWin} onSolved={handleSolved} />}
+            {planet.id === 'chuong-1' && <SortIsm onWin={handleWin} onSolved={handleSolved} />}
+            {planet.id === 'chuong-2' && <BreakChains onWin={handleWin} onSolved={handleSolved} />}
+            {planet.id === 'chuong-3' && <GrowSeed onWin={handleWin} onSolved={handleSolved} />}
+            {planet.id === 'chuong-4' && <BalanceScale onWin={handleWin} onSolved={handleSolved} />}
+            {planet.id === 'chuong-5' && <ConnectFragments onWin={handleWin} onSolved={handleSolved} />}
+            {planet.id === 'chuong-6' && <GlobalNetwork onWin={handleWin} onSolved={handleSolved} />}
+            {planet.id === 'chuong-7' && <HeartConstellation onWin={handleWin} onSolved={handleSolved} />}
             {/* Fallback */}
             {![
-              'dao-duc', 'phong-cach', 'van-hoa', 'doc-lap', 'dai-doan-ket',
-              'nha-nuoc', 'nguon-goc', 'nhan-van', 'quoc-te', 'ho-chi-minh'
+              'tong-quan', 'chuong-1', 'chuong-2', 'chuong-3', 'chuong-4',
+              'chuong-5', 'chuong-6', 'chuong-7'
             ].includes(planet.id) && (
               <div className="minigame-placeholder">
                 <h3>(Minigame cho {planet.name} đang được phát triển)</h3>
@@ -95,7 +90,7 @@ export default function MinigameOverlay({ quote, planet, onComplete, onCancel })
         ) : (
           <div className="minigame-success">
             <h3>Hoàn thành!</h3>
-            <p>Đã mở khóa bookmark.</p>
+            <p>Đã mở khóa bài học.</p>
           </div>
         )}
       </div>

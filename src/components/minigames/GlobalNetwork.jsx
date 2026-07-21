@@ -5,12 +5,12 @@ import './GlobalNetwork.css'
 const VIETNAM = { x: 800, y: 450 }
 
 const nodeData = [
-  { id: 'asia', title: 'Châu Á', subtitle: 'Láng giềng', colorHex: '#f5c86a', x: 500, y: 220, align: 'left', icon: 'compass' },
-  { id: 'america', title: 'Châu Mỹ', subtitle: 'Hòa bình', colorHex: '#51d6a7', x: 500, y: 450, align: 'left', icon: 'star' },
-  { id: 'ocean', title: 'Đại dương', subtitle: 'Hội nhập', colorHex: '#65d7ee', x: 500, y: 680, align: 'left', icon: 'wave' },
-  { id: 'europe', title: 'Châu Âu', subtitle: 'Tri thức', colorHex: '#a890ff', x: 1100, y: 220, align: 'right', icon: 'compass' },
-  { id: 'africa', title: 'Châu Phi', subtitle: 'Độc lập', colorHex: '#f59a62', x: 1100, y: 450, align: 'right', icon: 'star' },
-  { id: 'world', title: 'Thế giới', subtitle: 'Tiến bộ', colorHex: '#ef7fb4', x: 1100, y: 680, align: 'right', icon: 'globe' },
+  { id: 'dan-toc-54', title: '54 dân tộc anh em', subtitle: 'Đa dân tộc, đa tôn giáo', colorHex: '#f5c86a', x: 500, y: 220, align: 'left', icon: 'compass' },
+  { id: 'cuong-linh', title: 'Cương lĩnh dân tộc', subtitle: 'V.I. Lênin', colorHex: '#51d6a7', x: 500, y: 450, align: 'left', icon: 'star' },
+  { id: 'doan-ket', title: 'Đoàn kết dân tộc', subtitle: 'Bình đẳng, tự quyết', colorHex: '#65d7ee', x: 500, y: 680, align: 'left', icon: 'wave' },
+  { id: 'tin-nguong', title: 'Tự do tín ngưỡng', subtitle: 'Theo hoặc không theo tôn giáo', colorHex: '#a890ff', x: 1100, y: 220, align: 'right', icon: 'compass' },
+  { id: 'chong-me-tin', title: 'Chống mê tín dị đoan', subtitle: 'Chống lợi dụng tôn giáo', colorHex: '#f59a62', x: 1100, y: 450, align: 'right', icon: 'star' },
+  { id: 'dong-hanh', title: 'Tôn giáo đồng hành', subtitle: 'Gắn bó cùng dân tộc', colorHex: '#ef7fb4', x: 1100, y: 680, align: 'right', icon: 'globe' },
 ]
 
 function distance(a, b) {
@@ -177,7 +177,7 @@ export default function GlobalNetwork({ onWin, onSolved }) {
           onPointerCancel={() => setDrawing(null)}
         >
           <div className="game-instructions">
-            Kéo thả từ Việt Nam để kết nối với các hành tinh nhiệm vụ
+            Kéo thả từ Việt Nam để kết nối với các nội dung dân tộc và tôn giáo
           </div>
 
           <svg className="connection-overlay" viewBox="0 0 1600 900">
@@ -251,16 +251,16 @@ export default function GlobalNetwork({ onWin, onSolved }) {
 
         <div className={`network-epic-finale ${isFinale ? 'is-visible' : ''}`}>
           <div className="epic-bg" />
-          <img src={conThuyenImg} alt="Con thuyền hội nhập" className="epic-image" />
+          <img src={conThuyenImg} alt="Đoàn kết dân tộc và tôn giáo" className="epic-image" />
           <div className="epic-overlay" />
           <div className="epic-content">
             <span className="epic-eyebrow">Hành tinh đã mở khóa</span>
-            <h2 className="epic-title">QUỐC TẾ & THỜI ĐẠI</h2>
+            <h2 className="epic-title">DÂN TỘC & TÔN GIÁO</h2>
             <p className="epic-quote">
-              "Quan sơn muôn dặm một nhà, bốn phương vô sản đều là anh em."
+              "Các dân tộc hoàn toàn bình đẳng, các dân tộc được quyền tự quyết, liên hiệp công nhân tất cả các dân tộc lại."
             </p>
             <p className="epic-desc">
-              Tư tưởng Hồ Chí Minh là chiếc la bàn đưa con tàu cách mạng rẽ sóng, vươn ra biển lớn. Hội nhập không hòa tan, mang bản sắc dân tộc bước vào dòng chảy của thời đại.
+              Việt Nam là quốc gia đa dân tộc, đa tôn giáo trên nền tảng cộng đồng quốc gia - dân tộc thống nhất. Đoàn kết dân tộc và tôn trọng tự do tín ngưỡng là sức mạnh, đồng thời kiên quyết chống mê tín dị đoan và mọi hành động lợi dụng tôn giáo.
             </p>
           </div>
         </div>

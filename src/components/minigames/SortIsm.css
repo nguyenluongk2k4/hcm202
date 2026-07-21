@@ -1,0 +1,469 @@
+/* ═══════════════════════════════════════════════════
+   HÀNH TINH KHỞI NGUYÊN — SortIsm
+   Phân loại: CNXH không tưởng ↔ CNXH khoa học
+═══════════════════════════════════════════════════ */
+
+.minigame-sortism {
+  position: relative;
+  display: grid;
+  width: min(100%, 60rem);
+  min-height: 30rem;
+  gap: 1rem;
+  justify-items: center;
+  padding: clamp(0.8rem, 2vw, 1.2rem);
+  color: #eff6ff;
+  overflow: hidden;
+}
+
+.minigame-sortism .minigame-instruction {
+  position: relative;
+  z-index: 20;
+  width: min(100%, 48rem);
+  margin: 0;
+  padding: 0 0.65rem;
+  color: #f8fafc;
+  background: transparent;
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  font-weight: 600;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+  letter-spacing: 0.02em;
+  transition: opacity 260ms ease, transform 260ms ease;
+}
+
+.minigame-sortism.is-won .minigame-instruction {
+  opacity: 0.9;
+}
+
+/* ── Stage ── */
+.si-stage {
+  position: relative;
+  display: grid;
+  width: min(100%, 44rem);
+  gap: 1rem;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 2rem;
+  padding: clamp(0.9rem, 2.4vw, 1.4rem);
+  background:
+    radial-gradient(circle at 50% 20%, rgba(254,240,138,0.06), transparent 34%),
+    radial-gradient(circle at 16% 80%, rgba(56,189,248,0.08), transparent 34%),
+    radial-gradient(circle at 86% 74%, rgba(167,139,250,0.07), transparent 34%),
+    #050505;
+  box-shadow:
+    0 2rem 4rem rgba(0,0,0,0.8),
+    inset 0 1px 1px rgba(255,255,255,0.08);
+  isolation: isolate;
+}
+
+/* Starfield */
+.si-stage::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle, rgba(255,255,255,0.82) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(125,211,252,0.64) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(254,240,138,0.62) 0 1px, transparent 1.5px);
+  background-position: 2rem 3rem, 8rem 5rem, 15rem 2rem;
+  background-size: 12rem 11rem, 18rem 17rem, 26rem 23rem;
+  opacity: 0.4;
+  animation: siStarDrift 12s linear infinite alternate;
+  pointer-events: none;
+  content: '';
+}
+
+.si-stage > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Card pool ── */
+.si-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  min-height: 4.6rem;
+  align-content: center;
+}
+
+.si-pool-empty {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.si-card {
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(125,211,252,0.28);
+  border-radius: 999px;
+  color: #e0f2fe;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02)),
+    rgba(8,47,73,0.5);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.14),
+    0 0.5rem 1.2rem rgba(0,0,0,0.45);
+  font-family: inherit;
+  font-size: clamp(0.8rem, 1.6vw, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 220ms cubic-bezier(0.16,1,0.3,1), border-color 220ms ease, box-shadow 220ms ease, background 220ms ease;
+}
+
+.si-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(125,211,252,0.6);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.2),
+    0 0 1.2rem rgba(56,189,248,0.28),
+    0 0.6rem 1.4rem rgba(0,0,0,0.5);
+}
+
+.si-card.is-selected {
+  color: #fef9c3;
+  border-color: rgba(254,240,138,0.8);
+  background: rgba(113,63,18,0.5);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.24),
+    0 0 1.4rem rgba(250,204,21,0.4),
+    0 0 2.6rem rgba(250,204,21,0.16);
+  transform: translateY(-3px) scale(1.04);
+  animation: siSelectedPulse 1s ease-in-out infinite;
+}
+
+.si-card.is-wrong {
+  border-color: rgba(248,113,113,0.9);
+  color: #fecaca;
+  background: rgba(127,29,29,0.55);
+  animation: siShake 420ms ease;
+}
+
+/* ── Zones ── */
+.si-zones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.si-zone {
+  display: grid;
+  gap: 0.45rem;
+  align-content: start;
+  min-height: 10rem;
+  padding: 0.9rem 1rem;
+  border: 1px dashed rgba(255,255,255,0.14);
+  border-radius: 1.4rem;
+  color: #eff6ff;
+  background: rgba(255,255,255,0.025);
+  box-shadow: inset 0 0 2rem rgba(0,0,0,0.35);
+  font-family: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 260ms ease, box-shadow 260ms ease, background 260ms ease, transform 260ms ease;
+}
+
+.si-zone-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.si-zone-sub {
+  color: rgba(239,246,255,0.55);
+  font-size: clamp(0.68rem, 1.4vw, 0.78rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.si-zone--utopian .si-zone-title {
+  color: #c4b5fd;
+  text-shadow: 0 0 0.9rem rgba(167,139,250,0.5);
+}
+
+.si-zone--scientific .si-zone-title {
+  color: #7dd3fc;
+  text-shadow: 0 0 0.9rem rgba(56,189,248,0.5);
+}
+
+.si-zone.is-awaiting {
+  border-style: solid;
+  animation: siZoneBreathe 1.4s ease-in-out infinite;
+}
+
+.si-zone--utopian.is-awaiting {
+  border-color: rgba(167,139,250,0.55);
+  box-shadow: 0 0 1.6rem rgba(167,139,250,0.18), inset 0 0 2rem rgba(0,0,0,0.35);
+}
+
+.si-zone--scientific.is-awaiting {
+  border-color: rgba(56,189,248,0.55);
+  box-shadow: 0 0 1.6rem rgba(56,189,248,0.18), inset 0 0 2rem rgba(0,0,0,0.35);
+}
+
+.si-zone-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+  margin-top: 0.3rem;
+}
+
+.si-zone-card {
+  padding: 0.38rem 0.8rem;
+  border: 1px solid rgba(74,222,128,0.5);
+  border-radius: 999px;
+  color: #dcfce7;
+  background: rgba(20,83,45,0.44);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.12), 0 0 0.9rem rgba(74,222,128,0.2);
+  font-size: clamp(0.7rem, 1.4vw, 0.82rem);
+  font-weight: 700;
+  cursor: pointer;
+  animation: siCardLand 380ms cubic-bezier(0.16,1,0.3,1) both;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.si-zone-card:hover {
+  transform: scale(0.96);
+  opacity: 0.82;
+}
+
+/* ── Status row ── */
+.si-status {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  color: rgba(239,246,255,0.72);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.si-errors {
+  color: #64748b;
+  transition: color 200ms ease;
+}
+
+.si-errors.is-active {
+  color: #fca5a5;
+}
+
+/* ── Progress bar ── */
+.minigame-sortism > .minigame-progress {
+  position: relative;
+  z-index: 20;
+  width: min(100%, 30rem);
+  height: 0.72rem;
+  border: 1px solid rgba(125,211,252,0.2);
+  border-radius: 999px;
+  background: rgba(8,47,73,0.5);
+  box-shadow:
+    inset 0 0 1rem rgba(0,0,0,0.38),
+    0 0 1.4rem rgba(56,189,248,0.12);
+  overflow: hidden;
+  transition: opacity 240ms ease;
+}
+
+.minigame-sortism > .minigame-progress .minigame-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #a78bfa 0%, #38bdf8 45%, #fef08a 80%, #ffffff 100%);
+  box-shadow:
+    0 0 1rem rgba(56,189,248,0.44),
+    0 0 1.8rem rgba(254,240,138,0.38);
+  transition: width 0.28s ease;
+}
+
+/* ═══════════════════════════════════════════════════
+   SOLVED SCREEN
+═══════════════════════════════════════════════════ */
+.si-solved {
+  display: grid;
+  place-items: center;
+  width: min(100%, 44rem);
+  animation: siSolvedArrive 600ms cubic-bezier(0.16,1,0.3,1) both;
+}
+
+.si-solved-card {
+  position: relative;
+  display: grid;
+  width: min(88vw, 38rem);
+  gap: 0.62rem;
+  justify-items: center;
+  padding: clamp(1.1rem, 2.8vw, 1.55rem);
+  border: 1px solid rgba(219,234,254,0.54);
+  border-radius: 8px;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(186,230,253,0.14), transparent 40%),
+    linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.035)),
+    rgba(2,6,23,0.66);
+  box-shadow:
+    0 1.2rem 3.5rem rgba(0,0,0,0.42),
+    0 0 3rem rgba(125,211,252,0.28),
+    0 0 6rem rgba(254,240,138,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+  text-align: center;
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+}
+
+.si-solved-card::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    110deg,
+    transparent 0 22%,
+    rgba(56,189,248,0.18) 30%,
+    rgba(254,240,138,0.2) 38%,
+    rgba(167,139,250,0.18) 46%,
+    transparent 56% 100%
+  );
+  content: '';
+  opacity: 0;
+  transform: translateX(-100%);
+  animation: siCardShine 3.5s 0.6s ease-in-out both;
+}
+
+.si-solved-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid rgba(125,211,252,0.36);
+  border-radius: 999px;
+  background: rgba(8,47,73,0.5);
+}
+
+.si-badge-dot {
+  display: block;
+  width: 0.44rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #bae6fd;
+  box-shadow: 0 0 0.6rem rgba(125,211,252,0.9);
+  animation: siBadgePulse 1.2s ease-in-out infinite;
+}
+
+.si-solved-badge em {
+  color: #bae6fd;
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.si-solved-card h3 {
+  margin: 0;
+  color: #ffffff;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.5rem, 4.6vw, 3.2rem);
+  font-weight: 950;
+  line-height: 0.98;
+  letter-spacing: 0.07em;
+  text-shadow:
+    0 0 0.9rem rgba(125,211,252,0.76),
+    0 0 2.4rem rgba(254,240,138,0.32),
+    0 0 4rem rgba(167,139,250,0.24);
+}
+
+.si-solved-card blockquote {
+  margin: 0;
+  padding: 0.6rem 1rem;
+  border-left: 3px solid rgba(125,211,252,0.68);
+  border-radius: 0 8px 8px 0;
+  color: #bae6fd;
+  background: rgba(8,47,73,0.36);
+  font-style: italic;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  font-weight: 750;
+  line-height: 1.48;
+  text-align: left;
+  max-width: 32rem;
+}
+
+.si-solved-card blockquote strong {
+  font-style: normal;
+  font-weight: 950;
+  color: #fef08a;
+  text-shadow: 0 0 0.8rem rgba(254,240,138,0.72);
+}
+
+.si-solved-card p {
+  max-width: 30rem;
+  margin: 0;
+  color: rgba(239,246,255,0.94);
+  font-size: clamp(0.88rem, 1.6vw, 1.04rem);
+  font-weight: 720;
+  line-height: 1.52;
+}
+
+.si-solved-card .si-solved-stats {
+  color: rgba(186,230,253,0.7);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════
+   KEYFRAMES
+═══════════════════════════════════════════════════ */
+@keyframes siStarDrift {
+  to { background-position: 3.1rem 4.2rem, 7.1rem 6.4rem, 17rem 1.3rem; }
+}
+
+@keyframes siShake {
+  15%, 85% { transform: translateX(4px); }
+  30%, 70% { transform: translateX(-6px); }
+  45%, 55% { transform: translateX(5px); }
+}
+
+@keyframes siSelectedPulse {
+  0%, 100% { box-shadow: inset 0 1px 1px rgba(255,255,255,0.24), 0 0 1.2rem rgba(250,204,21,0.34); }
+  50%      { box-shadow: inset 0 1px 1px rgba(255,255,255,0.24), 0 0 2rem rgba(250,204,21,0.5), 0 0 3rem rgba(250,204,21,0.2); }
+}
+
+@keyframes siZoneBreathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.012); }
+}
+
+@keyframes siCardLand {
+  0%  { opacity: 0; transform: scale(0.6) translateY(-0.6rem); }
+  70% { opacity: 1; transform: scale(1.08) translateY(0); }
+  100%{ opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes siSolvedArrive {
+  0%  { opacity: 0; transform: translateY(1.4rem) scale(0.94); }
+  100%{ opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes siCardShine {
+  0%        { opacity: 0; transform: translateX(-100%); }
+  20%       { opacity: 0.9; }
+  72%, 100% { opacity: 0; transform: translateX(100%); }
+}
+
+@keyframes siBadgePulse {
+  0%, 100%{ box-shadow: 0 0 0.5rem rgba(125,211,252,0.9); }
+  50%     { box-shadow: 0 0 1.4rem rgba(125,211,252,1), 0 0 2.4rem rgba(56,189,248,0.4); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 720px) {
+  .si-zones { grid-template-columns: 1fr; }
+  .si-zone  { min-height: 7rem; }
+  .si-card  { font-size: 0.78rem; padding: 0.45rem 0.8rem; }
+}
